@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pl" data-mode="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Podsumowania</title>
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%2314B8A6'/%3E%3Cpath%20d='M14%2034h10l4-10%208%2022%206-14h12'%20stroke='white'%20stroke-width='5'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+  <div class="appHeader">
+    <div class="wrap">
+      <div class="headerRow">
+        <div class="brand">
+          <div class="brandIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 21s-7-4.5-9-9.5C1.5 7.5 4 5 6.8 5c1.6 0 3 .8 3.9 2 1-1.2 2.3-2 3.9-2C17.4 5 19.9 7.5 21 11.5 19 16.5 12 21 12 21Z" stroke="currentColor" stroke-width="1.8" />
+              <path d="M7 12h3l1-2 2 4 1-2h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <h1>Podsumowania</h1>
+            <div class="sub">Wykresy i statystyki z logów (lokalnie w przeglądarce).</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <a class="linkBtn" href="index.html">Wróć</a>
+          <a class="linkBtn" href="settings.html">Ustawienia</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid single">
+    <div class="card">
+      <div class="topbar">
+        <div class="filters">
+          <label style="margin:0;">
+            <span class="small">Zakres</span><br/>
+            <select id="range">
+              <option value="7">Ostatnie 7 dni</option>
+              <option value="30" selected>Ostatnie 30 dni</option>
+              <option value="90">Ostatnie 90 dni</option>
+              <option value="all">Wszystko</option>
+            </select>
+          </label>
+
+          <label style="margin:0;">
+            <span class="small">Typ wpisu</span><br/>
+            <select id="typeFilter">
+              <option value="all" selected>Wszystkie</option>
+              <option value="bp">BP</option>
+              <option value="log">Log (objawy/analiza)</option>
+              <option value="food">Jedzenie/płyny</option>
+              <option value="event">Wydarzenia</option>
+              <option value="meds">Leki</option>
+            </select>
+          </label>
+
+          <label style="margin:0;">
+            <span class="small">Target wody (ml/dzień)</span><br/>
+            <input id="waterTarget" inputmode="numeric" placeholder="np. 2000" style="max-width:140px;" />
+          </label>
+        </div>
+
+        <div class="pill">
+          Wpisów: <strong id="count">0</strong>
+        </div>
+      </div>
+
+      <div class="cardBody">
+        <div class="row3">
+          <div class="item" style="padding:12px;">
+            <div class="small muted">Średnia BP (zakres)</div>
+            <div style="margin-top:6px; font-weight:900; font-family: var(--mono);">
+              <span id="avgBp">-/-</span>
+            </div>
+          </div>
+          <div class="item" style="padding:12px;">
+            <div class="small muted">Średnie tętno (zakres)</div>
+            <div style="margin-top:6px; font-weight:900; font-family: var(--mono);">
+              <span id="avgPulse">-</span>
+            </div>
+          </div>
+          <div class="item" style="padding:12px;">
+            <div class="small muted">Średnia woda efektywna (ml/dzień)</div>
+            <div style="margin-top:6px; font-weight:900; font-family: var(--mono);">
+              <span id="avgWater">-</span>
+            </div>
+            <div class="small muted" style="margin-top:6px;">
+              % targetu: <strong id="avgWaterPct">-</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="block">
+          <h3 class="sectionTitle">Ciśnienie (SYS/DIA)</h3>
+          <canvas id="chartBp" height="110"></canvas>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="block">
+          <h3 class="sectionTitle">Tętno</h3>
+          <canvas id="chartPulse" height="110"></canvas>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="block">
+          <h3 class="sectionTitle">Woda dziennie (efektywna, ml)</h3>
+          <div class="small muted">
+            Liczone z pola nawodnienia (waterMl i hydration). Dla starszych wpisów nadal łapie z tekstu, jeśli tam masz ml lub l.
+          </div>
+          <canvas id="chartWater" height="120"></canvas>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="block">
+          <h3 class="sectionTitle">Aktywność logowania</h3>
+          <canvas id="chartEntries" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="themes.js"></script>
+  <script src="summary.js"></script>
+</body>
+</html>

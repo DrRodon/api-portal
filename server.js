@@ -114,6 +114,28 @@ const extractMessageHtml = (payload) => {
   return "";
 };
 
+const sendUiFile = (res, fileName) => {
+  res.sendFile(path.join(__dirname, fileName));
+};
+
+app.get("/", (_req, res) => {
+  sendUiFile(res, "index.html");
+});
+
+app.get("/index.html", (_req, res) => {
+  sendUiFile(res, "index.html");
+});
+
+app.get("/styles.css", (_req, res) => {
+  sendUiFile(res, "styles.css");
+});
+
+app.get("/script.js", (_req, res) => {
+  sendUiFile(res, "script.js");
+});
+
+app.use("/bp-chatlog", express.static(path.join(__dirname, "bp-chatlog")));
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
