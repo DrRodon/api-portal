@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl">
   <head>
     <meta charset="utf-8" />
@@ -27,7 +27,7 @@
 
       <a
         class="tile tile--active tile--gmail"
-        href="http://localhost:3000/auth"
+        href="/auth"
         aria-controls="gmail-preview"
         aria-expanded="false"
       >
@@ -45,8 +45,8 @@
         <div class="gmail-preview__header">
           <div>
             <p class="gmail-preview__eyebrow">Gmail</p>
-            <h2>Podglad skrzynki</h2>
-            <p class="gmail-preview__lede">Nieprzeczytane wiadomosci z inboxa.</p>
+            <h2>Podgląd skrzynki</h2>
+            <p class="gmail-preview__lede">Nieprzeczytane wiadomości z inboxa.</p>
           </div>
           <div class="gmail-preview__actions">
             <a
@@ -56,10 +56,10 @@
               rel="noreferrer"
               id="gmail-preview-open"
             >
-              Otworz Gmail
+              Otwórz Gmail
             </a>
-            <div class="gmail-preview__detail-actions" aria-label="Akcje wiadomosci">
-              <button class="gmail-preview__icon gmail-preview__action" type="button" id="gmail-action-trash" aria-label="Usun">
+            <div class="gmail-preview__detail-actions" aria-label="Akcje wiadomości">
+              <button class="gmail-preview__icon gmail-preview__action" type="button" id="gmail-action-trash" aria-label="Usuń">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M4 7h16M9 7V5h6v2M9 11v6M15 11v6M6 7l1 12h10l1-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
@@ -71,7 +71,7 @@
                 </svg>
               </button>
             </div>
-            <button class="gmail-preview__icon gmail-preview__back" type="button" id="gmail-preview-back" aria-label="Powrot" hidden>
+            <button class="gmail-preview__icon gmail-preview__back" type="button" id="gmail-preview-back" aria-label="Powrót" hidden>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
@@ -82,11 +82,11 @@
           </div>
         </div>
         <div class="gmail-preview__body" id="gmail-preview-body">
-          <div class="gmail-preview__empty">Laduje podglad...</div>
+          <div class="gmail-preview__empty">Ładuje podgląd...</div>
         </div>
         <div class="gmail-preview__footer">
-          <a class="gmail-preview__link gmail-preview__link--ghost" href="http://localhost:3000/auth" id="gmail-preview-auth">
-            Polacz konto
+          <a class="gmail-preview__link gmail-preview__link--ghost" href="/auth" id="gmail-preview-auth">
+            Połącz konto
           </a>
         </div>
       </section>
@@ -133,7 +133,7 @@
         <span class="theme-switch__label">Motyw</span>
         <select id="theme-select" class="theme-switch__control">
           <option value="auto">Auto</option>
-          <option value="day">Dzien</option>
+          <option value="day">Dzień</option>
           <option value="night">Noc</option>
         </select>
       </label>
