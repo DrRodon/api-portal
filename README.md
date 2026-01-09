@@ -6,7 +6,7 @@
 2) Copy .env.example to .env and fill values:
    - PowerShell: Copy-Item .env.example .env
 3) npm start
-4) Open http://localhost:3000 and finish Google OAuth
+4) Open http://localhost:3000 and finish Google OAuth (do not open index.html via file://)
 
 ## Gmail panel
 
@@ -17,6 +17,12 @@
 
 OAuth scope required:
 - https://www.googleapis.com/auth/gmail.modify
+
+Optional settings (.env):
+- HOST=127.0.0.1
+- ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+- PORTAL_TOKEN= (leave empty to auto-generate)
+- MAX_PREVIEW_MESSAGES=0 (0 = no limit)
 
 ## Secrets and local data
 

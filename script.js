@@ -23,6 +23,8 @@ let gmailPreviewOpen = false;
 let gmailDetailOpen = false;
 let currentMessageId = null;
 let previewCloseHandler = null;
+let portalToken = null;
+let portalTokenPromise = null;
 
 const isNightTime = () => {
   const hour = new Date().getHours();
@@ -35,6 +37,37 @@ const revealTiles = () => {
       tile.classList.add("is-visible");
     }, 120 * index);
   });
+};
+
+const getPortalToken = async () => {
+  if (portalToken) {
+    return portalToken;
+  }
+  if (!portalTokenPromise) {
+    portalTokenPromise = fetch("/api/config", { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Config load failed");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        portalToken = data.token;
+        return portalToken;
+      })
+      .catch((error) => {
+        portalTokenPromise = null;
+        throw error;
+      });
+  }
+  return portalTokenPromise;
+};
+
+const fetchWithToken = async (url, options = {}) => {
+  const token = await getPortalToken();
+  const headers = new Headers(options.headers || {});
+  headers.set("X-Portal-Token", token);
+  return fetch(url, { ...options, headers });
 };
 
 const setPreviewAuthVisible = (visible) => {
@@ -139,7 +172,7 @@ const renderMessageDetail = (message) => {
     frame.className = "gmail-preview__detail-frame";
     frame.setAttribute("sandbox", "");
     frame.setAttribute("referrerpolicy", "no-referrer");
-    frame.setAttribute("title", "Podglad wiadomosci");
+    frame.setAttribute("title", "PodglÄ…d wiadomoĹ›ci");
     frame.srcdoc = message.html;
     body = frame;
   } else {
@@ -160,13 +193,13 @@ const loadGmailMessage = async (messageId) => {
     return;
   }
   setPreviewAuthVisible(false);
-  setPreviewEmpty("Laduje wiadomosc...");
+  setPreviewEmpty("Ładuje wiadomość...");
   setDetailMode(true);
 
   try {
-    const response = await fetch(`http://localhost:3000/api/gmail/message/${messageId}`);
+    const response = await fetchWithToken(`/api/gmail/message/${messageId}`);
     if (!response.ok) {
-      setPreviewEmpty("Nie mozna pobrac wiadomosci.");
+      setPreviewEmpty("Nie można pobrać wiadomości.");
       return;
     }
     const data = await response.json();
@@ -176,7 +209,7 @@ const loadGmailMessage = async (messageId) => {
     }
     renderMessageDetail(data.message);
   } catch (error) {
-    setPreviewEmpty("Nie mozna polaczyc z backendem.");
+    setPreviewEmpty("Nie można połączyć z backendem.");
   }
 };
 
@@ -188,13 +221,13 @@ const loadGmailPreview = async () => {
   currentMessageId = null;
   setDetailMode(false);
   setPreviewAuthVisible(false);
-  setPreviewEmpty("Laduje podglad...");
+  setPreviewEmpty("Ładuje podgląd...");
 
   try {
-    const response = await fetch("http://localhost:3000/api/gmail/preview");
+    const response = await fetchWithToken("/api/gmail/preview");
     if (!response.ok) {
       setPreviewAuthVisible(true);
-      setPreviewEmpty("Polacz konto, aby zobaczyc skrzynke.");
+      setPreviewEmpty("Połącz konto, aby zobaczyć skrzynkę.");
       return;
     }
 
@@ -207,14 +240,14 @@ const loadGmailPreview = async () => {
 
     const messages = Array.isArray(data.messages) ? data.messages : [];
     if (!messages.length) {
-      setPreviewEmpty("Brak wiadomosci w skrzynce.");
+      setPreviewEmpty("Brak wiadomości w skrzynce.");
       return;
     }
 
     renderPreviewList(messages);
   } catch (error) {
     setPreviewAuthVisible(true);
-    setPreviewEmpty("Nie mozna polaczyc z backendem.");
+    setPreviewEmpty("Nie można połączyć z backendem.");
   }
 };
 
@@ -225,15 +258,15 @@ const runMessageAction = async (endpoint) => {
   setPreviewAuthVisible(false);
   setPreviewEmpty("Wykonywanie akcji...");
   try {
-    const response = await fetch(endpoint, { method: "POST" });
+    const response = await fetchWithToken(endpoint, { method: "POST" });
     if (!response.ok) {
-      setPreviewEmpty("Nie mozna wykonac akcji.");
+      setPreviewEmpty("Nie można wykonać akcji.");
       return;
     }
     updateGmailStatus();
     loadGmailPreview();
   } catch (error) {
-    setPreviewEmpty("Nie mozna polaczyc z backendem.");
+    setPreviewEmpty("Nie można połączyć z backendem.");
   }
 };
 
@@ -299,11 +332,11 @@ const setGmailDisconnected = (message) => {
   gmailIsConnected = false;
   gmailCount.textContent = "--";
   gmailStatus.textContent = message;
-  gmailCta.textContent = "Polacz konto";
-  gmailTile.setAttribute("href", "http://localhost:3000/auth");
+  gmailCta.textContent = "Połącz konto";
+  gmailTile.setAttribute("href", "/auth");
   if (gmailPreviewOpen && !gmailDetailOpen) {
     setPreviewAuthVisible(true);
-    setPreviewEmpty("Polacz konto, aby zobaczyc skrzynke.");
+    setPreviewEmpty("Połącz konto, aby zobaczyć skrzynkę.");
   }
 };
 
@@ -315,7 +348,7 @@ const setGmailConnected = (unread) => {
   gmailIsConnected = true;
   gmailCount.textContent = unread.toString();
   gmailStatus.textContent = "Nieprzeczytane";
-  gmailCta.textContent = "Otworz Gmail";
+  gmailCta.textContent = "Otwórz Gmail";
   gmailTile.setAttribute("href", "https://mail.google.com/");
   if (gmailPreviewOpen && !gmailDetailOpen) {
     loadGmailPreview();
@@ -339,7 +372,7 @@ const startBackendGrace = () => {
     return;
   }
 
-  setGmailDisconnected("Laczenie...");
+  setGmailDisconnected("Łączenie...");
 
   backendGraceTimer = setTimeout(() => {
     backendGraceTimer = null;
@@ -359,10 +392,10 @@ const updateGmailStatus = async () => {
   }
 
   try {
-    const response = await fetch("http://localhost:3000/api/gmail/unread");
+    const response = await fetchWithToken("/api/gmail/unread");
     if (!response.ok) {
       stopBackendGrace();
-      setGmailDisconnected("Polacz konto");
+      setGmailDisconnected("Połącz konto");
       return;
     }
 
@@ -422,13 +455,13 @@ if (gmailPreviewBack) {
 
 if (gmailActionTrash) {
   gmailActionTrash.addEventListener("click", () => {
-    runMessageAction(`http://localhost:3000/api/gmail/message/${currentMessageId}/trash`);
+    runMessageAction(`/api/gmail/message/${currentMessageId}/trash`);
   });
 }
 
 if (gmailActionRead) {
   gmailActionRead.addEventListener("click", () => {
-    runMessageAction(`http://localhost:3000/api/gmail/message/${currentMessageId}/read`);
+    runMessageAction(`/api/gmail/message/${currentMessageId}/read`);
   });
 }
 
