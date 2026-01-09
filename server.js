@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -6,7 +7,21 @@ const { google } = require("googleapis");
 
 require("dotenv").config();
 
+const HOST = process.env.HOST || "127.0.0.1";
 const PORT = process.env.PORT || 3000;
+const ALLOWED_ORIGINS = new Set(
+  (process.env.ALLOWED_ORIGINS ||
+    `http://localhost:${PORT},http://127.0.0.1:${PORT}`)
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+const PORTAL_TOKEN =
+  process.env.PORTAL_TOKEN || crypto.randomBytes(24).toString("hex");
+const MAX_PREVIEW_MESSAGES = Number.parseInt(
+  process.env.MAX_PREVIEW_MESSAGES || "0",
+  10
+);
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI =
@@ -14,7 +29,19 @@ const REDIRECT_URI =
 const TOKEN_PATH = path.join(__dirname, "data", "tokens.json");
 
 const app = express();
-app.use(cors({ origin: "*" }));
+app.disable("x-powered-by");
+app.use(
+  "/api",
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, false);
+      }
+      return callback(null, ALLOWED_ORIGINS.has(origin));
+    },
+    allowedHeaders: ["Content-Type", "X-Portal-Token"],
+  })
+);
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
@@ -114,8 +141,44 @@ const extractMessageHtml = (payload) => {
   return "";
 };
 
+const sendUiFile = (res, fileName) => {
+  res.sendFile(path.join(__dirname, fileName));
+};
+
+app.get("/", (_req, res) => {
+  sendUiFile(res, "index.html");
+});
+
+app.get("/styles.css", (_req, res) => {
+  sendUiFile(res, "styles.css");
+});
+
+app.get("/script.js", (_req, res) => {
+  sendUiFile(res, "script.js");
+});
+
+app.get("/favicon.ico", (_req, res) => {
+  res.status(204).end();
+});
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get("/api/config", (_req, res) => {
+  res.json({ token: PORTAL_TOKEN });
+});
+
+app.use("/api", (req, res, next) => {
+  if (req.path === "/config") {
+    return next();
+  }
+  const token = req.get("X-Portal-Token");
+  if (token !== PORTAL_TOKEN) {
+    res.status(401).json({ ok: false });
+    return;
+  }
+  next();
 });
 
 app.get("/auth", (_req, res) => {
@@ -186,27 +249,34 @@ app.get("/api/gmail/preview", async (_req, res) => {
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
     let pageToken = undefined;
     const messageIds = [];
+    const previewLimit =
+      Number.isFinite(MAX_PREVIEW_MESSAGES) && MAX_PREVIEW_MESSAGES > 0
+        ? MAX_PREVIEW_MESSAGES
+        : 0;
+    const pageSize = previewLimit > 0 ? Math.min(previewLimit, 100) : 100;
 
     do {
       const list = await gmail.users.messages.list({
         userId: "me",
         labelIds: ["INBOX"],
         q: "is:unread",
-        maxResults: 100,
+        maxResults: pageSize,
         pageToken,
       });
       if (Array.isArray(list.data.messages)) {
         messageIds.push(...list.data.messages);
       }
       pageToken = list.data.nextPageToken;
-    } while (pageToken);
-    if (!messageIds.length) {
+    } while (pageToken && (!previewLimit || messageIds.length < previewLimit));
+    const limitedIds =
+      previewLimit > 0 ? messageIds.slice(0, previewLimit) : messageIds;
+    if (!limitedIds.length) {
       res.json({ connected: true, messages: [] });
       return;
     }
 
-    const details = await Promise.all(
-      messageIds.map((message) =>
+    const details = await Promise.allSettled(
+      limitedIds.map((message) =>
         gmail.users.messages.get({
           userId: "me",
           id: message.id,
@@ -216,18 +286,21 @@ app.get("/api/gmail/preview", async (_req, res) => {
       )
     );
 
-    const messages = details.map((item) => {
-      const headers = item.data.payload?.headers || [];
-      const getHeader = (name) =>
-        headers.find((header) => header.name === name)?.value || "";
-      return {
-        id: item.data.id,
-        from: getHeader("From"),
-        subject: getHeader("Subject"),
-        date: getHeader("Date"),
-        snippet: item.data.snippet || "",
-      };
-    });
+    const messages = details
+      .filter((result) => result.status === "fulfilled")
+      .map((result) => {
+        const item = result.value;
+        const headers = item.data.payload?.headers || [];
+        const getHeader = (name) =>
+          headers.find((header) => header.name === name)?.value || "";
+        return {
+          id: item.data.id,
+          from: getHeader("From"),
+          subject: getHeader("Subject"),
+          date: getHeader("Date"),
+          snippet: item.data.snippet || "",
+        };
+      });
 
     res.json({ connected: true, messages });
   } catch (error) {
@@ -315,6 +388,6 @@ app.post("/api/gmail/message/:id/trash", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Gmail local API listening on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Gmail local API listening on http://${HOST}:${PORT}`);
 });
