@@ -25,7 +25,12 @@
         <span class="tile__cta">Otwórz aplikację</span>
       </a>
 
-      <a class="tile tile--active tile--gmail" href="http://localhost:3000/auth">
+      <a
+        class="tile tile--active tile--gmail"
+        href="http://localhost:3000/auth"
+        aria-controls="gmail-preview"
+        aria-expanded="false"
+      >
         <div class="tile__tag">Gmail</div>
         <h2>Skrzynka Gmail</h2>
         <p>Podgląd liczby nieprzeczytanych wiadomości na żywo.</p>
@@ -35,6 +40,56 @@
         </div>
         <span class="tile__cta" id="gmail-cta">Połącz konto</span>
       </a>
+
+      <section class="gmail-preview" id="gmail-preview" aria-live="polite" hidden>
+        <div class="gmail-preview__header">
+          <div>
+            <p class="gmail-preview__eyebrow">Gmail</p>
+            <h2>Podglad skrzynki</h2>
+            <p class="gmail-preview__lede">Nieprzeczytane wiadomosci z inboxa.</p>
+          </div>
+          <div class="gmail-preview__actions">
+            <a
+              class="gmail-preview__link gmail-preview__link--header"
+              href="https://mail.google.com/"
+              target="_blank"
+              rel="noreferrer"
+              id="gmail-preview-open"
+            >
+              Otworz Gmail
+            </a>
+            <div class="gmail-preview__detail-actions" aria-label="Akcje wiadomosci">
+              <button class="gmail-preview__icon gmail-preview__action" type="button" id="gmail-action-trash" aria-label="Usun">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 7h16M9 7V5h6v2M9 11v6M15 11v6M6 7l1 12h10l1-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <button class="gmail-preview__icon gmail-preview__action" type="button" id="gmail-action-read" aria-label="Oznacz jako przeczytane">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 7h16v10H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                  <path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <button class="gmail-preview__icon gmail-preview__back" type="button" id="gmail-preview-back" aria-label="Powrot" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+            <button class="gmail-preview__icon gmail-preview__close" type="button" id="gmail-preview-close" aria-label="Zamknij">
+              Zamknij
+            </button>
+          </div>
+        </div>
+        <div class="gmail-preview__body" id="gmail-preview-body">
+          <div class="gmail-preview__empty">Laduje podglad...</div>
+        </div>
+        <div class="gmail-preview__footer">
+          <a class="gmail-preview__link gmail-preview__link--ghost" href="http://localhost:3000/auth" id="gmail-preview-auth">
+            Polacz konto
+          </a>
+        </div>
+      </section>
 
       <div class="tile tile--placeholder" role="button" aria-disabled="true">
         <div class="tile__tag">Wkrótce</div>

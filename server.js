@@ -40,6 +40,80 @@ const saveTokens = async (tokens) => {
   await fs.writeFile(TOKEN_PATH, JSON.stringify(tokens, null, 2));
 };
 
+const decodeBase64Url = (input) => {
+  if (!input) {
+    return "";
+  }
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  return Buffer.from(padded, "base64").toString("utf8");
+};
+
+const stripHtml = (html) => {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const findPartByMime = (payload, mimeType) => {
+  if (!payload) {
+    return null;
+  }
+  if (payload.mimeType === mimeType && payload.body?.data) {
+    return payload;
+  }
+  if (!payload.parts) {
+    return null;
+  }
+  for (const part of payload.parts) {
+    const found = findPartByMime(part, mimeType);
+    if (found) {
+      return found;
+    }
+  }
+  return null;
+};
+
+const extractMessageText = (payload) => {
+  if (!payload) {
+    return "";
+  }
+  if (payload.body?.data) {
+    const raw = decodeBase64Url(payload.body.data);
+    if (payload.mimeType === "text/html") {
+      return stripHtml(raw);
+    }
+    return raw;
+  }
+  const plainPart = findPartByMime(payload, "text/plain");
+  if (plainPart?.body?.data) {
+    return decodeBase64Url(plainPart.body.data);
+  }
+  const htmlPart = findPartByMime(payload, "text/html");
+  if (htmlPart?.body?.data) {
+    const html = decodeBase64Url(htmlPart.body.data);
+    return stripHtml(html);
+  }
+  return "";
+};
+
+const extractMessageHtml = (payload) => {
+  if (!payload) {
+    return "";
+  }
+  if (payload.mimeType === "text/html" && payload.body?.data) {
+    return decodeBase64Url(payload.body.data);
+  }
+  const htmlPart = findPartByMime(payload, "text/html");
+  if (htmlPart?.body?.data) {
+    return decodeBase64Url(htmlPart.body.data);
+  }
+  return "";
+};
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
@@ -53,7 +127,7 @@ app.get("/auth", (_req, res) => {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
-    scope: ["https://www.googleapis.com/auth/gmail.readonly"],
+    scope: ["https://www.googleapis.com/auth/gmail.modify"],
   });
 
   res.redirect(authUrl);
@@ -97,6 +171,147 @@ app.get("/api/gmail/unread", async (_req, res) => {
     });
   } catch (error) {
     res.status(500).json({ connected: false, unread: null });
+  }
+});
+
+app.get("/api/gmail/preview", async (_req, res) => {
+  const tokens = await loadTokens();
+  if (!tokens) {
+    res.status(401).json({ connected: false, messages: [] });
+    return;
+  }
+
+  try {
+    oauth2Client.setCredentials(tokens);
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+    let pageToken = undefined;
+    const messageIds = [];
+
+    do {
+      const list = await gmail.users.messages.list({
+        userId: "me",
+        labelIds: ["INBOX"],
+        q: "is:unread",
+        maxResults: 100,
+        pageToken,
+      });
+      if (Array.isArray(list.data.messages)) {
+        messageIds.push(...list.data.messages);
+      }
+      pageToken = list.data.nextPageToken;
+    } while (pageToken);
+    if (!messageIds.length) {
+      res.json({ connected: true, messages: [] });
+      return;
+    }
+
+    const details = await Promise.all(
+      messageIds.map((message) =>
+        gmail.users.messages.get({
+          userId: "me",
+          id: message.id,
+          format: "metadata",
+          metadataHeaders: ["From", "Subject", "Date"],
+        })
+      )
+    );
+
+    const messages = details.map((item) => {
+      const headers = item.data.payload?.headers || [];
+      const getHeader = (name) =>
+        headers.find((header) => header.name === name)?.value || "";
+      return {
+        id: item.data.id,
+        from: getHeader("From"),
+        subject: getHeader("Subject"),
+        date: getHeader("Date"),
+        snippet: item.data.snippet || "",
+      };
+    });
+
+    res.json({ connected: true, messages });
+  } catch (error) {
+    res.status(500).json({ connected: false, messages: [] });
+  }
+});
+
+app.get("/api/gmail/message/:id", async (req, res) => {
+  const tokens = await loadTokens();
+  if (!tokens) {
+    res.status(401).json({ connected: false, message: null });
+    return;
+  }
+
+  try {
+    oauth2Client.setCredentials(tokens);
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+    const item = await gmail.users.messages.get({
+      userId: "me",
+      id: req.params.id,
+      format: "full",
+    });
+    const headers = item.data.payload?.headers || [];
+    const getHeader = (name) =>
+      headers.find((header) => header.name === name)?.value || "";
+    const bodyText = extractMessageText(item.data.payload);
+    const bodyHtml = extractMessageHtml(item.data.payload);
+
+    res.json({
+      connected: true,
+      message: {
+        id: item.data.id,
+        from: getHeader("From"),
+        subject: getHeader("Subject"),
+        date: getHeader("Date"),
+        body: bodyText || item.data.snippet || "",
+        html: bodyHtml || "",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ connected: false, message: null });
+  }
+});
+
+app.post("/api/gmail/message/:id/read", async (req, res) => {
+  const tokens = await loadTokens();
+  if (!tokens) {
+    res.status(401).json({ ok: false });
+    return;
+  }
+
+  try {
+    oauth2Client.setCredentials(tokens);
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+    await gmail.users.messages.modify({
+      userId: "me",
+      id: req.params.id,
+      requestBody: {
+        removeLabelIds: ["UNREAD"],
+      },
+    });
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/gmail/message/:id/trash", async (req, res) => {
+  const tokens = await loadTokens();
+  if (!tokens) {
+    res.status(401).json({ ok: false });
+    return;
+  }
+
+  try {
+    oauth2Client.setCredentials(tokens);
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+    await gmail.users.messages.trash({
+      userId: "me",
+      id: req.params.id,
+    });
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ ok: false });
   }
 });
 
