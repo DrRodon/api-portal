@@ -10,59 +10,78 @@
     <div class="backdrop" aria-hidden="true"></div>
     <header class="hero">
       <p class="eyebrow">Portal aplikacji</p>
-      <h1>Twoje narzędzia zdrowia w jednym miejscu</h1>
-      <p class="lede">
-        Wybierz aplikację z kafelków poniżej. Każdy moduł otwiera się na osobnej stronie,
-        a wolne sloty czekają na kolejne pomysły.
+      <h1>Twoje aplikacje w jednym miejscu</h1>
+      <p class="lede lede__shadow">
+        Wybierz aplikację z kafelków poniżej.
+        Każdy moduł otwiera się na osobnej stronie, a wolne sloty czekają na kolejne pomysły.
       </p>
     </header>
 
     <main class="grid" aria-label="Lista aplikacji">
-      <a class="tile tile--active" href="apps/notatnik-cisnienia/index.html">
+      <a class="tile tile--active" href="file:///C:/Users/krzys/Desktop/GitHub/bp-chatlog/index.html">
         <div class="tile__tag">Aktywne</div>
         <h2>Notatnik ciśnienia</h2>
         <p>Rejestrowanie pomiarów i analiza trendów w jednym widoku.</p>
         <span class="tile__cta">Otwórz aplikację</span>
       </a>
 
+      <a class="tile tile--active tile--gmail" href="http://localhost:3000/auth">
+        <div class="tile__tag">Gmail</div>
+        <h2>Skrzynka Gmail</h2>
+        <p>Podgląd liczby nieprzeczytanych wiadomości na żywo.</p>
+        <div class="tile__status">
+          <span class="tile__badge" id="gmail-count">...</span>
+          <span class="tile__status-text" id="gmail-status">Sprawdzanie połączenia</span>
+        </div>
+        <span class="tile__cta" id="gmail-cta">Połącz konto</span>
+      </a>
+
       <div class="tile tile--placeholder" role="button" aria-disabled="true">
         <div class="tile__tag">Wkrótce</div>
         <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł zdrowia.</p>
+        <p>Slot gotowy na nowy moduł.</p>
         <span class="tile__cta">Dodaj pomysł</span>
       </div>
 
       <div class="tile tile--placeholder" role="button" aria-disabled="true">
         <div class="tile__tag">Wkrótce</div>
         <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł zdrowia.</p>
+        <p>Slot gotowy na nowy moduł.</p>
         <span class="tile__cta">Dodaj pomysł</span>
       </div>
 
       <div class="tile tile--placeholder" role="button" aria-disabled="true">
         <div class="tile__tag">Wkrótce</div>
         <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł zdrowia.</p>
+        <p>Slot gotowy na nowy moduł.</p>
         <span class="tile__cta">Dodaj pomysł</span>
       </div>
 
       <div class="tile tile--placeholder" role="button" aria-disabled="true">
         <div class="tile__tag">Wkrótce</div>
         <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł zdrowia.</p>
+        <p>Slot gotowy na nowy moduł.</p>
         <span class="tile__cta">Dodaj pomysł</span>
       </div>
 
       <div class="tile tile--placeholder" role="button" aria-disabled="true">
         <div class="tile__tag">Wkrótce</div>
         <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł zdrowia.</p>
+        <p>Slot gotowy na nowy moduł.</p>
         <span class="tile__cta">Dodaj pomysł</span>
       </div>
     </main>
 
     <footer class="footer">
-      <span>Portal zaprojektowany pod styl Notatnika ciśnienia</span>
+      <span>Portal aplikacji - wersja bazowa</span>
+      <label class="theme-switch" for="theme-select">
+        <span class="theme-switch__label">Motyw</span>
+        <select id="theme-select" class="theme-switch__control">
+          <option value="auto">Auto</option>
+          <option value="day">Dzien</option>
+          <option value="night">Noc</option>
+        </select>
+      </label>
     </footer>
 
     <script src="script.js"></script>
