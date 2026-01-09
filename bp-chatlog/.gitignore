@@ -1,0 +1,16 @@
+# dane / logi / backupy
+*.json
+*backup*.json
+*autobackup*.json
+
+# jeśli masz konkretny plik z danymi, dopisz go jawnie (przykład)
+# notatnik-autobackup.json
+
+# typowe śmieci
+.DS_Store
+Thumbs.db
+
+# node / tooling (jeśli kiedyś dojdzie)
+node_modules/
+dist/
+build/

@@ -149,6 +149,10 @@ app.get("/", (_req, res) => {
   sendUiFile(res, "index.html");
 });
 
+app.get("/index.html", (_req, res) => {
+  sendUiFile(res, "index.html");
+});
+
 app.get("/styles.css", (_req, res) => {
   sendUiFile(res, "styles.css");
 });
@@ -157,6 +161,7 @@ app.get("/script.js", (_req, res) => {
   sendUiFile(res, "script.js");
 });
 
+app.use("/bp-chatlog", express.static(path.join(__dirname, "bp-chatlog")));
 app.get("/favicon.ico", (_req, res) => {
   res.status(204).end();
 });
@@ -391,3 +396,4 @@ app.post("/api/gmail/message/:id/trash", async (req, res) => {
 app.listen(PORT, HOST, () => {
   console.log(`Gmail local API listening on http://${HOST}:${PORT}`);
 });
+

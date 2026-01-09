@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="pl" data-mode="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ustawienia – Notatnik ciśnienia i analiza</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <header class="appHeader">
+    <div class="wrap headerRow">
+      <div class="brand">
+        <div class="brandIcon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M20 12h-3l-2 5-4-12-2 7H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 21s-7-4.5-9-9a5.5 5.5 0 0 1 9-5 5.5 5.5 0 0 1 9 5c-2 4.5-9 9-9 9Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Ustawienia</h1>
+          <div class="sub">Wygląd, leki, import/export.</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <a class="linkBtn" href="./index.html" title="Wróć">Wróć</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid single">
+    <section class="card">
+      <div class="cardHead">
+        <h2>Ustawienia</h2>
+      </div>
+
+      <div class="cardBodyScroll">
+        <h2 class="sectionTitle">Wygląd</h2>
+
+        <div class="block">
+          <div>
+            <label for="themeSelect">Motyw</label>
+            <select id="themeSelect"></select>
+          </div>
+
+          <div class="modeRow">
+            <div>
+              <div class="modeTitle">Tryb ciemny</div>
+              <div class="small">Zmienia tło i kontrast.</div>
+            </div>
+
+            <label class="switch" aria-label="Tryb ciemny">
+              <input type="checkbox" id="modeToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2 class="sectionTitle">Leki</h2>
+
+        <div class="small" style="margin-bottom:10px;">
+          Dodaj leki, które chcesz kontrolować.
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="medName">Nazwa</label>
+            <input id="medName" placeholder="np. Atacand" />
+          </div>
+          <div>
+            <label for="medDose">Dawka</label>
+            <input id="medDose" placeholder="np. 4 mg" />
+          </div>
+        </div>
+
+                        <div class="row mt10">
+          <div class="rowInline">
+            <div>
+              <label for="medTime">Domyślna godzina</label>
+              <input id="medTime" type="time" value="07:30" />
+            </div>
+            <div class="toggleField">
+              <div class="toggleLabel">Dora&#x17A;ne</div>
+              <label class="switch" aria-label="Dora&#x17A;ne">
+                <input type="checkbox" id="medPrn" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <div style="display:grid; align-content:end; gap:8px;">
+            <button id="addMedBtn" type="button" class="ok">Dodaj lek</button>
+            <button id="cancelMedBtn" type="button" class="secondary hidden">Anuluj</button>
+          </div>
+        </div>
+
+        <div class="mt10" id="medList"></div>
+
+        <div class="hr"></div>
+
+        <h2 class="sectionTitle">Dane</h2>
+
+        <div class="small" style="margin-bottom:10px;">
+          Export i import działają na JSONie całej bazy w localStorage.
+        </div>
+
+        <div class="btns">
+          <button id="exportAllBtn" type="button">Export JSON</button>
+          <button id="importBtn" type="button" class="secondary">Import JSON</button>
+          <button id="exportMedsBtn" type="button">Export leków</button>
+          <button id="importMedsBtn" type="button" class="secondary">Import leków</button>
+          <button id="wipeBtn" type="button" class="danger">Wyczyść wszystko</button>
+          <input id="importFile" type="file" accept="application/json" class="hidden" />
+          <input id="importMedsFile" type="file" accept="application/json" class="hidden" />
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="btns">
+          <button id="resetSettingsBtn" class="secondary" type="button">Reset ustawień</button>
+        </div>
+
+        <div class="small" style="margin-top:10px;">
+          Dane są trzymane lokalnie w przeglądarce (localStorage).
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="./themes.js"></script>
+  <script>
+    (() => {
+      window.Theme.initThemeUI();
+
+      const MEDS_KEY = "bp_chatlog_meds_v1";
+      const STORAGE_KEY = "bp_chatlog_items_v4";
+
+      function toast(msg){
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.remove("hidden");
+        clearTimeout(toast._tm);
+        toast._tm = setTimeout(() => t.classList.add("hidden"), 2200);
+      }
+
+      function slugify(s){
+        return String(s || "")
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9\-]/g, "");
+      }
+
+      function escapeAttr(s){
+        return String(s || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function loadMeds(){
+        try{
+          const raw = localStorage.getItem(MEDS_KEY);
+          const arr = raw ? JSON.parse(raw) : [];
+          return Array.isArray(arr) ? arr : [];
+        }catch{
+          return [];
+        }
+      }
+
+      function saveMeds(meds){
+        localStorage.setItem(MEDS_KEY, JSON.stringify(meds));
+      }
+
+      function renderMeds(){
+        const box = document.getElementById("medList");
+        const meds = loadMeds();
+
+        if(!meds.length){
+          box.innerHTML = `<div class="small">Brak leków na liście.</div>`;
+          return;
+        }
+
+        box.innerHTML = "";
+        meds.forEach((m) => {
+          const safeName = escapeAttr(m.name || "-");
+          const safeDose = escapeAttr(m.dose || "");
+          const safeTime = escapeAttr(m.defaultTime || "");
+          const prnLabel = m.prn ? "dora\u017anie" : "";
+          const tooltip = [m.name, m.dose, prnLabel || m.defaultTime].filter(Boolean).join(" | ");
+          const safeTooltip = escapeAttr(tooltip || m.name || "");
+          const row = document.createElement("div");
+          row.className = "medItem";
+
+          const left = document.createElement("div");
+          left.className = "left";
+          left.innerHTML = `
+            <div class="name tooltipTrigger" data-tooltip="${safeTooltip}"><span class="medNameText">${safeName}</span></div>
+            <div class="hint">${safeDose}${prnLabel ? " | " + prnLabel : (safeTime ? " | " + safeTime : "")} | ${m.active ? "active" : "inactive"}</div>
+          `;
+
+          const right = document.createElement("div");
+          right.className = "right";
+
+          const edit = document.createElement("button");
+          edit.type = "button";
+          edit.className = "secondary";
+          edit.textContent = "Edytuj";
+          edit.onclick = () => {
+            const meds2 = loadMeds();
+            const idx = meds2.findIndex(x => x.id === m.id);
+            if(idx < 0) return;
+            const med = meds2[idx];
+            editingId = med.id;
+            document.getElementById("medName").value = med.name || "";
+            document.getElementById("medDose").value = med.dose || "";
+            if(medTimeInput) medTimeInput.dataset.lastTime = med.defaultTime || "";
+            if(medTimeInput) medTimeInput.value = med.defaultTime || "";
+            if(medPrnToggle) medPrnToggle.checked = Boolean(med.prn);
+            syncMedTimeState();
+            if(addMedBtn) addMedBtn.textContent = "Zapisz zmiany";
+            if(cancelMedBtn) cancelMedBtn.classList.remove("hidden");
+          };
+
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "secondary";
+          toggle.textContent = m.active ? "Dezaktywuj" : "Aktywuj";
+          toggle.onclick = () => {
+            const meds2 = loadMeds();
+            const idx = meds2.findIndex(x => x.id === m.id);
+            if(idx >= 0){
+              meds2[idx].active = !meds2[idx].active;
+              saveMeds(meds2);
+              renderMeds();
+              toast("Zapisano.");
+            }
+          };
+
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "danger";
+          del.textContent = "Usuń";
+          del.onclick = () => {
+            const ok = confirm(`Usunąć lek "${m.name}"?`);
+            if(!ok) return;
+            const meds2 = loadMeds().filter(x => x.id !== m.id);
+            saveMeds(meds2);
+            renderMeds();
+            toast("Usunięto.");
+          };
+
+          right.appendChild(edit);
+          right.appendChild(toggle);
+          right.appendChild(del);
+
+          row.appendChild(left);
+          row.appendChild(right);
+          box.appendChild(row);
+        });
+      }
+
+      const medTimeInput = document.getElementById("medTime");
+      const medPrnToggle = document.getElementById("medPrn");
+      const addMedBtn = document.getElementById("addMedBtn");
+      const cancelMedBtn = document.getElementById("cancelMedBtn");
+      let editingId = null;
+
+      function syncMedTimeState(){
+        if(!medTimeInput || !medPrnToggle) return;
+        if(medPrnToggle.checked){
+          if(!medTimeInput.dataset.lastTime) medTimeInput.dataset.lastTime = medTimeInput.value || "";
+          medTimeInput.value = "";
+          medTimeInput.disabled = true;
+        }else{
+          medTimeInput.disabled = false;
+          if(!medTimeInput.value) medTimeInput.value = medTimeInput.dataset.lastTime || "07:30";
+        }
+      }
+
+      if(medPrnToggle) medPrnToggle.addEventListener("change", syncMedTimeState);
+      syncMedTimeState();
+
+      function resetMedForm(){
+        editingId = null;
+        document.getElementById("medName").value = "";
+        document.getElementById("medDose").value = "";
+        if(medPrnToggle) medPrnToggle.checked = false;
+        if(medTimeInput) medTimeInput.value = medTimeInput.dataset.lastTime || "07:30";
+        syncMedTimeState();
+        if(addMedBtn) addMedBtn.textContent = "Dodaj lek";
+        if(cancelMedBtn) cancelMedBtn.classList.add("hidden");
+      }
+
+      if(cancelMedBtn){
+        cancelMedBtn.addEventListener("click", resetMedForm);
+      }
+
+      addMedBtn.addEventListener("click", () => {
+        const name = document.getElementById("medName").value.trim();
+        const dose = document.getElementById("medDose").value.trim();
+        const isPrn = Boolean(medPrnToggle?.checked);
+        const defaultTime = isPrn ? "" : (medTimeInput?.value || "");
+
+        if(!name) return alert("Podaj nazw? leku.");
+
+        const meds = loadMeds();
+
+        if(editingId){
+          const idx = meds.findIndex(x => x.id === editingId);
+          if(idx >= 0){
+            meds[idx] = { ...meds[idx], name, dose, defaultTime, prn: isPrn };
+            saveMeds(meds);
+            renderMeds();
+            resetMedForm();
+            toast("Zapisano zmiany.");
+            return;
+          }else{
+            editingId = null;
+          }
+        }
+
+        const id = slugify(name);
+        if(meds.some(m => m.id === id)) return alert("Taki lek ju? istnieje.");
+
+        meds.push({ id, name, dose, defaultTime, prn: isPrn, active: true });
+        saveMeds(meds);
+
+        resetMedForm();
+        renderMeds();
+        toast("Dodano lek.");
+      });
+
+      document.getElementById("exportAllBtn").addEventListener("click", () => {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const items = raw ? JSON.parse(raw) : [];
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          app: "bp-chatlog",
+          version: 4,
+          scope: "all",
+          items
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `notatnik-export-${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast("Wyeksportowano.");
+      });
+
+      document.getElementById("importBtn").addEventListener("click", () => {
+        document.getElementById("importFile").click();
+      });
+
+      document.getElementById("exportMedsBtn").addEventListener("click", () => {
+        const meds = loadMeds();
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          app: "bp-chatlog",
+          version: 1,
+          scope: "meds",
+          meds
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `notatnik-leki-${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast("Wyeksportowano leki.");
+      });
+
+      document.getElementById("importMedsBtn").addEventListener("click", () => {
+        document.getElementById("importMedsFile").click();
+      });
+
+      document.getElementById("importFile").addEventListener("change", async (e) => {
+        const f = e.target.files?.[0];
+        if(!f) return;
+        try{
+          const txt = await f.text();
+          const json = JSON.parse(txt);
+          const items = Array.isArray(json?.items) ? json.items : null;
+          if(!items) return alert("Zły format. Oczekuję JSON z polem items[].");
+
+          const ok = confirm(`Zaimportować wpisy: ${items.length}? Nadpisze to obecną bazę.`);
+          if(!ok) return;
+
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+          toast("Zaimportowano.");
+        }catch(err){
+          alert("Import nie wyszedł. JSON jest uszkodzony albo w złym formacie.");
+        }finally{
+          e.target.value = "";
+        }
+      });
+
+      document.getElementById("importMedsFile").addEventListener("change", async (e) => {
+        const f = e.target.files?.[0];
+        if(!f) return;
+        try{
+          const txt = await f.text();
+          const json = JSON.parse(txt);
+          const meds = Array.isArray(json?.meds) ? json.meds : null;
+          if(!meds) return alert("Zły format. Oczekuję JSON z polem meds[].");
+
+          const ok = confirm(`Zaimportować leki: ${meds.length}? Nadpisze to obecną listę.`);
+          if(!ok) return;
+
+          saveMeds(meds);
+          renderMeds();
+          toast("Zaimportowano leki.");
+        }catch(err){
+          alert("Import leków nie wyszedł. JSON jest uszkodzony albo w złym formacie.");
+        }finally{
+          e.target.value = "";
+        }
+      });
+
+      document.getElementById("wipeBtn").addEventListener("click", () => {
+        const ok = confirm("Wyczyścić WSZYSTKIE wpisy? Tego nie cofniesz.");
+        if(!ok) return;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+        toast("Wyczyszczono.");
+      });
+
+      document.getElementById("resetSettingsBtn").addEventListener("click", () => {
+        const ok = confirm("Zresetować ustawienia motywu do domyślnych? (Lista leków zostaje)");
+        if(!ok) return;
+
+        const def = window.Theme.getDefaultSettings();
+        window.Theme.saveSettings(def);
+        window.Theme.applyTheme(def);
+
+        document.getElementById("themeSelect").value = def.themeId;
+        document.getElementById("modeToggle").checked = def.mode === "dark";
+
+        toast("Zresetowano ustawienia.");
+      });
+
+      renderMeds();
+    })();
+  </script>
+</body>
+</html>
