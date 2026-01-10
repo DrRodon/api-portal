@@ -1,4 +1,7 @@
 const tiles = document.querySelectorAll(".tile");
+const notatnikTile = document.querySelector(".tile--notatnik");
+const notatnikPanel = document.getElementById("notatnik-panel");
+const notatnikPanelClose = document.getElementById("notatnik-panel-close");
 const gmailTile = document.querySelector(".tile--gmail");
 const gmailCount = document.getElementById("gmail-count");
 const gmailStatus = document.getElementById("gmail-status");
@@ -21,8 +24,10 @@ let autoRefreshTimer = null;
 let gmailIsConnected = false;
 let gmailPreviewOpen = false;
 let gmailDetailOpen = false;
+let notatnikPanelOpen = false;
 let currentMessageId = null;
 let previewCloseHandler = null;
+let notatnikCloseHandler = null;
 let portalToken = null;
 let portalTokenPromise = null;
 
@@ -309,11 +314,53 @@ const setPreviewOpen = (isOpen) => {
   }
 };
 
+const setNotatnikOpen = (isOpen) => {
+  notatnikPanelOpen = isOpen;
+  if (notatnikPanel) {
+    if (isOpen) {
+      if (notatnikCloseHandler) {
+        notatnikPanel.removeEventListener("transitionend", notatnikCloseHandler);
+        notatnikCloseHandler = null;
+      }
+      notatnikPanel.hidden = false;
+      notatnikPanel.classList.remove("is-closing");
+      requestAnimationFrame(() => {
+        notatnikPanel.classList.add("is-open");
+      });
+    } else {
+      notatnikPanel.classList.remove("is-open");
+      notatnikPanel.classList.add("is-closing");
+      const onTransitionEnd = (event) => {
+        if (event.propertyName !== "opacity") {
+          return;
+        }
+        notatnikPanel.hidden = true;
+        notatnikPanel.classList.remove("is-closing");
+        notatnikPanel.removeEventListener("transitionend", onTransitionEnd);
+        notatnikCloseHandler = null;
+      };
+      notatnikCloseHandler = onTransitionEnd;
+      notatnikPanel.addEventListener("transitionend", onTransitionEnd);
+    }
+  }
+  if (notatnikTile) {
+    notatnikTile.setAttribute("aria-expanded", String(isOpen));
+  }
+};
+
 
 const applyTheme = (mode) => {
   const isNight = mode === "night" || (mode === "auto" && isNightTime());
   document.body.classList.toggle("theme-dark", isNight);
   document.body.dataset.theme = mode;
+  window.dispatchEvent(
+    new CustomEvent("portal:theme-change", {
+      detail: {
+        mode: isNight ? "dark" : "light",
+        theme: mode
+      }
+    })
+  );
 };
 
 const initializeTheme = () => {
@@ -421,6 +468,7 @@ window.addEventListener("load", () => {
   revealTiles();
   updateGmailStatus();
   setPreviewOpen(false);
+  setNotatnikOpen(false);
   if (!autoRefreshTimer) {
     autoRefreshTimer = setInterval(() => {
       updateGmailStatus();
@@ -431,12 +479,34 @@ window.addEventListener("load", () => {
   }
 });
 
+if (notatnikTile) {
+  notatnikTile.addEventListener("click", (event) => {
+    if (!notatnikPanel) {
+      return;
+    }
+    event.preventDefault();
+    if (gmailPreviewOpen) {
+      setPreviewOpen(false);
+    }
+    setNotatnikOpen(!notatnikPanelOpen);
+  });
+}
+
+if (notatnikPanelClose) {
+  notatnikPanelClose.addEventListener("click", () => {
+    setNotatnikOpen(false);
+  });
+}
+
 if (gmailTile) {
   gmailTile.addEventListener("click", (event) => {
     if (!gmailPreview) {
       return;
     }
     event.preventDefault();
+    if (notatnikPanelOpen) {
+      setNotatnikOpen(false);
+    }
     setPreviewOpen(!gmailPreviewOpen);
   });
 }
@@ -479,8 +549,14 @@ if (gmailPreviewBody) {
 }
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && gmailPreviewOpen) {
+  if (event.key !== "Escape") {
+    return;
+  }
+  if (gmailPreviewOpen) {
     setPreviewOpen(false);
+  }
+  if (notatnikPanelOpen) {
+    setNotatnikOpen(false);
   }
 });
 
