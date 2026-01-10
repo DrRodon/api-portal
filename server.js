@@ -157,6 +157,10 @@ app.get("/styles.css", (_req, res) => {
   sendUiFile(res, "styles.css");
 });
 
+app.get("/notatnik.css", (_req, res) => {
+  sendUiFile(res, "notatnik.css");
+});
+
 app.get("/script.js", (_req, res) => {
   sendUiFile(res, "script.js");
 });

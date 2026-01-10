@@ -6,6 +6,7 @@
 
   const el = (id) => document.getElementById(id);
   const state = { items: [], editingId: null };
+  const isEmbedded = Boolean(document.getElementById("notatnik-panel"));
 
   function uuid(){
     return (crypto?.randomUUID?.() ?? `id_${Date.now()}_${Math.random().toString(16).slice(2)}`);
@@ -818,7 +819,20 @@
     load();
 
     const settings = window.Theme.loadSettings();
-    window.Theme.applyTheme(settings);
+    const applyThemeWithMode = (modeOverride) => {
+      const mode = modeOverride || settings.mode;
+      window.Theme.applyTheme({ ...settings, mode });
+    };
+
+    if (isEmbedded) {
+      const portalMode = document.body.classList.contains("theme-dark") ? "dark" : "light";
+      applyThemeWithMode(portalMode);
+      window.addEventListener("portal:theme-change", (event) => {
+        applyThemeWithMode(event?.detail?.mode);
+      });
+    } else {
+      applyThemeWithMode();
+    }
 
     el("dt").value = nowLocalInputValue();
     el("severity").value = "0";
@@ -855,7 +869,6 @@
     el("copyViewBtn").addEventListener("click", copyCurrentViewJson);
 
     setDateRangeToToday();
-    render();
   }
 
   init();

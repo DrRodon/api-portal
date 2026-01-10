@@ -136,7 +136,7 @@
   }
 
   function applyTheme(settings){
-    const root = document.documentElement;
+    const root = document.getElementById("notatnik-root") || document.documentElement;
     const theme = THEMES.find(t => t.id === settings.themeId) || THEMES[0];
     const mode = settings.mode === "dark" ? "dark" : "light";
     const vars = mode === "dark" ? theme.dark : theme.light;
