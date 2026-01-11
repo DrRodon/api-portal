@@ -568,6 +568,45 @@ body.theme-dark .tile__badge {
   color: var(--ink);
 }
 
+
+.gmail-preview__attachments {
+  border-top: 1px dashed rgba(154, 144, 134, 0.35);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gmail-preview__attachments-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.gmail-preview__attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gmail-preview__attachment {
+  border: 1px solid rgba(154, 144, 134, 0.4);
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.gmail-preview__attachment-size {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
 .gmail-preview__detail-body {
   font-size: 0.88rem;
   line-height: 1.6;
@@ -585,7 +624,7 @@ body.theme-dark .tile__badge {
 }
 
 .gmail-preview.is-detail .gmail-preview__body {
-  overflow: hidden;
+  overflow: auto;
   padding-right: 0;
 }
 
@@ -649,6 +688,11 @@ body.theme-dark .gmail-preview__link {
 
 body.theme-dark .gmail-preview__icon,
 body.theme-dark .gmail-preview__item-button {
+  background: rgba(24, 20, 42, 0.9);
+  border-color: rgba(183, 156, 255, 0.35);
+  color: var(--ink);
+}
+body.theme-dark .gmail-preview__attachment {
   background: rgba(24, 20, 42, 0.9);
   border-color: rgba(183, 156, 255, 0.35);
   color: var(--ink);

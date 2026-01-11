@@ -75,6 +75,61 @@ const fetchWithToken = async (url, options = {}) => {
   return fetch(url, { ...options, headers });
 };
 
+const formatBytes = (value) => {
+  const bytes = Number(value);
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "0 B";
+  }
+  const units = ["B", "KB", "MB", "GB"];
+  let idx = 0;
+  let size = bytes;
+  while (size >= 1024 && idx < units.length - 1) {
+    size /= 1024;
+    idx += 1;
+  }
+  return `${size.toFixed(size >= 10 || idx == 0 ? 0 : 1)} ${units[idx]}`;
+};
+
+const downloadAttachment = async (messageId, attachment) => {
+  if (!messageId || !attachment?.id) {
+    return;
+  }
+  const params = new URLSearchParams();
+  if (attachment.filename) {
+    params.set("name", attachment.filename);
+  }
+  if (attachment.mimeType) {
+    params.set("type", attachment.mimeType);
+  }
+  const query = params.toString();
+  const url = `/api/gmail/message/${messageId}/attachment/${attachment.id}${query ? `?${query}` : ""}`;
+
+  try {
+    const response = await fetchWithToken(url);
+    if (!response.ok) {
+      let detail = "";
+      try {
+        detail = await response.text();
+      } catch (error) {
+        detail = "";
+      }
+      throw new Error(`download failed (${response.status}) ${detail}`.trim());
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = attachment.filename || "attachment";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (error) {
+    console.error("Attachment download error", error);
+    alert("Nie mozna pobrac zalacznika.");
+  }
+};
+
 const setPreviewAuthVisible = (visible) => {
   if (!gmailPreviewAuth) {
     return;
@@ -190,6 +245,42 @@ const renderMessageDetail = (message) => {
   detail.appendChild(meta);
   detail.appendChild(subject);
   detail.appendChild(body);
+  if (Array.isArray(message.attachments) && message.attachments.length) {
+    const attachments = document.createElement("div");
+    attachments.className = "gmail-preview__attachments";
+
+    const title = document.createElement("div");
+    title.className = "gmail-preview__attachments-title";
+    title.textContent = "Zalaczniki";
+
+    const list = document.createElement("div");
+    list.className = "gmail-preview__attachment-list";
+
+    message.attachments.forEach((attachment) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "gmail-preview__attachment";
+      button.addEventListener("click", () => {
+        downloadAttachment(message.id, attachment);
+      });
+
+      const name = document.createElement("span");
+      name.textContent = attachment.filename || "attachment";
+
+      const size = document.createElement("span");
+      size.className = "gmail-preview__attachment-size";
+      size.textContent = formatBytes(attachment.size);
+
+      button.appendChild(name);
+      button.appendChild(size);
+      list.appendChild(button);
+    });
+
+    attachments.appendChild(title);
+    attachments.appendChild(list);
+    detail.appendChild(attachments);
+  }
+
   gmailPreviewBody.appendChild(detail);
 };
 
