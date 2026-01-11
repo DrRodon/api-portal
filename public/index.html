@@ -74,220 +74,434 @@
         </div>
         <div class="notatnik-panel__body">
           <div id="notatnik-root" data-mode="dark">
-            <main class="grid gridViewport">            
-                <!-- LEWA: formularz -->            
-                <section class="card cardScroll" id="formCard">            
-                  <div class="cardHead">            
-                    <h2 id="formTitle">Dodaj wpis</h2>            
-                    <div class="cardHeadActions">            
-                      <button id="saveBtn" class="ok" type="button">Zapisz</button>            
-                      <button id="resetBtn" class="secondary" type="button">Wyczyść formularz</button>            
-                      <span class="pill">Wpisów: <strong id="countPill">0</strong></span>            
-                    </div>            
-                  </div>            
-                        
-                  <div class="cardBodyScroll">            
-                    <div class="block">            
-                      <label for="notes">Notatki</label>            
-                      <textarea id="notes" placeholder="dowolne"></textarea>            
-                    </div>            
-                        
-                    <div class="hr"></div>            
-                        
-                    <div class="row">            
-                      <div>            
-                        <label for="dt">Data i czas wpisu</label>            
-                        <input id="dt" type="datetime-local" />            
-                      </div>            
-                      <div class="toggleField">            
-                        <label for="medsToggle">Wpis leków</label>            
-                        <div class="toggleInput">            
-                          <span class="toggleText">Przyjęte leki</span>            
-                          <label class="switch" aria-label="Przyjęte leki">            
-                            <input type="checkbox" id="medsToggle" />            
-                            <span class="slider"></span>            
-                          </label>            
-                        </div>            
-                      </div>            
-                    </div>            
-                        
-                    <div class="row3 mt10">            
-                      <div>            
-                        <label for="sys">SYS</label>            
-                        <input id="sys" inputmode="numeric" placeholder="np. 128" />            
-                      </div>            
-                      <div>            
-                        <label for="dia">DIA</label>            
-                        <input id="dia" inputmode="numeric" placeholder="np. 84" />            
-                      </div>            
-                      <div>            
-                        <label for="pulse">Tętno</label>            
-                        <input id="pulse" inputmode="numeric" placeholder="np. 72" />            
-                      </div>            
-                    </div>            
-                        
-                    <div class="mt10" id="medsSection">            
-                      <label>Leki (lista z Ustawień)</label>            
-                      <div id="medChecklist" class="medChecklist"></div>            
-                        
-                      <div class="mt10">            
-                        <label for="medNotes">Uwagi do leków</label>            
-                        <input id="medNotes" placeholder="np. Atacand wypadł z ręki, nie byłem pewien" />            
-                      </div>            
-                    </div>            
-                        
-                    <div class="hr"></div>            
-                        
-                    <div class="mt10">            
-                      <label for="food">Jedzenie</label>            
-                      <input id="food" placeholder="np. 2 kanapki, obiad, słodycze" />            
-                    </div>            
-                        
-                    <div class="row mt10">            
-                      <div>            
-                        <label for="waterAmount">Nawodnienie (ml)</label>            
-                        <input id="waterAmount" inputmode="numeric" placeholder="np. 250" />            
-                      </div>            
-                      <div>            
-                        <label for="waterType">Rodzaj płynu (procent wody)</label>            
-                        <select id="waterType">            
-                          <option value="1">woda (100%)</option>            
-                          <option value="0.85">woda z sokiem (85%)</option>            
-                          <option value="0.9">herbata (90%)</option>            
-                          <option value="0.99">kawa (99%)</option>            
-                          <option value="0.7">sok (70%)</option>            
-                        </select>            
-                      </div>            
-                    </div>            
-                        
-                    <div class="row mt10">            
-                      <div>            
-                        <label for="substances">Kofeina, alkohol, nikotyna</label>            
-                        <input id="substances" placeholder="np. kawa x2, bez alkoholu" />            
-                      </div>            
-                      <div>            
-                        <label for="sleep">Sen</label>            
-                        <input id="sleep" placeholder="np. 6:30, pobudki x2" />            
-                      </div>            
-                    </div>            
-                        
-                    <div class="mt10">            
-                      <label for="events">Wydarzenia (seks, stres, wysiłek)</label>            
-                      <input id="events" placeholder="np. rano seks, stres w pracy" />            
-                    </div>            
-                        
-                    <div class="mt10">            
-                      <label for="symptoms">Objawy (Twoje słowa)</label>            
-                      <input id="symptoms" placeholder="np. mam zjazd, jestem skołowany" />            
-                    </div>            
-                        
-                    <div class="row mt10">            
-                      <div class="sliderBox">            
-                        <div class="sliderTop">            
-                          <label for="severity">Nasilenie bólu</label>            
-                          <div class="sliderReadout">            
-                            <strong id="severityVal">0</strong>            
-                            <span id="severityText" class="sliderText">brak</span>            
-                          </div>            
-                        </div>            
-                        <input id="severity" type="range" min="0" max="10" step="1" />            
-                      </div>            
-                        
-                      <div class="sliderBox">            
-                        <div class="sliderTop">            
-                          <label for="anxiety">Lęk lub napięcie</label>            
-                          <div class="sliderReadout">            
-                            <strong id="anxietyVal">0</strong>            
-                            <span id="anxietyText" class="sliderText">brak</span>            
-                          </div>            
-                        </div>            
-                        <input id="anxiety" type="range" min="0" max="10" step="1" />            
-                      </div>            
-                    </div>            
-                        
-                    <div class="mt10">            
-                      <label for="hypothesis">Hipoteza</label>            
-                      <textarea id="hypothesis" placeholder="np. pominąłem dawkę + słabe nawodnienie"></textarea>            
-                    </div>            
-                    <div class="btns">            
-                      <button id="cancelEditBtn" class="secondary hidden" type="button">Anuluj edycję</button>            
-                    </div>            
-                  </div>            
-                </section>            
-                        
-                <!-- PRAWA: lista -->            
-                <section class="card cardScroll">            
-                  <div class="topbar topbarFixed">            
-                    <div class="filters">            
-                      <input id="q" placeholder="Szukaj w wpisach" />            
-                      <div class="dateRange">            
-                        <span class="dateLabel">Od <input id="fromDate" type="date" /></span>            
-                        <span class="dateLabel">Do <input id="toDate" type="date" /></span>            
-                        <button id="todayBtn" type="button" class="secondary">Dziś</button>            
-                        <button id="allBtn" type="button" class="secondary">Wszystko</button>            
-                      </div>            
-                    </div>            
-                        
-                    <div class="btns" style="margin-top:6px;">            
-                      <select id="sort" style="width:auto;">            
-                        <option value="desc">Sortowanie: najnowsze</option>            
-                        <option value="asc">Sortowanie: najstarsze</option>            
-                      </select>            
-                      <label class="iconToggle" title="Pokaż wpisy metryczne">            
-                        <input id="showMetrics" type="checkbox" aria-label="Pokaż wpisy metryczne" />            
-                        <span class="iconBtn" aria-hidden="true">            
-                          <svg viewBox="0 0 24 24" fill="none">            
-                            <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"/>            
-                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>            
-                          </svg>            
-                        </span>            
-                      </label>            
-                      <button id="copyViewBtn" type="button" class="iconBtn" aria-label="Kopiuj JSON z widoku" title="Kopiuj JSON z widoku">            
-                        <svg viewBox="0 0 24 24" fill="none">            
-                          <path d="M8 8h10v12H8z" stroke="currentColor" stroke-width="2"/>            
-                          <path d="M6 16H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/>            
-                        </svg>            
-                      </button>            
-                    </div>            
-                        
-                  </div>            
-                        
-                  <div class="listScroll">            
-                    <div class="summaryWrap">            
-                      <div class="summaryPanel" id="viewSummary">            
-                        <div class="summaryBlock">            
-                          <div class="summaryTitle">Nawodnienie</div>            
-                          <div class="summaryValue"><span id="waterTotal">-</span> / <span id="waterTarget">-</span> ml</div>            
-                          <div class="summaryHint" id="waterDays">- dni</div>            
-                          <div class="summaryBar">            
-                            <div class="summaryBarFill" id="waterBar"></div>            
-                          </div>            
-                        </div>            
-                        
-                        <div class="summaryBlock meds">            
-                          <div class="summaryTitle">Leki</div>            
-                          <div class="medsTable" id="medsSummary"></div>            
-                        </div>            
-                        
-                        <div class="summaryBlock bp">            
-                          <div class="summaryTitle">Ciśnienie i puls</div>            
-                          <div class="bpGrid">            
-                            <div class="bpChartCol">            
-                              <div class="summaryChart" id="bpPulseChart">Brak danych w widoku.</div>            
-                              <div class="summaryLegend">            
-                                <span class="legendItem sys">SYS</span>            
-                                <span class="legendItem dia">DIA</span>            
-                                <span class="legendItem pulse">Tętno</span>            
-                              </div>            
-                            </div>            
-                            <div class="bpInfo" id="bpPulseInfo">-</div>            
-                          </div>            
-                        </div>            
-                      </div>            
-                    </div>            
-                    <div class="list" id="list"></div>            
-                  </div>            
-                </section>            
+            <main class="grid gridViewport">
+            
+                <!-- LEWA: formularz -->
+            
+                <section class="card cardScroll" id="formCard">
+            
+                  <div class="cardHead">
+            
+                    <h2 id="formTitle">Dodaj wpis</h2>
+            
+                    <div class="cardHeadActions">
+            
+                      <button id="saveBtn" class="ok" type="button">Zapisz</button>
+            
+                      <button id="resetBtn" class="secondary" type="button">Wyczyść formularz</button>
+            
+                      <span class="pill">Wpisów: <strong id="countPill">0</strong></span>
+            
+                    </div>
+            
+                  </div>
+            
+            
+            
+                  <div class="cardBodyScroll">
+            
+                    <div class="block">
+            
+                      <label for="notes">Notatki</label>
+            
+                      <textarea id="notes" placeholder="dowolne"></textarea>
+            
+                    </div>
+            
+            
+            
+                    <div class="hr"></div>
+            
+            
+            
+                    <div class="row">
+            
+                      <div>
+            
+                        <label for="dt">Data i czas wpisu</label>
+            
+                        <input id="dt" type="datetime-local" />
+            
+                      </div>
+            
+                      <div class="toggleField">
+            
+                        <label for="medsToggle">Wpis leków</label>
+            
+                        <div class="toggleInput">
+            
+                          <span class="toggleText">Przyjęte leki</span>
+            
+                          <label class="switch" aria-label="Przyjęte leki">
+            
+                            <input type="checkbox" id="medsToggle" />
+            
+                            <span class="slider"></span>
+            
+                          </label>
+            
+                        </div>
+            
+                      </div>
+            
+                    </div>
+            
+            
+            
+                    <div class="row3 mt10">
+            
+                      <div>
+            
+                        <label for="sys">SYS</label>
+            
+                        <input id="sys" inputmode="numeric" placeholder="np. 128" />
+            
+                      </div>
+            
+                      <div>
+            
+                        <label for="dia">DIA</label>
+            
+                        <input id="dia" inputmode="numeric" placeholder="np. 84" />
+            
+                      </div>
+            
+                      <div>
+            
+                        <label for="pulse">Tętno</label>
+            
+                        <input id="pulse" inputmode="numeric" placeholder="np. 72" />
+            
+                      </div>
+            
+                    </div>
+            
+            
+            
+                    <div class="mt10" id="medsSection">
+            
+                      <label>Leki (lista z Ustawień)</label>
+            
+                      <div id="medChecklist" class="medChecklist"></div>
+            
+            
+            
+                      <div class="mt10">
+            
+                        <label for="medNotes">Uwagi do leków</label>
+            
+                        <input id="medNotes" placeholder="np. Atacand wypadł z ręki, nie byłem pewien" />
+            
+                      </div>
+            
+                    </div>
+            
+            
+            
+                    <div class="hr"></div>
+            
+            
+            
+                    <div class="mt10">
+            
+                      <label for="food">Jedzenie</label>
+            
+                      <input id="food" placeholder="np. 2 kanapki, obiad, słodycze" />
+            
+                    </div>
+            
+            
+            
+                    <div class="row mt10">
+            
+                      <div>
+            
+                        <label for="waterAmount">Nawodnienie (ml)</label>
+            
+                        <input id="waterAmount" inputmode="numeric" placeholder="np. 250" />
+            
+                      </div>
+            
+                      <div>
+            
+                        <label for="waterType">Rodzaj płynu (procent wody)</label>
+            
+                        <select id="waterType">
+            
+                          <option value="1">woda (100%)</option>
+            
+                          <option value="0.85">woda z sokiem (85%)</option>
+            
+                          <option value="0.9">herbata (90%)</option>
+            
+                          <option value="0.99">kawa (99%)</option>
+            
+                          <option value="0.7">sok (70%)</option>
+            
+                        </select>
+            
+                      </div>
+            
+                    </div>
+            
+            
+            
+                    <div class="row mt10">
+            
+                      <div>
+            
+                        <label for="substances">Kofeina, alkohol, nikotyna</label>
+            
+                        <input id="substances" placeholder="np. kawa x2, bez alkoholu" />
+            
+                      </div>
+            
+                      <div>
+            
+                        <label for="sleep">Sen</label>
+            
+                        <input id="sleep" placeholder="np. 6:30, pobudki x2" />
+            
+                      </div>
+            
+                    </div>
+            
+            
+            
+                    <div class="mt10">
+            
+                      <label for="events">Wydarzenia (seks, stres, wysiłek)</label>
+            
+                      <input id="events" placeholder="np. rano seks, stres w pracy" />
+            
+                    </div>
+            
+            
+            
+                    <div class="mt10">
+            
+                      <label for="symptoms">Objawy (Twoje słowa)</label>
+            
+                      <input id="symptoms" placeholder="np. mam zjazd, jestem skołowany" />
+            
+                    </div>
+            
+            
+            
+                    <div class="row mt10">
+            
+                      <div class="sliderBox">
+            
+                        <div class="sliderTop">
+            
+                          <label for="severity">Nasilenie bólu</label>
+            
+                          <div class="sliderReadout">
+            
+                            <strong id="severityVal">0</strong>
+            
+                            <span id="severityText" class="sliderText">brak</span>
+            
+                          </div>
+            
+                        </div>
+            
+                        <input id="severity" type="range" min="0" max="10" step="1" />
+            
+                      </div>
+            
+            
+            
+                      <div class="sliderBox">
+            
+                        <div class="sliderTop">
+            
+                          <label for="anxiety">Lęk lub napięcie</label>
+            
+                          <div class="sliderReadout">
+            
+                            <strong id="anxietyVal">0</strong>
+            
+                            <span id="anxietyText" class="sliderText">brak</span>
+            
+                          </div>
+            
+                        </div>
+            
+                        <input id="anxiety" type="range" min="0" max="10" step="1" />
+            
+                      </div>
+            
+                    </div>
+            
+            
+            
+                    <div class="mt10">
+            
+                      <label for="hypothesis">Hipoteza</label>
+            
+                      <textarea id="hypothesis" placeholder="np. pominąłem dawkę + słabe nawodnienie"></textarea>
+            
+                    </div>
+            
+                    <div class="btns">
+            
+                      <button id="cancelEditBtn" class="secondary hidden" type="button">Anuluj edycję</button>
+            
+                    </div>
+            
+                  </div>
+            
+                </section>
+            
+            
+            
+                <!-- PRAWA: lista -->
+            
+                <section class="card cardScroll">
+            
+                  <div class="topbar topbarFixed">
+            
+                    <div class="filters">
+            
+                      <input id="q" placeholder="Szukaj w wpisach" />
+            
+                      <div class="dateRange">
+            
+                        <span class="dateLabel">Od <input id="fromDate" type="date" /></span>
+            
+                        <span class="dateLabel">Do <input id="toDate" type="date" /></span>
+            
+                        <button id="todayBtn" type="button" class="secondary">Dziś</button>
+            
+                        <button id="allBtn" type="button" class="secondary">Wszystko</button>
+            
+                      </div>
+            
+                    </div>
+            
+            
+            
+                    <div class="btns" style="margin-top:6px;">
+            
+                      <select id="sort" style="width:auto;">
+            
+                        <option value="desc">Sortowanie: najnowsze</option>
+            
+                        <option value="asc">Sortowanie: najstarsze</option>
+            
+                      </select>
+            
+                      <label class="iconToggle" title="Pokaż wpisy metryczne">
+            
+                        <input id="showMetrics" type="checkbox" aria-label="Pokaż wpisy metryczne" />
+            
+                        <span class="iconBtn" aria-hidden="true">
+            
+                          <svg viewBox="0 0 24 24" fill="none">
+            
+                            <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"/>
+            
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            
+                          </svg>
+            
+                        </span>
+            
+                      </label>
+            
+                      <button id="copyViewBtn" type="button" class="iconBtn" aria-label="Kopiuj JSON z widoku" title="Kopiuj JSON z widoku">
+            
+                        <svg viewBox="0 0 24 24" fill="none">
+            
+                          <path d="M8 8h10v12H8z" stroke="currentColor" stroke-width="2"/>
+            
+                          <path d="M6 16H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/>
+            
+                        </svg>
+            
+                      </button>
+            
+                    </div>
+            
+            
+            
+                  </div>
+            
+            
+            
+                  <div class="listScroll">
+            
+                    <div class="summaryWrap">
+            
+                      <div class="summaryPanel" id="viewSummary">
+            
+                        <div class="summaryBlock">
+            
+                          <div class="summaryTitle">Nawodnienie</div>
+            
+                          <div class="summaryValue"><span id="waterTotal">-</span> / <span id="waterTarget">-</span> ml</div>
+            
+                          <div class="summaryHint" id="waterDays">- dni</div>
+            
+                          <div class="summaryBar">
+            
+                            <div class="summaryBarFill" id="waterBar"></div>
+            
+                          </div>
+            
+                        </div>
+            
+            
+            
+                        <div class="summaryBlock meds">
+            
+                          <div class="summaryTitle">Leki</div>
+            
+                          <div class="medsTable" id="medsSummary"></div>
+            
+                        </div>
+            
+            
+            
+                        <div class="summaryBlock bp">
+            
+                          <div class="summaryTitle">Ciśnienie i puls</div>
+            
+                          <div class="bpGrid">
+            
+                            <div class="bpChartCol">
+            
+                              <div class="summaryChart" id="bpPulseChart">Brak danych w widoku.</div>
+            
+                              <div class="summaryLegend">
+            
+                                <span class="legendItem sys">SYS</span>
+            
+                                <span class="legendItem dia">DIA</span>
+            
+                                <span class="legendItem pulse">Tętno</span>
+            
+                              </div>
+            
+                            </div>
+            
+                            <div class="bpInfo" id="bpPulseInfo">-</div>
+            
+                          </div>
+            
+                        </div>
+            
+                      </div>
+            
+                    </div>
+            
+                    <div class="list" id="list"></div>
+            
+                  </div>
+            
+                </section>
+            
               </main>
 
             <div id="toast" class="toast hidden"></div>
@@ -397,16 +611,19 @@
       </div>
     </main>
 
-    <footer class="footer">
+        <footer class="footer">
       <span>Portal aplikacji - wersja bazowa</span>
-      <label class="theme-switch" for="theme-select">
-        <span class="theme-switch__label">Motyw</span>
-        <select id="theme-select" class="theme-switch__control">
-          <option value="auto">Auto</option>
-          <option value="day">Dzień</option>
-          <option value="night">Noc</option>
-        </select>
-      </label>
+      <div class="footer__actions">
+        <label class="theme-switch" for="theme-select">
+          <span class="theme-switch__label">Motyw</span>
+          <select id="theme-select" class="theme-switch__control">
+            <option value="auto">Auto</option>
+            <option value="day">Dzie?"</option>
+            <option value="night">Noc</option>
+          </select>
+        </label>
+        <a class="logout-link" href="/logout">Wyloguj</a>
+      </div>
     </footer>
 
     <script src="script.js"></script>
