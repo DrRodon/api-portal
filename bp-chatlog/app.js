@@ -152,35 +152,64 @@
     const w = 320;
     const h = 80;
     const p = 6;
-    const points = series.filter(s => s.values.length > 1);
+    const gridSteps = 4;
+    const points = series.filter(s => s.values.length > 0);
     if(!points.length) return "";
 
     let min = Infinity;
     let max = -Infinity;
+    let firstIndex = Infinity;
+    let lastIndex = -1;
+
     for(const s of points){
-      for(const v of s.values){
+      for(let i = 0; i < s.values.length; i += 1){
+        const v = s.values[i];
         if(v == null) continue;
         if(v < min) min = v;
         if(v > max) max = v;
+        if(i < firstIndex) firstIndex = i;
+        if(i > lastIndex) lastIndex = i;
       }
     }
     if(!Number.isFinite(min) || !Number.isFinite(max)) return "";
+    if(!Number.isFinite(firstIndex) || lastIndex < firstIndex) return "";
     const span = (max - min) || 1;
+    const innerW = w - 2 * p;
+    const innerH = h - 2 * p;
+    const denom = Math.max(1, lastIndex - firstIndex);
+
+    const grid = Array.from({ length: gridSteps + 1 }, (_, i) => {
+      const y = p + innerH * (i / gridSteps);
+      return `<line class="chartGrid" x1="${p}" y1="${y.toFixed(1)}" x2="${(w - p).toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+    }).join("");
+
+    const axis = `<line class="chartAxis" x1="${p}" y1="${p}" x2="${p}" y2="${(h - p).toFixed(1)}"/>`;
 
     const lines = points.map((s) => {
-      const lastIndex = s.values.reduce((acc, v, i) => (v == null ? acc : i), -1);
-      const denom = Math.max(1, lastIndex);
       const pts = s.values.map((v, i) => {
-        if(i > lastIndex) return null;
+        if(i < firstIndex || i > lastIndex) return null;
         if(v == null) return null;
-        const x = p + (w - 2 * p) * (i / denom);
-        const y = p + (h - 2 * p) * (1 - (v - min) / span);
+        const x = p + innerW * ((i - firstIndex) / denom);
+        const y = p + innerH * (1 - (v - min) / span);
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       }).filter(Boolean).join(" ");
       return `<polyline class="chartLine ${s.cls}" points="${pts}"/>`;
     }).join("");
 
-    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>`;
+    const dots = points.map((s) => {
+      const count = s.values.reduce((acc, v) => (v == null ? acc : acc + 1), 0);
+      if(count > 1) return "";
+      const circles = s.values.map((v, i) => {
+        if(i < firstIndex || i > lastIndex) return null;
+        if(v == null) return null;
+        const x = p + innerW * ((i - firstIndex) / denom);
+        const y = p + innerH * (1 - (v - min) / span);
+        return `<circle class="chartPoint ${s.cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.5"/>`;
+      }).filter(Boolean).join("");
+      return circles;
+    }).join("");
+
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">${grid}${axis}${lines}${dots}</svg>`;
   }
 
   function renderSummary(items){
