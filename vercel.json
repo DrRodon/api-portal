@@ -1,8 +1,14 @@
-{
+﻿{
   "version": 2,
   "functions": {
     "api/index.js": {
-      "includeFiles": "index.html styles.css script.js notatnik.css bp-chatlog/**"
+      "includeFiles": [
+        "index.html",
+        "styles.css",
+        "script.js",
+        "notatnik.css",
+        "bp-chatlog/**"
+      ]
     }
   },
   "rewrites": [
