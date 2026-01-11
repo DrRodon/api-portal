@@ -1,20 +1,14 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    }
-  ],
   "functions": {
-    "server.js": {
+    "api/index.js": {
       "includeFiles": "index.html styles.css script.js notatnik.css bp-chatlog/**"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/server.js"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ]
 }
