@@ -141,6 +141,85 @@ const extractMessageHtml = (payload) => {
   return "";
 };
 
+const decodeBase64UrlToBuffer = (input) => {
+  if (!input) {
+    return Buffer.alloc(0);
+  }
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  return Buffer.from(padded, "base64");
+};
+
+const sanitizeFilename = (name) => {
+  const base = path.basename(String(name || "attachment"));
+  return base.replace(/[\r\n"\/\\]+/g, "_") || "attachment";
+};
+
+const asciiFilename = (name) => {
+  return String(name || "attachment")
+    .replace(/[^\x20-\x7E]+/g, "_")
+    .replace(/[\r\n"\/\\]+/g, "_")
+    .trim() || "attachment";
+};
+
+const headerValue = (headers, name) => {
+  if (!Array.isArray(headers)) {
+    return "";
+  }
+  const hit = headers.find(
+    (header) => header?.name?.toLowerCase() === name.toLowerCase()
+  );
+  return hit?.value || "";
+};
+
+const extractFilename = (header) => {
+  if (!header) {
+    return "";
+  }
+  const parts = header.split(";").map((part) => part.trim());
+  for (const part of parts) {
+    const lowered = part.toLowerCase();
+    if (lowered.startsWith("filename*=")) {
+      const value = part.split("=", 2)[1]?.trim() || "";
+      const cleaned = value.replace(/^utf-8''/i, "").replace(/^"|"$/g, "");
+      try {
+        return decodeURIComponent(cleaned);
+      } catch (error) {
+        return cleaned;
+      }
+    }
+    if (lowered.startsWith("filename=") || lowered.startsWith("name=")) {
+      return part.split("=", 2)[1]?.trim().replace(/^"|"$/g, "") || "";
+    }
+  }
+  return "";
+};
+
+const collectAttachments = (payload, acc = []) => {
+  if (!payload) {
+    return acc;
+  }
+  const attachmentId = payload.body?.attachmentId;
+  if (attachmentId) {
+    const headers = payload.headers || [];
+    const filename =
+      payload.filename ||
+      extractFilename(headerValue(headers, "Content-Disposition")) ||
+      extractFilename(headerValue(headers, "Content-Type")) ||
+      "attachment";
+    acc.push({
+      id: attachmentId,
+      filename: sanitizeFilename(filename),
+      mimeType: payload.mimeType || "application/octet-stream",
+      size: payload.body?.size || 0,
+    });
+  }
+  if (Array.isArray(payload.parts)) {
+    payload.parts.forEach((part) => collectAttachments(part, acc));
+  }
+  return acc;
+};
+
 const sendUiFile = (res, fileName) => {
   res.sendFile(path.join(__dirname, fileName));
 };
@@ -337,6 +416,7 @@ app.get("/api/gmail/message/:id", async (req, res) => {
       headers.find((header) => header.name === name)?.value || "";
     const bodyText = extractMessageText(item.data.payload);
     const bodyHtml = extractMessageHtml(item.data.payload);
+    const attachments = collectAttachments(item.data.payload);
 
     res.json({
       connected: true,
@@ -347,10 +427,46 @@ app.get("/api/gmail/message/:id", async (req, res) => {
         date: getHeader("Date"),
         body: bodyText || item.data.snippet || "",
         html: bodyHtml || "",
+        attachments,
       },
     });
   } catch (error) {
     res.status(500).json({ connected: false, message: null });
+  }
+});
+
+app.get("/api/gmail/message/:id/attachment/:attachmentId", async (req, res) => {
+  const tokens = await loadTokens();
+  if (!tokens) {
+    res.status(401).json({ ok: false });
+    return;
+  }
+
+  try {
+    oauth2Client.setCredentials(tokens);
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+    const attachment = await gmail.users.messages.attachments.get({
+      userId: "me",
+      messageId: req.params.id,
+      id: req.params.attachmentId,
+    });
+    const buffer = decodeBase64UrlToBuffer(attachment.data?.data);
+    const filename = sanitizeFilename(req.query.name);
+    const fallbackName = asciiFilename(filename);
+    const mimeType = String(req.query.type || "application/octet-stream");
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fallbackName}"; filename*=UTF-8''${encodeURIComponent(filename)}`
+    );
+    res.send(buffer);
+  } catch (error) {
+    console.error("Attachment download failed", {
+      messageId: req.params.id,
+      attachmentId: req.params.attachmentId,
+      error: error?.message || error,
+    });
+    res.status(500).json({ ok: false });
   }
 });
 
