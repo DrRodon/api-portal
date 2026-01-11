@@ -28,7 +28,11 @@ const REDIRECT_URL =
   process.env.REDIRECT_URL ||
   process.env.REDIRECT_URI ||
   "http://localhost:3000/oauth2callback";
-const TOKEN_PATH = path.join(__dirname, "data", "tokens.json");
+const TOKEN_PATH =
+  process.env.TOKEN_PATH ||
+  (process.env.VERCEL
+    ? path.join("/tmp", "tokens.json")
+    : path.join(__dirname, "data", "tokens.json"));
 
 const app = express();
 const publicDir = path.join(__dirname, "public");
@@ -275,6 +279,7 @@ app.get("/oauth2callback", async (req, res) => {
     await saveTokens(tokens);
     res.send("Authorization complete. Return to the portal and refresh Gmail.");
   } catch (error) {
+    console.error("OAuth callback failed:", error);
     res.status(500).send("Gmail authorization error.");
   }
 });
