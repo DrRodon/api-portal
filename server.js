@@ -38,6 +38,19 @@ const REDIRECT_URL =
   (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}/oauth2callback`
     : "http://localhost:3000/oauth2callback");
+const PORTAL_REDIRECT_URL =
+  process.env.PORTAL_REDIRECT_URL ||
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}/oauth2callback/portal`
+    : `http://localhost:${PORT}/oauth2callback/portal`);
+const PORTAL_AUTH_SECRET = process.env.PORTAL_AUTH_SECRET || PORTAL_TOKEN;
+const PORTAL_SESSION_TTL_HOURS = Number.parseInt(
+  process.env.PORTAL_SESSION_TTL_HOURS || "24",
+  10
+);
+const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS || "";
+const ALLOWED_EMAILS_KV_KEY =
+  process.env.ALLOWED_EMAILS_KV_KEY || "portal:allowed_emails";
 const KV_REST_API_URL = process.env.KV_REST_API_URL;
 const KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN;
 const KV_TOKEN_KEY = process.env.KV_TOKEN_KEY || "portal:gmail:tokens";
@@ -62,15 +75,17 @@ app.use(
     allowedHeaders: ["Content-Type", "X-Portal-Token"],
   })
 );
-app.use(express.static(publicDir));
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(publicDir, "index.html"));
-});
+app.use(express.json({ limit: "100kb" }));
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
   CLIENT_SECRET,
   REDIRECT_URL
+);
+const portalOauthClient = new google.auth.OAuth2(
+  CLIENT_ID,
+  CLIENT_SECRET,
+  PORTAL_REDIRECT_URL
 );
 
 const ensureDataDir = async () => {
@@ -97,6 +112,124 @@ const getKvClient = () => {
 
 const logTokenEvent = (event, data) => {
   console.info(`[tokens] ${event}`, data);
+};
+
+const normalizeEmailList = (value) => {
+  if (!value) {
+    return [];
+  }
+  const raw = Array.isArray(value) ? value : String(value).split(",");
+  return raw
+    .map((item) => String(item).trim().toLowerCase())
+    .filter(Boolean);
+};
+
+const getAllowedEmails = async () => {
+  const kvClient = getKvClient();
+  if (kvClient) {
+    try {
+      const stored = await kvClient.get(ALLOWED_EMAILS_KV_KEY);
+      const list = normalizeEmailList(stored);
+      if (list.length) {
+        return list;
+      }
+    } catch (error) {
+      console.warn(
+        "[auth] KV allowlist load failed:",
+        error?.message || error
+      );
+    }
+  }
+  return normalizeEmailList(ALLOWED_EMAILS);
+};
+
+const setAllowedEmails = async (emails) => {
+  const kvClient = getKvClient();
+  if (!kvClient) {
+    throw new Error("KV is not configured");
+  }
+  await kvClient.set(ALLOWED_EMAILS_KV_KEY, emails);
+};
+
+const base64UrlEncode = (input) => {
+  return Buffer.from(input)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+};
+
+const base64UrlDecode = (input) => {
+  if (!input) {
+    return "";
+  }
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  return Buffer.from(padded, "base64").toString("utf8");
+};
+
+const signSession = (payload) => {
+  const encoded = base64UrlEncode(JSON.stringify(payload));
+  const signature = crypto
+    .createHmac("sha256", PORTAL_AUTH_SECRET)
+    .update(encoded)
+    .digest("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+  return `${encoded}.${signature}`;
+};
+
+const verifySession = (value) => {
+  if (!value) {
+    return null;
+  }
+  const [encoded, signature] = value.split(".", 2);
+  if (!encoded || !signature) {
+    return null;
+  }
+  const expected = crypto
+    .createHmac("sha256", PORTAL_AUTH_SECRET)
+    .update(encoded)
+    .digest("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(base64UrlDecode(encoded));
+    if (!payload?.email || !payload?.exp) {
+      return null;
+    }
+    if (Date.now() > payload.exp) {
+      return null;
+    }
+    return payload;
+  } catch (error) {
+    return null;
+  }
+};
+
+const parseCookies = (cookieHeader) => {
+  const cookies = {};
+  if (!cookieHeader) {
+    return cookies;
+  }
+  cookieHeader.split(";").forEach((part) => {
+    const [name, ...rest] = part.trim().split("=");
+    if (!name) {
+      return;
+    }
+    cookies[name] = rest.join("=");
+  });
+  return cookies;
+};
+
+const getPortalSession = (req) => {
+  const cookies = parseCookies(req.headers.cookie || "");
+  return verifySession(cookies.portal_session);
 };
 
 const loadTokens = async () => {
@@ -306,6 +439,40 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+const isPublicPath = (path) => {
+  return (
+    path === "/auth" ||
+    path === "/oauth2callback" ||
+    path === "/auth/portal" ||
+    path === "/oauth2callback/portal" ||
+    path === "/logout" ||
+    path === "/health" ||
+    path === "/favicon.ico"
+  );
+};
+
+app.use((req, res, next) => {
+  if (isPublicPath(req.path)) {
+    return next();
+  }
+  const session = getPortalSession(req);
+  if (!session) {
+    if (req.path.startsWith("/api")) {
+      res.status(401).json({ ok: false, auth: false });
+      return;
+    }
+    res.redirect("/auth/portal");
+    return;
+  }
+  req.portalUser = session;
+  next();
+});
+
+app.use(express.static(publicDir));
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
+});
+
 app.get("/api/config", (_req, res) => {
   res.json({ token: PORTAL_TOKEN });
 });
@@ -320,6 +487,125 @@ app.use("/api", (req, res, next) => {
     return;
   }
   next();
+});
+
+app.get("/api/allowlist", async (req, res) => {
+  try {
+    const emails = await getAllowedEmails();
+    res.json({ emails });
+  } catch (error) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/allowlist", async (req, res) => {
+  const sessionEmail = req.portalUser?.email;
+  if (!sessionEmail) {
+    res.status(401).json({ ok: false });
+    return;
+  }
+
+  try {
+    const current = await getAllowedEmails();
+    if (!current.includes(sessionEmail)) {
+      res.status(403).json({ ok: false });
+      return;
+    }
+
+    const input =
+      req.body?.emails ?? req.body?.allowlist ?? req.body?.list ?? req.body;
+    const emails = normalizeEmailList(input);
+    if (!emails.length) {
+      res.status(400).json({ ok: false, error: "empty_allowlist" });
+      return;
+    }
+    if (!emails.includes(sessionEmail)) {
+      res.status(400).json({ ok: false, error: "self_missing" });
+      return;
+    }
+
+    await setAllowedEmails(emails);
+    res.json({ ok: true, emails });
+  } catch (error) {
+    console.error("Allowlist update failed:", error);
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.get("/auth/portal", (_req, res) => {
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    res.status(500).send("Missing CLIENT_ID or CLIENT_SECRET in .env.");
+    return;
+  }
+  const authUrl = portalOauthClient.generateAuthUrl({
+    scope: ["openid", "email", "profile"],
+    prompt: "login",
+  });
+  res.redirect(authUrl);
+});
+
+app.get("/oauth2callback/portal", async (req, res) => {
+  const code = req.query.code;
+  if (!code) {
+    res.status(400).send("Missing authorization code.");
+    return;
+  }
+
+  try {
+    const { tokens } = await portalOauthClient.getToken(code);
+    const idToken = tokens?.id_token;
+    if (!idToken) {
+      res.status(400).send("Missing id_token from Google.");
+      return;
+    }
+    const ticket = await portalOauthClient.verifyIdToken({
+      idToken,
+      audience: CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const email = payload?.email ? String(payload.email).toLowerCase() : "";
+    if (!email || payload?.email_verified === false) {
+      res.status(403).send("Email verification required.");
+      return;
+    }
+
+    const allowed = await getAllowedEmails();
+    if (!allowed.length) {
+      res.status(403).send("Allowlist is empty. Set ALLOWED_EMAILS or KV.");
+      return;
+    }
+    if (!allowed.includes(email)) {
+      res.status(403).send("Access denied.");
+      return;
+    }
+
+    const ttlMs =
+      Number.isFinite(PORTAL_SESSION_TTL_HOURS) && PORTAL_SESSION_TTL_HOURS > 0
+        ? PORTAL_SESSION_TTL_HOURS * 60 * 60 * 1000
+        : 24 * 60 * 60 * 1000;
+    const session = signSession({ email, exp: Date.now() + ttlMs });
+    const cookieParts = [
+      `portal_session=${session}`,
+      "Path=/",
+      "HttpOnly",
+      "SameSite=Lax",
+      `Max-Age=${Math.floor(ttlMs / 1000)}`,
+    ];
+    if (process.env.VERCEL) {
+      cookieParts.push("Secure");
+    }
+    res.setHeader("Set-Cookie", cookieParts.join("; "));
+
+    const tokensExisting = await loadTokens();
+    if (!tokensExisting) {
+      res.redirect("/auth");
+      return;
+    }
+    res.redirect("/");
+  } catch (error) {
+    console.error("Portal OAuth callback failed:", error);
+    res.status(500).send("Portal authorization error.");
+  }
 });
 
 app.get("/auth", (_req, res) => {
@@ -347,7 +633,7 @@ app.get("/oauth2callback", async (req, res) => {
   try {
     const { tokens } = await oauth2Client.getToken(code);
     await saveTokens(tokens);
-    res.send("Authorization complete. Return to the portal and refresh Gmail.");
+    res.redirect("/");
   } catch (error) {
     console.error("OAuth callback failed:", error);
     res.status(500).send("Gmail authorization error.");

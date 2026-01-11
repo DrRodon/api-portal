@@ -26,6 +26,31 @@ Optional settings (.env):
 - KV_REST_API_URL= (Vercel KV / Upstash REST URL for durable token storage)
 - KV_REST_API_TOKEN= (Vercel KV / Upstash REST token)
 - KV_TOKEN_KEY=portal:gmail:tokens (key used to store tokens in KV)
+- PORTAL_REDIRECT_URL= (portal login OAuth redirect, defaults to /oauth2callback/portal)
+- PORTAL_AUTH_SECRET= (signing secret for portal session cookie, defaults to PORTAL_TOKEN)
+- PORTAL_SESSION_TTL_HOURS=24
+- ALLOWED_EMAILS=alice@example.com,bob@example.com (portal allowlist)
+- ALLOWED_EMAILS_KV_KEY=portal:allowed_emails (KV key for allowlist)
+
+## Portal allowlist (KV)
+
+- If the KV key exists, it overrides `ALLOWED_EMAILS`.
+- Bootstrap: set `ALLOWED_EMAILS` for your account so you can log in once.
+- Then update the KV allowlist via the API (requires portal session + X-Portal-Token).
+
+Example (run in browser console after login):
+
+```js
+const { token } = await fetch("/api/config").then((r) => r.json());
+await fetch("/api/allowlist", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-Portal-Token": token
+  },
+  body: JSON.stringify({ emails: ["you@example.com", "other@example.com"] })
+});
+```
 
 ## Secrets and local data
 
