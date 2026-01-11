@@ -35,7 +35,7 @@ const TOKEN_PATH =
     : path.join(__dirname, "data", "tokens.json"));
 
 const app = express();
-const publicDir = path.join(__dirname, "public");
+const publicDir = path.join(process.cwd(), "public");
 app.disable("x-powered-by");
 app.use(
   "/api",
@@ -50,6 +50,9 @@ app.use(
   })
 );
 app.use(express.static(publicDir));
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
+});
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
