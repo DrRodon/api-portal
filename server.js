@@ -29,6 +29,7 @@ const REDIRECT_URI =
 const TOKEN_PATH = path.join(__dirname, "data", "tokens.json");
 
 const app = express();
+const publicDir = path.join(__dirname, "public");
 app.disable("x-powered-by");
 app.use(
   "/api",
@@ -42,6 +43,7 @@ app.use(
     allowedHeaders: ["Content-Type", "X-Portal-Token"],
   })
 );
+app.use(express.static(publicDir));
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
@@ -220,31 +222,6 @@ const collectAttachments = (payload, acc = []) => {
   return acc;
 };
 
-const sendUiFile = (res, fileName) => {
-  res.sendFile(path.join(__dirname, fileName));
-};
-
-app.get("/", (_req, res) => {
-  sendUiFile(res, "index.html");
-});
-
-app.get("/index.html", (_req, res) => {
-  sendUiFile(res, "index.html");
-});
-
-app.get("/styles.css", (_req, res) => {
-  sendUiFile(res, "styles.css");
-});
-
-app.get("/notatnik.css", (_req, res) => {
-  sendUiFile(res, "notatnik.css");
-});
-
-app.get("/script.js", (_req, res) => {
-  sendUiFile(res, "script.js");
-});
-
-app.use("/bp-chatlog", express.static(path.join(__dirname, "bp-chatlog")));
 app.get("/favicon.ico", (_req, res) => {
   res.status(204).end();
 });
