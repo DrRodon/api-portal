@@ -524,6 +524,21 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/logout", (_req, res) => {
+  const cookieParts = [
+    "portal_session=",
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    "Max-Age=0",
+  ];
+  if (process.env.VERCEL) {
+    cookieParts.push("Secure");
+  }
+  res.setHeader("Set-Cookie", cookieParts.join("; "));
+  res.redirect("/auth/portal");
+});
+
 const isPublicPath = (path) => {
   return (
     path === "/auth/portal" ||
