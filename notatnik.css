@@ -249,7 +249,25 @@
 }#notatnik-root .chartLine{
   fill: none;
   stroke-width: 2;
-}#notatnik-root .chartLine.sys{ stroke: #ef4444; }#notatnik-root .chartLine.dia{ stroke: #f59e0b; }#notatnik-root .chartLine.pulse{ stroke: #3b82f6; }#notatnik-root .summaryLegend{
+}#notatnik-root .chartPoint{
+  stroke-width: 1.5;
+}
+#notatnik-root .chartPoint.sys{ fill: #ef4444; stroke: #ef4444; }
+#notatnik-root .chartPoint.dia{ fill: #f59e0b; stroke: #f59e0b; }
+#notatnik-root .chartPoint.pulse{ fill: #3b82f6; stroke: #3b82f6; }
+#notatnik-root .chartGrid{
+  stroke: var(--border);
+  stroke-width: 1;
+  opacity: .6;
+  shape-rendering: crispEdges;
+}
+#notatnik-root .chartAxis{
+  stroke: var(--muted);
+  stroke-width: 1;
+  opacity: .85;
+  shape-rendering: crispEdges;
+}
+#notatnik-root .chartLine.sys{ stroke: #ef4444; }#notatnik-root .chartLine.dia{ stroke: #f59e0b; }#notatnik-root .chartLine.pulse{ stroke: #3b82f6; }#notatnik-root .summaryLegend{
   display: flex;
   gap: 8px;
   flex-wrap: wrap;

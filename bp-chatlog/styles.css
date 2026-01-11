@@ -354,6 +354,28 @@ h1{ font-size: 16px; margin:0; font-weight:700; }
   stroke-width: 2;
 }
 
+.chartPoint{
+  stroke-width: 1.5;
+}
+
+.chartPoint.sys{ fill: #ef4444; stroke: #ef4444; }
+.chartPoint.dia{ fill: #f59e0b; stroke: #f59e0b; }
+.chartPoint.pulse{ fill: #3b82f6; stroke: #3b82f6; }
+
+.chartGrid{
+  stroke: var(--border);
+  stroke-width: 1;
+  opacity: .6;
+  shape-rendering: crispEdges;
+}
+
+.chartAxis{
+  stroke: var(--muted);
+  stroke-width: 1;
+  opacity: .85;
+  shape-rendering: crispEdges;
+}
+
 .chartLine.sys{ stroke: #ef4444; }
 .chartLine.dia{ stroke: #f59e0b; }
 .chartLine.pulse{ stroke: #3b82f6; }
