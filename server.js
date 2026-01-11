@@ -9,9 +9,17 @@ require("dotenv").config();
 
 const HOST = process.env.HOST || "127.0.0.1";
 const PORT = process.env.PORT || 3000;
+const DEFAULT_ORIGINS = [
+  `http://localhost:${PORT}`,
+  `http://127.0.0.1:${PORT}`,
+];
+
+if (process.env.VERCEL_URL) {
+  DEFAULT_ORIGINS.push(`https://${process.env.VERCEL_URL}`);
+}
+
 const ALLOWED_ORIGINS = new Set(
-  (process.env.ALLOWED_ORIGINS ||
-    `http://localhost:${PORT},http://127.0.0.1:${PORT}`)
+  (process.env.ALLOWED_ORIGINS || DEFAULT_ORIGINS.join(","))
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean)
@@ -27,7 +35,12 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URL =
   process.env.REDIRECT_URL ||
   process.env.REDIRECT_URI ||
-  "http://localhost:3000/oauth2callback";
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}/oauth2callback`
+    : "http://localhost:3000/oauth2callback");
+const KV_REST_API_URL = process.env.KV_REST_API_URL;
+const KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN;
+const KV_TOKEN_KEY = process.env.KV_TOKEN_KEY || "portal:gmail:tokens";
 const TOKEN_PATH =
   process.env.TOKEN_PATH ||
   (process.env.VERCEL
@@ -64,18 +77,72 @@ const ensureDataDir = async () => {
   await fs.mkdir(path.dirname(TOKEN_PATH), { recursive: true });
 };
 
+const getKvClient = () => {
+  if (!KV_REST_API_URL || !KV_REST_API_TOKEN) {
+    return null;
+  }
+  if (getKvClient.cached !== undefined) {
+    return getKvClient.cached;
+  }
+  try {
+    // Lazy-load so local dev doesn't require KV unless configured.
+    const { kv } = require("@vercel/kv");
+    getKvClient.cached = kv;
+  } catch (error) {
+    console.warn("[tokens] KV disabled: @vercel/kv not available.");
+    getKvClient.cached = null;
+  }
+  return getKvClient.cached;
+};
+
+const logTokenEvent = (event, data) => {
+  console.info(`[tokens] ${event}`, data);
+};
+
 const loadTokens = async () => {
+  const kvClient = getKvClient();
+  if (kvClient) {
+    try {
+      const stored = await kvClient.get(KV_TOKEN_KEY);
+      if (stored) {
+        const parsed =
+          typeof stored === "string" ? JSON.parse(stored) : stored;
+        logTokenEvent("load", { source: "kv", found: true });
+        return parsed;
+      }
+      logTokenEvent("load", { source: "kv", found: false });
+    } catch (error) {
+      console.warn("[tokens] KV load failed:", error?.message || error);
+    }
+  }
   try {
     const raw = await fs.readFile(TOKEN_PATH, "utf8");
+    logTokenEvent("load", { source: "file", found: true, path: TOKEN_PATH });
     return JSON.parse(raw);
   } catch (error) {
+    logTokenEvent("load", { source: "file", found: false, path: TOKEN_PATH });
     return null;
   }
 };
 
 const saveTokens = async (tokens) => {
+  const kvClient = getKvClient();
+  let kvSaved = false;
+  if (kvClient) {
+    try {
+      await kvClient.set(KV_TOKEN_KEY, tokens);
+      kvSaved = true;
+      logTokenEvent("save", { source: "kv" });
+    } catch (error) {
+      console.warn("[tokens] KV save failed:", error?.message || error);
+    }
+  }
+  if (process.env.VERCEL && kvSaved) {
+    return;
+  }
   await ensureDataDir();
   await fs.writeFile(TOKEN_PATH, JSON.stringify(tokens, null, 2));
+  logTokenEvent("save", { source: "file", path: TOKEN_PATH });
 };
 
 const decodeBase64Url = (input) => {

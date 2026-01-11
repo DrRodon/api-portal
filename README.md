@@ -23,6 +23,9 @@ Optional settings (.env):
 - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 - PORTAL_TOKEN= (leave empty to auto-generate)
 - MAX_PREVIEW_MESSAGES=0 (0 = no limit)
+- KV_REST_API_URL= (Vercel KV / Upstash REST URL for durable token storage)
+- KV_REST_API_TOKEN= (Vercel KV / Upstash REST token)
+- KV_TOKEN_KEY=portal:gmail:tokens (key used to store tokens in KV)
 
 ## Secrets and local data
 
