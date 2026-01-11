@@ -513,7 +513,11 @@ app.post("/api/gmail/message/:id/trash", async (req, res) => {
   }
 });
 
-app.listen(PORT, HOST, () => {
-  console.log(`Gmail local API listening on http://${HOST}:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, HOST, () => {
+    console.log(`Gmail local API listening on http://${HOST}:${PORT}`);
+  });
+}
+
+module.exports = app;
 
