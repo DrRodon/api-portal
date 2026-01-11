@@ -14,6 +14,7 @@
 - Click a message to open full content inside the portal.
 - Actions available in detail view: mark as read and delete.
 - Auto-refresh runs every 30 seconds.
+- Each portal user authorizes their own Gmail account; tokens are stored per email in KV.
 
 OAuth scope required:
 - https://www.googleapis.com/auth/gmail.modify
@@ -50,6 +51,25 @@ await fetch("/api/allowlist", {
   },
   body: JSON.stringify({ emails: ["you@example.com", "other@example.com"] })
 });
+```
+
+Check session + Gmail connection (console):
+
+```js
+const { token } = await fetch("/api/config").then((r) => r.json());
+await fetch("/api/session", {
+  headers: { "X-Portal-Token": token }
+}).then((r) => r.json());
+```
+
+Disconnect Gmail for current user (console):
+
+```js
+const { token } = await fetch("/api/config").then((r) => r.json());
+await fetch("/api/gmail/disconnect", {
+  method: "POST",
+  headers: { "X-Portal-Token": token }
+}).then((r) => r.json());
 ```
 
 ## Secrets and local data

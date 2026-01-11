@@ -88,8 +88,8 @@ const portalOauthClient = new google.auth.OAuth2(
   PORTAL_REDIRECT_URL
 );
 
-const ensureDataDir = async () => {
-  await fs.mkdir(path.dirname(TOKEN_PATH), { recursive: true });
+const ensureDataDir = async (targetPath) => {
+  await fs.mkdir(path.dirname(targetPath), { recursive: true });
 };
 
 const getKvClient = () => {
@@ -168,15 +168,19 @@ const base64UrlDecode = (input) => {
   return Buffer.from(padded, "base64").toString("utf8");
 };
 
-const signSession = (payload) => {
-  const encoded = base64UrlEncode(JSON.stringify(payload));
-  const signature = crypto
+const createSignature = (value) => {
+  return crypto
     .createHmac("sha256", PORTAL_AUTH_SECRET)
-    .update(encoded)
+    .update(value)
     .digest("base64")
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/g, "");
+};
+
+const signSession = (payload) => {
+  const encoded = base64UrlEncode(JSON.stringify(payload));
+  const signature = createSignature(encoded);
   return `${encoded}.${signature}`;
 };
 
@@ -188,13 +192,7 @@ const verifySession = (value) => {
   if (!encoded || !signature) {
     return null;
   }
-  const expected = crypto
-    .createHmac("sha256", PORTAL_AUTH_SECRET)
-    .update(encoded)
-    .digest("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+  const expected = createSignature(encoded);
   if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
     return null;
   }
@@ -232,40 +230,104 @@ const getPortalSession = (req) => {
   return verifySession(cookies.portal_session);
 };
 
-const loadTokens = async () => {
+const tokenKeyForEmail = (email) => {
+  if (!email) {
+    return KV_TOKEN_KEY;
+  }
+  return `${KV_TOKEN_KEY}:${email}`;
+};
+
+const tokenPathForEmail = (email) => {
+  if (!email) {
+    return TOKEN_PATH;
+  }
+  const safe = crypto
+    .createHash("sha256")
+    .update(String(email))
+    .digest("hex")
+    .slice(0, 12);
+  const name = `tokens-${safe}.json`;
+  if (process.env.VERCEL) {
+    return path.join("/tmp", name);
+  }
+  return path.join(path.dirname(TOKEN_PATH), name);
+};
+
+const loadTokens = async (email) => {
   const kvClient = getKvClient();
+  const tokenKey = tokenKeyForEmail(email);
   if (kvClient) {
     try {
-      const stored = await kvClient.get(KV_TOKEN_KEY);
+      const stored = await kvClient.get(tokenKey);
       if (stored) {
         const parsed =
           typeof stored === "string" ? JSON.parse(stored) : stored;
-        logTokenEvent("load", { source: "kv", found: true });
+        logTokenEvent("load", { source: "kv", found: true, key: tokenKey });
         return parsed;
       }
-      logTokenEvent("load", { source: "kv", found: false });
+      logTokenEvent("load", { source: "kv", found: false, key: tokenKey });
     } catch (error) {
       console.warn("[tokens] KV load failed:", error?.message || error);
     }
   }
   try {
-    const raw = await fs.readFile(TOKEN_PATH, "utf8");
-    logTokenEvent("load", { source: "file", found: true, path: TOKEN_PATH });
+    const tokenPath = tokenPathForEmail(email);
+    const raw = await fs.readFile(tokenPath, "utf8");
+    logTokenEvent("load", { source: "file", found: true, path: tokenPath });
     return JSON.parse(raw);
   } catch (error) {
-    logTokenEvent("load", { source: "file", found: false, path: TOKEN_PATH });
+    const tokenPath = tokenPathForEmail(email);
+    logTokenEvent("load", { source: "file", found: false, path: tokenPath });
     return null;
   }
 };
 
-const saveTokens = async (tokens) => {
+const createOAuthState = (email) => {
+  const ttlMs = 10 * 60 * 1000;
+  const payload = {
+    email,
+    exp: Date.now() + ttlMs,
+  };
+  const encoded = base64UrlEncode(JSON.stringify(payload));
+  const signature = createSignature(encoded);
+  return `${encoded}.${signature}`;
+};
+
+const verifyOAuthState = (value) => {
+  if (!value) {
+    return null;
+  }
+  const [encoded, signature] = value.split(".", 2);
+  if (!encoded || !signature) {
+    return null;
+  }
+  const expected = createSignature(encoded);
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(base64UrlDecode(encoded));
+    if (!payload?.email || !payload?.exp) {
+      return null;
+    }
+    if (Date.now() > payload.exp) {
+      return null;
+    }
+    return payload;
+  } catch (error) {
+    return null;
+  }
+};
+
+const saveTokens = async (tokens, email) => {
   const kvClient = getKvClient();
   let kvSaved = false;
+  const tokenKey = tokenKeyForEmail(email);
   if (kvClient) {
     try {
-      await kvClient.set(KV_TOKEN_KEY, tokens);
+      await kvClient.set(tokenKey, tokens);
       kvSaved = true;
-      logTokenEvent("save", { source: "kv" });
+      logTokenEvent("save", { source: "kv", key: tokenKey });
     } catch (error) {
       console.warn("[tokens] KV save failed:", error?.message || error);
     }
@@ -273,9 +335,32 @@ const saveTokens = async (tokens) => {
   if (process.env.VERCEL && kvSaved) {
     return;
   }
-  await ensureDataDir();
-  await fs.writeFile(TOKEN_PATH, JSON.stringify(tokens, null, 2));
-  logTokenEvent("save", { source: "file", path: TOKEN_PATH });
+  const tokenPath = tokenPathForEmail(email);
+  await ensureDataDir(tokenPath);
+  await fs.writeFile(tokenPath, JSON.stringify(tokens, null, 2));
+  logTokenEvent("save", { source: "file", path: tokenPath });
+};
+
+const deleteTokens = async (email) => {
+  const kvClient = getKvClient();
+  const tokenKey = tokenKeyForEmail(email);
+  if (kvClient) {
+    try {
+      await kvClient.del(tokenKey);
+      logTokenEvent("delete", { source: "kv", key: tokenKey });
+    } catch (error) {
+      console.warn("[tokens] KV delete failed:", error?.message || error);
+    }
+  }
+  const tokenPath = tokenPathForEmail(email);
+  try {
+    await fs.unlink(tokenPath);
+    logTokenEvent("delete", { source: "file", path: tokenPath });
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      console.warn("[tokens] File delete failed:", error?.message || error);
+    }
+  }
 };
 
 const decodeBase64Url = (input) => {
@@ -441,10 +526,9 @@ app.get("/health", (_req, res) => {
 
 const isPublicPath = (path) => {
   return (
-    path === "/auth" ||
-    path === "/oauth2callback" ||
     path === "/auth/portal" ||
     path === "/oauth2callback/portal" ||
+    path === "/oauth2callback" ||
     path === "/logout" ||
     path === "/health" ||
     path === "/favicon.ico"
@@ -493,6 +577,34 @@ app.get("/api/allowlist", async (req, res) => {
   try {
     const emails = await getAllowedEmails();
     res.json({ emails });
+  } catch (error) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.get("/api/session", async (req, res) => {
+  const email = req.portalUser?.email || "";
+  if (!email) {
+    res.status(401).json({ ok: false });
+    return;
+  }
+  try {
+    const tokens = await loadTokens(email);
+    res.json({ ok: true, email, gmailConnected: Boolean(tokens) });
+  } catch (error) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/gmail/disconnect", async (req, res) => {
+  const email = req.portalUser?.email || "";
+  if (!email) {
+    res.status(401).json({ ok: false });
+    return;
+  }
+  try {
+    await deleteTokens(email);
+    res.json({ ok: true });
   } catch (error) {
     res.status(500).json({ ok: false });
   }
@@ -596,7 +708,7 @@ app.get("/oauth2callback/portal", async (req, res) => {
     }
     res.setHeader("Set-Cookie", cookieParts.join("; "));
 
-    const tokensExisting = await loadTokens();
+    const tokensExisting = await loadTokens(email);
     if (!tokensExisting) {
       res.redirect("/auth");
       return;
@@ -608,16 +720,22 @@ app.get("/oauth2callback/portal", async (req, res) => {
   }
 });
 
-app.get("/auth", (_req, res) => {
+app.get("/auth", (req, res) => {
   if (!CLIENT_ID || !CLIENT_SECRET) {
     res.status(500).send("Missing CLIENT_ID or CLIENT_SECRET in .env.");
+    return;
+  }
+  const email = req.portalUser?.email;
+  if (!email) {
+    res.status(401).send("Portal login required.");
     return;
   }
 
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline",
-    prompt: "consent",
+    prompt: "consent select_account",
     scope: ["https://www.googleapis.com/auth/gmail.modify"],
+    state: createOAuthState(email),
   });
 
   res.redirect(authUrl);
@@ -629,10 +747,30 @@ app.get("/oauth2callback", async (req, res) => {
     res.status(400).send("Missing authorization code.");
     return;
   }
+  const state = verifyOAuthState(req.query.state);
+  const email = state?.email ? String(state.email).toLowerCase() : "";
+  if (!email) {
+    res.status(400).send("Missing or invalid OAuth state.");
+    return;
+  }
 
   try {
     const { tokens } = await oauth2Client.getToken(code);
-    await saveTokens(tokens);
+    oauth2Client.setCredentials(tokens);
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+    const profile = await gmail.users.getProfile({ userId: "me" });
+    const gmailAddress = String(profile.data.emailAddress || "")
+      .toLowerCase()
+      .trim();
+    if (!gmailAddress || gmailAddress !== email) {
+      res
+        .status(403)
+        .send(
+          "Gmail account mismatch. Sign in with the same email as your portal login."
+        );
+      return;
+    }
+    await saveTokens(tokens, email);
     res.redirect("/");
   } catch (error) {
     console.error("OAuth callback failed:", error);
@@ -640,8 +778,9 @@ app.get("/oauth2callback", async (req, res) => {
   }
 });
 
-app.get("/api/gmail/unread", async (_req, res) => {
-  const tokens = await loadTokens();
+app.get("/api/gmail/unread", async (req, res) => {
+  const email = req.portalUser?.email || "";
+  const tokens = await loadTokens(email);
   if (!tokens) {
     res.status(401).json({ connected: false, unread: null });
     return;
@@ -665,8 +804,9 @@ app.get("/api/gmail/unread", async (_req, res) => {
   }
 });
 
-app.get("/api/gmail/preview", async (_req, res) => {
-  const tokens = await loadTokens();
+app.get("/api/gmail/preview", async (req, res) => {
+  const email = req.portalUser?.email || "";
+  const tokens = await loadTokens(email);
   if (!tokens) {
     res.status(401).json({ connected: false, messages: [] });
     return;
@@ -737,7 +877,8 @@ app.get("/api/gmail/preview", async (_req, res) => {
 });
 
 app.get("/api/gmail/message/:id", async (req, res) => {
-  const tokens = await loadTokens();
+  const email = req.portalUser?.email || "";
+  const tokens = await loadTokens(email);
   if (!tokens) {
     res.status(401).json({ connected: false, message: null });
     return;
@@ -776,7 +917,8 @@ app.get("/api/gmail/message/:id", async (req, res) => {
 });
 
 app.get("/api/gmail/message/:id/attachment/:attachmentId", async (req, res) => {
-  const tokens = await loadTokens();
+  const email = req.portalUser?.email || "";
+  const tokens = await loadTokens(email);
   if (!tokens) {
     res.status(401).json({ ok: false });
     return;
@@ -811,7 +953,8 @@ app.get("/api/gmail/message/:id/attachment/:attachmentId", async (req, res) => {
 });
 
 app.post("/api/gmail/message/:id/read", async (req, res) => {
-  const tokens = await loadTokens();
+  const email = req.portalUser?.email || "";
+  const tokens = await loadTokens(email);
   if (!tokens) {
     res.status(401).json({ ok: false });
     return;
@@ -834,7 +977,8 @@ app.post("/api/gmail/message/:id/read", async (req, res) => {
 });
 
 app.post("/api/gmail/message/:id/trash", async (req, res) => {
-  const tokens = await loadTokens();
+  const email = req.portalUser?.email || "";
+  const tokens = await loadTokens(email);
   if (!tokens) {
     res.status(401).json({ ok: false });
     return;
