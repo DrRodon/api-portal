@@ -678,7 +678,7 @@ app.get("/api/bp/sync", async (req, res) => {
       kv.get(bpDataKey(email)),
       kv.get(bpMedsKey(email)),
     ]);
-    res.json({ ok: true, items: items || [], meds: meds || [] });
+    res.json({ ok: true, items: items || [], meds: meds || [], email });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false });

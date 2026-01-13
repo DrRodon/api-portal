@@ -492,9 +492,26 @@
           const res = await fetch("/api/bp/sync");
           const json = await res.json();
           if (json.ok) {
+            const serverEmail = json.email;
+            const localOwner = localStorage.getItem("bp_owner_email");
             const serverMeds = json.meds || [];
-            const localMeds = loadMeds();
 
+            // 1. Owner Mismatch Check
+            if (serverEmail && localOwner && localOwner !== serverEmail) {
+              // Wiping happen in app.js mainly, but here we can just accept Server Data
+              localStorage.setItem(MEDS_KEY, JSON.stringify(serverMeds));
+              renderMeds();
+              return;
+            }
+            if (!localOwner && serverEmail) {
+              if (serverMeds.length > 0) {
+                localStorage.setItem(MEDS_KEY, JSON.stringify(serverMeds));
+                renderMeds();
+              }
+              localStorage.setItem("bp_owner_email", serverEmail);
+            }
+
+            const localMeds = loadMeds();
             let finalMeds = localMeds;
             let dirty = false;
 

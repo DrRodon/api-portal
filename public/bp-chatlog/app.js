@@ -410,8 +410,39 @@
       const res = await fetch("/api/bp/sync");
       const json = await res.json();
       if (json.ok) {
+        const serverEmail = json.email;
+        const localOwner = localStorage.getItem("bp_owner_email");
         const serverItems = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
 
+        // 1. Owner Mismatch / New Owner logic
+        if (serverEmail && localOwner && localOwner !== serverEmail) {
+          console.warn("User switched from", localOwner, "to", serverEmail, ". Wiping local data.");
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(MEDS_KEY);
+          state.items = serverItems;
+          localStorage.setItem("bp_owner_email", serverEmail);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items)); // Cache new data
+          render();
+          toast("Przełączono użytkownika. Dane załadowane z chmury.");
+          return; // Stop here, do not push old data
+        }
+
+        // 2. First time claiming ownership or same owner
+        if (!localOwner && serverEmail) {
+          // If we have local data but no owner, checking against server data
+          // Case: Legacy data exists, but we are now logging in.
+          // If Server has data, Server WINs to be safe and avoid polluting account with stale local data
+          if (serverItems.length > 0) {
+            console.warn("Legacy local data found, but Server has data. Preferring Server.");
+            state.items = serverItems;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+          } else {
+            // Server empty, Local has data -> We keep local and it will PUSH below.
+          }
+          localStorage.setItem("bp_owner_email", serverEmail);
+        }
+
+        // 3. Sync Logic (Same user)
         let dirty = false;
         if (serverItems.length > state.items.length) {
           state.items = serverItems;
