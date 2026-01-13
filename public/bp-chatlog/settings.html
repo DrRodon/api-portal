@@ -611,9 +611,20 @@
       if (document.getElementById("shareBtn")) {
         fetchSharing();
         document.getElementById("shareBtn").addEventListener("click", async () => {
-          const email = document.getElementById("shareEmail").value.trim();
-          if (!email) return alert("Podaj email.");
+          const emailInput = document.getElementById("shareEmail");
+          const email = emailInput.value.trim();
+          if (!email) {
+            alert("Podaj email.");
+            return;
+          }
+
+          const btn = document.getElementById("shareBtn");
+          const orgText = btn.textContent;
+          btn.textContent = "...";
+          btn.disabled = true;
+
           try {
+            console.log("Adding share:", email);
             const res = await fetch("/api/bp/share", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -621,13 +632,20 @@
             });
             const json = await res.json();
             if (json.ok) {
-              document.getElementById("shareEmail").value = "";
-              fetchSharing();
+              emailInput.value = "";
+              await fetchSharing();
               toast("Udostępniono.");
             } else {
-              alert("Błąd: " + (json.error || "Nieznany"));
+              if (json.error === "SELF_SHARE") alert("Nie możesz udostępnić danych samemu sobie.");
+              else alert("Błąd: " + (json.error || "Nieznany"));
             }
-          } catch (e) { alert("Błąd sieci."); }
+          } catch (e) {
+            console.error(e);
+            alert("Błąd sieci.");
+          } finally {
+            btn.textContent = orgText;
+            btn.disabled = false;
+          }
         });
       }
     })();
