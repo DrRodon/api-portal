@@ -514,62 +514,98 @@
       initMeds();
 
       /* Sharing Logic */
+      /* Sharing Logic */
       async function fetchSharing() {
+        const shareList = document.getElementById("shareList");
+        const swmList = document.getElementById("sharedWithMeList");
+
+        if (shareList) shareList.innerHTML = '<div class="small">Ładowanie...</div>';
+        if (swmList) swmList.innerHTML = '<div class="small">Ładowanie...</div>';
+
         try {
           const res1 = await fetch("/api/bp/share");
           const json1 = await res1.json();
-          const shareList = document.getElementById("shareList");
-          if (json1.ok && shareList) {
+
+          console.log("SharedTo:", json1); // Debug
+
+          if (shareList) {
             shareList.innerHTML = "";
-            json1.sharedTo.forEach(email => {
-              const row = document.createElement("div");
-              row.style.marginBottom = "4px";
-              row.style.display = "flex";
-              row.style.alignItems = "center";
-              row.style.gap = "8px";
-              row.innerHTML = `<div style="flex:1">${escapeAttr(email)}</div>`;
-              const btn = document.createElement("button");
-              btn.className = "danger";
-              btn.style.padding = "4px 8px";
-              btn.style.fontSize = "12px";
-              btn.textContent = "Usuń";
-              btn.onclick = async () => {
-                if (!confirm("Zabrać dostęp?")) return;
-                await fetch("/api/bp/share", {
-                  method: "DELETE",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ targetEmail: email })
-                });
-                fetchSharing();
-                toast("Usunięto dostęp.");
-              };
-              row.appendChild(btn);
-              shareList.appendChild(row);
-            });
+            if (json1.ok && Array.isArray(json1.sharedTo) && json1.sharedTo.length > 0) {
+              json1.sharedTo.forEach(email => {
+                const row = document.createElement("div");
+                row.className = "shareRow";
+                row.style.marginBottom = "8px";
+                row.style.padding = "8px";
+                row.style.background = "var(--bg-card)";
+                row.style.border = "1px solid var(--border)";
+                row.style.borderRadius = "8px";
+                row.style.display = "flex";
+                row.style.alignItems = "center";
+                row.style.justifyContent = "space-between";
+                row.style.gap = "8px";
+
+                row.innerHTML = `<div>
+                    <div style="font-weight:600">${escapeAttr(email)}</div>
+                    <div class="small">Dostęp przyznany</div>
+                </div>`;
+
+                const btn = document.createElement("button");
+                btn.className = "danger";
+                btn.textContent = "Odbierz dostęp";
+                btn.style.fontSize = "0.85rem";
+                btn.style.padding = "4px 10px";
+
+                btn.onclick = async () => {
+                  if (!confirm(`Zabrać dostęp użytkownikowi ${email}?`)) return;
+                  try {
+                    await fetch("/api/bp/share", {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ targetEmail: email })
+                    });
+                    fetchSharing();
+                    toast("Usunięto dostęp.");
+                  } catch (e) { toast("Błąd sieci."); }
+                };
+                row.appendChild(btn);
+                shareList.appendChild(row);
+              });
+            } else {
+              shareList.innerHTML = '<div class="small">Nie udostępniasz nikomu swoich danych.</div>';
+            }
           }
 
           const res2 = await fetch("/api/bp/shared-with-me");
           const json2 = await res2.json();
-          const swmList = document.getElementById("sharedWithMeList");
-          if (json2.ok && swmList) {
+
+          if (swmList) {
             swmList.innerHTML = "";
-            json2.owners.forEach(email => {
-              const row = document.createElement("div");
-              row.style.marginBottom = "4px";
-              const link = document.createElement("a");
-              link.href = `/bp-chatlog/index.html?viewUser=${encodeURIComponent(email)}`;
-              link.textContent = email;
-              link.className = "linkBtn";
-              link.style.display = "block";
-              link.style.background = "var(--bg-card)";
-              link.style.border = "1px solid var(--border)";
-              link.style.padding = "6px";
-              link.style.textAlign = "center";
-              row.appendChild(link);
-              swmList.appendChild(row);
-            });
+            if (json2.ok && Array.isArray(json2.owners) && json2.owners.length > 0) {
+              json2.owners.forEach(email => {
+                const row = document.createElement("div");
+                row.style.marginBottom = "4px";
+                const link = document.createElement("a");
+                link.href = `/bp-chatlog/index.html?viewUser=${encodeURIComponent(email)}`;
+                link.textContent = `Otwórz dziennik: ${email}`;
+                link.className = "secondary";
+                link.style.display = "block";
+                link.style.textAlign = "center";
+                link.style.padding = "8px";
+                link.style.textDecoration = "none";
+                link.style.border = "1px solid currentColor";
+                link.style.borderRadius = "8px";
+
+                row.appendChild(link);
+                swmList.appendChild(row);
+              });
+            } else {
+              swmList.innerHTML = '<div class="small">Nikt nie udostępnił Ci danych.</div>';
+            }
           }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error(e);
+          if (shareList) shareList.textContent = "Błąd pobierania danych.";
+        }
       }
 
       if (document.getElementById("shareBtn")) {
