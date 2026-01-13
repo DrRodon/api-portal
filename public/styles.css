@@ -1030,6 +1030,7 @@ body.theme-dark .theme-switch__control:focus-visible {
     grid-column: 1 / -1;
     grid-row: auto;
     height: auto;
+    min-height: calc(var(--tile-row) * 2 + 20px);
     padding: 18px;
   }
 
