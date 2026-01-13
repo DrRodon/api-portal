@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ustawienia â€“ Notatnik ciĹ›nienia i analiza</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>Ustawienia – Notatnik ciśnienia i analiza</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 
@@ -20,12 +20,12 @@
         </div>
         <div>
           <h1>Ustawienia</h1>
-          <div class="sub">WyglÄ…d, leki, import/export.</div>
+          <div class="sub">Wygląd, leki, import/export.</div>
         </div>
       </div>
 
       <div class="toolbar">
-        <a class="linkBtn" href="./index.html" title="WrĂłÄ‡">WrĂłÄ‡</a>
+        <a class="linkBtn" href="./index.html" title="Wróć">Wróć</a>
       </div>
     </div>
   </header>
@@ -37,7 +37,7 @@
       </div>
 
       <div class="cardBodyScroll">
-        <h2 class="sectionTitle">WyglÄ…d</h2>
+        <h2 class="sectionTitle">Wygląd</h2>
 
         <div class="block">
           <div>
@@ -48,7 +48,7 @@
           <div class="modeRow">
             <div>
               <div class="modeTitle">Tryb ciemny</div>
-              <div class="small">Zmienia tĹ‚o i kontrast.</div>
+              <div class="small">Zmienia tło i kontrast.</div>
             </div>
 
             <label class="switch" aria-label="Tryb ciemny">
@@ -63,7 +63,7 @@
         <h2 class="sectionTitle">Leki</h2>
 
         <div class="small" style="margin-bottom:10px;">
-          Dodaj leki, ktĂłre chcesz kontrolowaÄ‡.
+          Dodaj leki, które chcesz kontrolować.
         </div>
 
         <div class="row">
@@ -80,7 +80,7 @@
                         <div class="row mt10">
           <div class="rowInline">
             <div>
-              <label for="medTime">DomyĹ›lna godzina</label>
+              <label for="medTime">Domyślna godzina</label>
               <input id="medTime" type="time" value="07:30" />
             </div>
             <div class="toggleField">
@@ -104,15 +104,15 @@
         <h2 class="sectionTitle">Dane</h2>
 
         <div class="small" style="margin-bottom:10px;">
-          Export i import dziaĹ‚ajÄ… na JSONie caĹ‚ej bazy w localStorage.
+          Export i import działają na JSONie całej bazy w localStorage.
         </div>
 
         <div class="btns">
           <button id="exportAllBtn" type="button">Export JSON</button>
           <button id="importBtn" type="button" class="secondary">Import JSON</button>
-          <button id="exportMedsBtn" type="button">Export lekĂłw</button>
-          <button id="importMedsBtn" type="button" class="secondary">Import lekĂłw</button>
-          <button id="wipeBtn" type="button" class="danger">WyczyĹ›Ä‡ wszystko</button>
+          <button id="exportMedsBtn" type="button">Export leków</button>
+          <button id="importMedsBtn" type="button" class="secondary">Import leków</button>
+          <button id="wipeBtn" type="button" class="danger">Wyczyść wszystko</button>
           <input id="importFile" type="file" accept="application/json" class="hidden" />
           <input id="importMedsFile" type="file" accept="application/json" class="hidden" />
         </div>
@@ -120,11 +120,11 @@
         <div class="hr"></div>
 
         <div class="btns">
-          <button id="resetSettingsBtn" class="secondary" type="button">Reset ustawieĹ„</button>
+          <button id="resetSettingsBtn" class="secondary" type="button">Reset ustawień</button>
         </div>
 
         <div class="small" style="margin-top:10px;">
-          Dane sÄ… trzymane lokalnie w przeglÄ…darce (localStorage).
+          Dane są trzymane lokalnie w przeglądarce (localStorage).
         </div>
       </div>
     </section>
@@ -183,7 +183,7 @@
         const meds = loadMeds();
 
         if(!meds.length){
-          box.innerHTML = `<div class="small">Brak lekĂłw na liĹ›cie.</div>`;
+          box.innerHTML = `<div class="small">Brak leków na liście.</div>`;
           return;
         }
 
@@ -246,14 +246,14 @@
           const del = document.createElement("button");
           del.type = "button";
           del.className = "danger";
-          del.textContent = "UsuĹ„";
+          del.textContent = "Usuń";
           del.onclick = () => {
-            const ok = confirm(`UsunÄ…Ä‡ lek "${m.name}"?`);
+            const ok = confirm(`Usunąć lek "${m.name}"?`);
             if(!ok) return;
             const meds2 = loadMeds().filter(x => x.id !== m.id);
             saveMeds(meds2);
             renderMeds();
-            toast("UsuniÄ™to.");
+            toast("Usunięto.");
           };
 
           right.appendChild(edit);
@@ -391,15 +391,15 @@
           const txt = await f.text();
           const json = JSON.parse(txt);
           const items = Array.isArray(json?.items) ? json.items : null;
-          if(!items) return alert("ZĹ‚y format. OczekujÄ™ JSON z polem items[].");
+          if(!items) return alert("Zły format. Oczekuję JSON z polem items[].");
 
-          const ok = confirm(`ZaimportowaÄ‡ wpisy: ${items.length}? Nadpisze to obecnÄ… bazÄ™.`);
+          const ok = confirm(`Zaimportować wpisy: ${items.length}? Nadpisze to obecną bazę.`);
           if(!ok) return;
 
           localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
           toast("Zaimportowano.");
         }catch(err){
-          alert("Import nie wyszedĹ‚. JSON jest uszkodzony albo w zĹ‚ym formacie.");
+          alert("Import nie wyszedł. JSON jest uszkodzony albo w złym formacie.");
         }finally{
           e.target.value = "";
         }
@@ -412,30 +412,30 @@
           const txt = await f.text();
           const json = JSON.parse(txt);
           const meds = Array.isArray(json?.meds) ? json.meds : null;
-          if(!meds) return alert("ZĹ‚y format. OczekujÄ™ JSON z polem meds[].");
+          if(!meds) return alert("Zły format. Oczekuję JSON z polem meds[].");
 
-          const ok = confirm(`ZaimportowaÄ‡ leki: ${meds.length}? Nadpisze to obecnÄ… listÄ™.`);
+          const ok = confirm(`Zaimportować leki: ${meds.length}? Nadpisze to obecną listę.`);
           if(!ok) return;
 
           saveMeds(meds);
           renderMeds();
           toast("Zaimportowano leki.");
         }catch(err){
-          alert("Import lekĂłw nie wyszedĹ‚. JSON jest uszkodzony albo w zĹ‚ym formacie.");
+          alert("Import leków nie wyszedł. JSON jest uszkodzony albo w złym formacie.");
         }finally{
           e.target.value = "";
         }
       });
 
       document.getElementById("wipeBtn").addEventListener("click", () => {
-        const ok = confirm("WyczyĹ›ciÄ‡ WSZYSTKIE wpisy? Tego nie cofniesz.");
+        const ok = confirm("Wyczyścić WSZYSTKIE wpisy? Tego nie cofniesz.");
         if(!ok) return;
         localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
         toast("Wyczyszczono.");
       });
 
       document.getElementById("resetSettingsBtn").addEventListener("click", () => {
-        const ok = confirm("ZresetowaÄ‡ ustawienia motywu do domyĹ›lnych? (Lista lekĂłw zostaje)");
+        const ok = confirm("Zresetować ustawienia motywu do domyślnych? (Lista leków zostaje)");
         if(!ok) return;
 
         const def = window.Theme.getDefaultSettings();

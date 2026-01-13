@@ -1013,6 +1013,7 @@ body.theme-dark .theme-switch__control:focus-visible {
 
   .gmail-preview {
     grid-column: 1 / -1;
+    height: auto;
   }
 
   .notatnik-panel {
@@ -1023,6 +1024,37 @@ body.theme-dark .theme-switch__control:focus-visible {
 @media (max-width: 560px) {
   .grid {
     grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+
+  .gmail-preview {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    height: auto;
+    min-height: calc(var(--tile-row) * 2 + 20px);
+    padding: 18px;
+  }
+
+  .gmail-preview__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .gmail-preview__actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .gmail-preview__meta,
+  .gmail-preview__detail-meta {
+    white-space: normal;
+    overflow: visible;
+  }
+
+  .gmail-preview__subject,
+  .gmail-preview__detail-subject {
+    white-space: normal;
   }
 }
 

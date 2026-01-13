@@ -232,7 +232,7 @@ const renderMessageDetail = (message) => {
     frame.className = "gmail-preview__detail-frame";
     frame.setAttribute("sandbox", "");
     frame.setAttribute("referrerpolicy", "no-referrer");
-    frame.setAttribute("title", "PodglÄ…d wiadomoĹ›ci");
+    frame.setAttribute("title", "Podgląd wiadomości");
     frame.srcdoc = message.html;
     body = frame;
   } else {
