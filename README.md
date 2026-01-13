@@ -66,6 +66,3 @@ Aby udostępnić komuś swoje wyniki:
 2. W sekcji "Udostępnianie" wpisz adres email osoby docelowej.
 3. Ta osoba (musi również zalogować się do Portalu) zobaczy Twój email w sekcji "Dane udostępnione DLA Ciebie".
 4. Kliknięcie w link otworzy Twój dziennik w trybie Read-Only.
-
----
-*Created by Antigravity*
