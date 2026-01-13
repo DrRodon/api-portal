@@ -218,6 +218,18 @@
         } catch (e) { console.error("Save meds failed", e); toast("Błąd zapisu leków"); }
       }
 
+      async function initMeds() {
+        try {
+          const r = await fetch("/api/bp/sync");
+          const j = await r.json();
+          if (j.ok) {
+            const cloudMeds = typeof j.meds === "string" ? JSON.parse(j.meds) : (j.meds || []);
+            window._cachedMeds = Array.isArray(cloudMeds) ? cloudMeds : [];
+          }
+        } catch (e) { console.error(e); }
+        renderMeds();
+      }
+
       function loadMeds() {
         return window._cachedMeds || [];
       }
