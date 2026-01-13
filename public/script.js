@@ -2,6 +2,10 @@ const tiles = document.querySelectorAll(".tile");
 const notatnikTile = document.querySelector(".tile--notatnik");
 const notatnikPanel = document.getElementById("notatnik-panel");
 const notatnikPanelClose = document.getElementById("notatnik-panel-close");
+const notatnikRoot = document.getElementById("notatnik-root");
+const notatnikViewButtons = notatnikRoot
+  ? notatnikRoot.querySelectorAll("[data-notatnik-view]")
+  : [];
 const gmailTile = document.querySelector(".tile--gmail");
 const gmailCount = document.getElementById("gmail-count");
 const gmailStatus = document.getElementById("gmail-status");
@@ -439,6 +443,18 @@ const setNotatnikOpen = (isOpen) => {
   }
 };
 
+const setNotatnikView = (view) => {
+  if (!notatnikRoot) {
+    return;
+  }
+  notatnikRoot.dataset.view = view;
+  notatnikViewButtons.forEach((button) => {
+    const isActive = button.dataset.notatnikView === view;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+};
+
 
 const applyTheme = (mode) => {
   const isNight = mode === "night" || (mode === "auto" && isNightTime());
@@ -586,6 +602,15 @@ if (notatnikTile) {
 if (notatnikPanelClose) {
   notatnikPanelClose.addEventListener("click", () => {
     setNotatnikOpen(false);
+  });
+}
+
+if (notatnikViewButtons.length) {
+  setNotatnikView(notatnikRoot?.dataset.view || "form");
+  notatnikViewButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setNotatnikView(button.dataset.notatnikView || "form");
+    });
   });
 }
 

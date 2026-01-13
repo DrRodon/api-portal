@@ -1021,6 +1021,21 @@ body.theme-dark .theme-switch__control:focus-visible {
   }
 }
 
+@media (max-width: 980px) {
+  .notatnik-panel {
+    height: min(88svh, 920px);
+  }
+
+  .notatnik-panel__body {
+    height: auto;
+    overflow: auto;
+  }
+
+  .notatnik-panel #notatnik-root {
+    height: auto;
+  }
+}
+
 @media (max-width: 560px) {
   .grid {
     grid-template-columns: 1fr;
