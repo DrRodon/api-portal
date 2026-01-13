@@ -3,11 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Notatnik ciĹ›nienia i analiza</title>
-
+  <title>Notatnik ciśnienia i analiza</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
   <!-- Favicon (bez dodatkowego pliku) -->
-<path d="M50 32h-8l-5 12-10-28-6 18H14" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <link rel="icon" href='data:image/svg+xml;utf8,
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="14" fill="%2314B8A6"/>
+    <path d="M50 32h-8l-5 12-10-28-6 18H14" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="M32 56S13 44 9 32c-2.7-8.5 4.5-16 13-16 4.5 0 7.7 2.2 10 5.6C34.3 18.2 37.5 16 42 16c8.5 0 15.7 7.5 13 16-4 12-23 24-23 24Z" fill="none" stroke="white" stroke-width="4" stroke-linejoin="round"/>
   </svg>' />
 
@@ -25,7 +28,7 @@
           </svg>
         </div>
         <div>
-          <h1>Notatnik ciĹ›nienia i analiza</h1>
+          <h1>Notatnik ciśnienia i analiza</h1>
           <div class="sub">Zapisuj wpisy, analizuj wykresy, trzymaj wszystko lokalnie.</div>
         </div>
       </div>
@@ -53,8 +56,8 @@
         <h2 id="formTitle">Dodaj wpis</h2>
         <div class="cardHeadActions">
           <button id="saveBtn" class="ok" type="button">Zapisz</button>
-          <button id="resetBtn" class="secondary" type="button">WyczyĹ›Ä‡ formularz</button>
-          <span class="pill">WpisĂłw: <strong id="countPill">0</strong></span>
+          <button id="resetBtn" class="secondary" type="button">Wyczyść formularz</button>
+          <span class="pill">Wpisów: <strong id="countPill">0</strong></span>
         </div>
       </div>
 
@@ -72,10 +75,10 @@
             <input id="dt" type="datetime-local" />
           </div>
           <div class="toggleField">
-            <label for="medsToggle">Wpis lekĂłw</label>
+            <label for="medsToggle">Wpis leków</label>
             <div class="toggleInput">
-              <span class="toggleText">PrzyjÄ™te leki</span>
-              <label class="switch" aria-label="PrzyjÄ™te leki">
+              <span class="toggleText">Przyjęte leki</span>
+              <label class="switch" aria-label="Przyjęte leki">
                 <input type="checkbox" id="medsToggle" />
                 <span class="slider"></span>
               </label>
@@ -93,18 +96,18 @@
             <input id="dia" inputmode="numeric" placeholder="np. 84" />
           </div>
           <div>
-            <label for="pulse">TÄ™tno</label>
+            <label for="pulse">Tętno</label>
             <input id="pulse" inputmode="numeric" placeholder="np. 72" />
           </div>
         </div>
 
         <div class="mt10" id="medsSection">
-          <label>Leki (lista z UstawieĹ„)</label>
+          <label>Leki (lista z Ustawień)</label>
           <div id="medChecklist" class="medChecklist"></div>
 
           <div class="mt10">
-            <label for="medNotes">Uwagi do lekĂłw</label>
-            <input id="medNotes" placeholder="np. Atacand wypadĹ‚ z rÄ™ki, nie byĹ‚em pewien" />
+            <label for="medNotes">Uwagi do leków</label>
+            <input id="medNotes" placeholder="np. Atacand wypadł z ręki, nie byłem pewien" />
           </div>
         </div>
 
@@ -112,7 +115,7 @@
 
         <div class="mt10">
           <label for="food">Jedzenie</label>
-          <input id="food" placeholder="np. 2 kanapki, obiad, sĹ‚odycze" />
+          <input id="food" placeholder="np. 2 kanapki, obiad, słodycze" />
         </div>
 
         <div class="row mt10">
@@ -121,7 +124,7 @@
             <input id="waterAmount" inputmode="numeric" placeholder="np. 250" />
           </div>
           <div>
-            <label for="waterType">Rodzaj pĹ‚ynu (procent wody)</label>
+            <label for="waterType">Rodzaj płynu (procent wody)</label>
             <select id="waterType">
               <option value="1">woda (100%)</option>
               <option value="0.85">woda z sokiem (85%)</option>
@@ -144,19 +147,19 @@
         </div>
 
         <div class="mt10">
-          <label for="events">Wydarzenia (seks, stres, wysiĹ‚ek)</label>
+          <label for="events">Wydarzenia (seks, stres, wysiłek)</label>
           <input id="events" placeholder="np. rano seks, stres w pracy" />
         </div>
 
         <div class="mt10">
-          <label for="symptoms">Objawy (Twoje sĹ‚owa)</label>
-          <input id="symptoms" placeholder="np. mam zjazd, jestem skoĹ‚owany" />
+          <label for="symptoms">Objawy (Twoje słowa)</label>
+          <input id="symptoms" placeholder="np. mam zjazd, jestem skołowany" />
         </div>
 
         <div class="row mt10">
           <div class="sliderBox">
             <div class="sliderTop">
-              <label for="severity">Nasilenie bĂłlu</label>
+              <label for="severity">Nasilenie bólu</label>
               <div class="sliderReadout">
                 <strong id="severityVal">0</strong>
                 <span id="severityText" class="sliderText">brak</span>
@@ -167,7 +170,7 @@
 
           <div class="sliderBox">
             <div class="sliderTop">
-              <label for="anxiety">LÄ™k lub napiÄ™cie</label>
+              <label for="anxiety">Lęk lub napięcie</label>
               <div class="sliderReadout">
                 <strong id="anxietyVal">0</strong>
                 <span id="anxietyText" class="sliderText">brak</span>
@@ -179,10 +182,10 @@
 
         <div class="mt10">
           <label for="hypothesis">Hipoteza</label>
-          <textarea id="hypothesis" placeholder="np. pominÄ…Ĺ‚em dawkÄ™ + sĹ‚abe nawodnienie"></textarea>
+          <textarea id="hypothesis" placeholder="np. pominąłem dawkę + słabe nawodnienie"></textarea>
         </div>
         <div class="btns">
-          <button id="cancelEditBtn" class="secondary hidden" type="button">Anuluj edycjÄ™</button>
+          <button id="cancelEditBtn" class="secondary hidden" type="button">Anuluj edycję</button>
         </div>
       </div>
     </section>
@@ -195,7 +198,7 @@
           <div class="dateRange">
             <span class="dateLabel">Od <input id="fromDate" type="date" /></span>
             <span class="dateLabel">Do <input id="toDate" type="date" /></span>
-            <button id="todayBtn" type="button" class="secondary">DziĹ›</button>
+            <button id="todayBtn" type="button" class="secondary">Dziś</button>
             <button id="allBtn" type="button" class="secondary">Wszystko</button>
           </div>
         </div>
@@ -205,8 +208,8 @@
             <option value="desc">Sortowanie: najnowsze</option>
             <option value="asc">Sortowanie: najstarsze</option>
           </select>
-          <label class="iconToggle" title="PokaĹĽ wpisy metryczne">
-            <input id="showMetrics" type="checkbox" aria-label="PokaĹĽ wpisy metryczne" />
+          <label class="iconToggle" title="Pokaż wpisy metryczne">
+            <input id="showMetrics" type="checkbox" aria-label="Pokaż wpisy metryczne" />
             <span class="iconBtn" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
                 <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"/>
@@ -242,14 +245,14 @@
             </div>
 
             <div class="summaryBlock bp">
-              <div class="summaryTitle">CiĹ›nienie i puls</div>
+              <div class="summaryTitle">Ciśnienie i puls</div>
               <div class="bpGrid">
                 <div class="bpChartCol">
                   <div class="summaryChart" id="bpPulseChart">Brak danych w widoku.</div>
                   <div class="summaryLegend">
                     <span class="legendItem sys">SYS</span>
                     <span class="legendItem dia">DIA</span>
-                    <span class="legendItem pulse">TÄ™tno</span>
+                    <span class="legendItem pulse">Tętno</span>
                   </div>
                 </div>
                 <div class="bpInfo" id="bpPulseInfo">-</div>
