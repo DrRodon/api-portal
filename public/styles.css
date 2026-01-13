@@ -849,45 +849,45 @@ body.theme-dark .notatnik-panel__icon {
   border-color: rgba(201, 79, 61, 0.6);
 }
 
+.footer__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logout-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 18px rgba(5, 8, 20, 0.25);
+}
+
+.logout-link:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.theme-dark .logout-link {
+  background: linear-gradient(180deg, rgba(30, 24, 56, 0.95), rgba(18, 14, 36, 0.95));
+  border-color: rgba(183, 156, 255, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 32px rgba(6, 4, 16, 0.65);
+  color: var(--ink);
+}
+
+.theme-dark .logout-link:hover {
+  background: linear-gradient(180deg, rgba(48, 38, 84, 0.95), rgba(24, 20, 42, 0.98));
+  border-color: rgba(183, 156, 255, 0.55);
+}
+
 .footer {
-  .footer__actions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .logout-link {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    color: inherit;
-    text-decoration: none;
-    font-size: 0.9rem;
-    background: rgba(255, 255, 255, 0.16);
-    box-shadow: 0 8px 18px rgba(5, 8, 20, 0.25);
-  }
-
-  .logout-link:hover {
-    border-color: rgba(255, 255, 255, 0.55);
-    background: rgba(255, 255, 255, 0.28);
-  }
-
-  .theme-dark .logout-link {
-    background: linear-gradient(180deg, rgba(30, 24, 56, 0.95), rgba(18, 14, 36, 0.95));
-    border-color: rgba(183, 156, 255, 0.38);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 18px 32px rgba(6, 4, 16, 0.65);
-    color: var(--ink);
-  }
-
-  .theme-dark .logout-link:hover {
-    background: linear-gradient(180deg, rgba(48, 38, 84, 0.95), rgba(24, 20, 42, 0.98));
-    border-color: rgba(183, 156, 255, 0.55);
-  }
-
   margin-top: 48px;
   font-size: 0.85rem;
   color: rgba(78, 63, 47, 0.75);
