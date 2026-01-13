@@ -659,6 +659,151 @@ app.post("/api/allowlist", async (req, res) => {
   }
 });
 
+/* BP Chatlog Sync & Share API */
+const BP_KV_PREFIX = "bp:v1";
+
+const bpDataKey = (email) => `${BP_KV_PREFIX}:data:${email}`;
+const bpMedsKey = (email) => `${BP_KV_PREFIX}:meds:${email}`;
+const bpAclKey = (email) => `${BP_KV_PREFIX}:acl:${email}`; // Set of emails allowed to view 'email's data
+const bpSharedWithKey = (email) => `${BP_KV_PREFIX}:shared_with:${email}`; // Set of emails that 'email' can view
+
+app.get("/api/bp/sync", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const kv = getKvClient();
+  if (!kv) return res.json({ ok: true, items: [], meds: [] }); // Fallback or empty if no KV
+
+  try {
+    const [items, meds] = await Promise.all([
+      kv.get(bpDataKey(email)),
+      kv.get(bpMedsKey(email)),
+    ]);
+    res.json({ ok: true, items: items || [], meds: meds || [] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/bp/sync", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const { items, meds } = req.body;
+  const kv = getKvClient();
+  if (!kv) return res.status(503).json({ ok: false, error: "KV_DISABLED" });
+
+  try {
+    await Promise.all([
+      kv.set(bpDataKey(email), items || []),
+      kv.set(bpMedsKey(email), meds || []),
+    ]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.get("/api/bp/share", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const kv = getKvClient();
+  if (!kv) return res.json({ ok: true, sharedTo: [] });
+
+  try {
+    const allowed = await kv.smembers(bpAclKey(email));
+    res.json({ ok: true, sharedTo: allowed || [] });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/bp/share", async (req, res) => {
+  const email = req.portalUser?.email;
+  const targetRaw = req.body.targetEmail;
+  if (!email) return res.status(401).json({ ok: false });
+  if (!targetRaw) return res.status(400).json({ ok: false });
+
+  const target = targetRaw.trim().toLowerCase();
+  if (target === email)
+    return res.status(400).json({ ok: false, error: "SELF_SHARE" });
+
+  const kv = getKvClient();
+  if (!kv) return res.status(503).json({ ok: false });
+
+  try {
+    await kv.sadd(bpAclKey(email), target);
+    await kv.sadd(bpSharedWithKey(target), email);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.delete("/api/bp/share", async (req, res) => {
+  const email = req.portalUser?.email;
+  const targetRaw = req.body.targetEmail;
+  if (!email) return res.status(401).json({ ok: false });
+  if (!targetRaw) return res.status(400).json({ ok: false });
+
+  const target = targetRaw.trim().toLowerCase();
+  const kv = getKvClient();
+  if (!kv) return res.status(503).json({ ok: false });
+
+  try {
+    await kv.srem(bpAclKey(email), target);
+    await kv.srem(bpSharedWithKey(target), email);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.get("/api/bp/shared-with-me", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const kv = getKvClient();
+  if (!kv) return res.json({ ok: true, owners: [] });
+
+  try {
+    const owners = await kv.smembers(bpSharedWithKey(email));
+    res.json({ ok: true, owners: owners || [] });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.get("/api/bp/view/:ownerEmail", async (req, res) => {
+  const viewer = req.portalUser?.email;
+  const owner = req.params.ownerEmail?.toLowerCase();
+  if (!viewer) return res.status(401).json({ ok: false });
+  if (!owner) return res.status(400).json({ ok: false });
+
+  const kv = getKvClient();
+  if (!kv) return res.status(503).json({ ok: false });
+
+  try {
+    const isAllowed = await kv.sismember(bpAclKey(owner), viewer);
+    if (!isAllowed) {
+      return res.status(403).json({ ok: false, error: "ACCESS_DENIED" });
+    }
+
+    const [items, meds] = await Promise.all([
+      kv.get(bpDataKey(owner)),
+      kv.get(bpMedsKey(owner)),
+    ]);
+    res.json({
+      ok: true,
+      items: items || [],
+      meds: meds || [],
+      readOnly: true,
+      owner,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
 app.get("/auth/portal", (_req, res) => {
   if (!CLIENT_ID || !CLIENT_SECRET) {
     res.status(500).send("Missing CLIENT_ID or CLIENT_SECRET in .env.");

@@ -8,106 +8,106 @@
   const state = { items: [], editingId: null };
   const isEmbedded = Boolean(document.getElementById("notatnik-panel"));
 
-  function uuid(){
+  function uuid() {
     return (crypto?.randomUUID?.() ?? `id_${Date.now()}_${Math.random().toString(16).slice(2)}`);
   }
 
-  function safeNum(v){
+  function safeNum(v) {
     const s = String(v ?? "").trim();
-    if(!s) return null;
+    if (!s) return null;
     const x = Number(s.replace(",", "."));
     return Number.isFinite(x) ? x : null;
   }
 
-  function nowLocalInputValue(){
+  function nowLocalInputValue() {
     const d = new Date();
     const pad = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  function toLocalInput(dateObj){
+  function toLocalInput(dateObj) {
     const pad = (n) => String(n).padStart(2, "0");
-    return `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}T${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
+    return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}T${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
   }
 
-  function escapeHtml(str){
+  function escapeHtml(str) {
     return String(str ?? "")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;")
-      .replaceAll("\n","<br/>");
+      .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;").replaceAll("'", "&#039;")
+      .replaceAll("\n", "<br/>");
   }
 
-  function normalizeText(s){ return String(s ?? "").toLowerCase().trim(); }
+  function normalizeText(s) { return String(s ?? "").toLowerCase().trim(); }
 
-  function toast(msg){
+  function toast(msg) {
     const t = el("toast");
-    if(!t) return;
+    if (!t) return;
     t.textContent = msg;
     t.classList.remove("hidden");
     clearTimeout(toast._tm);
     toast._tm = setTimeout(() => t.classList.add("hidden"), 2200);
   }
 
-  function formatWhen(iso){
-    if(!iso) return "-";
+  function formatWhen(iso) {
+    if (!iso) return "-";
     const d = new Date(iso);
-    if(Number.isNaN(d.getTime())) return iso;
+    if (Number.isNaN(d.getTime())) return iso;
     const pad = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  function parseDateOnly(v){
-    if(!v) return null;
+  function parseDateOnly(v) {
+    if (!v) return null;
     const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if(!m) return null;
+    if (!m) return null;
     const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0, 0);
     return Number.isNaN(d.getTime()) ? null : d;
   }
 
-  function dayKey(iso){
+  function dayKey(iso) {
     const d = new Date(iso);
-    if(Number.isNaN(d.getTime())) return "unknown";
-    const pad = (n) => String(n).padStart(2,"0");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    if (Number.isNaN(d.getTime())) return "unknown";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
 
-  function bpStatusInfo(sys, dia){
-    if(sys == null || dia == null) return { cls: "", title: "Brak danych", explain: "", range: "" };
-    if(sys >= 180 || dia >= 120){
+  function bpStatusInfo(sys, dia) {
+    if (sys == null || dia == null) return { cls: "", title: "Brak danych", explain: "", range: "" };
+    if (sys >= 180 || dia >= 120) {
       return { cls: "bad", title: "Bardzo wysokie cisnienie", explain: "Znacznie powyzej normy.", range: "SYS 180+ lub DIA 120+" };
     }
-    if(sys >= 140 || dia >= 90){
+    if (sys >= 140 || dia >= 90) {
       return { cls: "warn", title: "Wysokie cisnienie", explain: "Powyzej normy.", range: "SYS 140+ lub DIA 90+" };
     }
-    if(sys >= 130 || dia >= 85){
+    if (sys >= 130 || dia >= 85) {
       return { cls: "warn", title: "Podwyzszone cisnienie", explain: "Lekko powyzej normy.", range: "SYS 130+ lub DIA 85+" };
     }
-    if(sys < 90 || dia < 60){
+    if (sys < 90 || dia < 60) {
       return { cls: "warn", title: "Niskie cisnienie", explain: "Ponizej normy.", range: "SYS < 90 lub DIA < 60" };
     }
     return { cls: "ok", title: "W normie", explain: "Wartosc w granicach normy.", range: "Ponizej progow ostrzegawczych" };
   }
 
-  function scaleLabel(v){
-    if(v <= 0) return "brak";
-    if(v <= 2) return "minimalne";
-    if(v <= 4) return "łagodne";
-    if(v <= 6) return "wyraźne";
-    if(v <= 8) return "silne";
+  function scaleLabel(v) {
+    if (v <= 0) return "brak";
+    if (v <= 2) return "minimalne";
+    if (v <= 4) return "łagodne";
+    if (v <= 6) return "wyraźne";
+    if (v <= 8) return "silne";
     return "bardzo silne";
   }
 
-  function loadWaterTarget(){
-    try{
+  function loadWaterTarget() {
+    try {
       const raw = localStorage.getItem(WATER_TARGET_KEY);
       const v = Number(raw);
       return Number.isFinite(v) && v > 0 ? Math.round(v) : DEFAULT_WATER_TARGET;
-    }catch{
+    } catch {
       return DEFAULT_WATER_TARGET;
     }
   }
 
-  function effectiveWaterMl(item){
+  function effectiveWaterMl(item) {
     if (typeof item?.waterMl === "number" && item.waterMl > 0) {
       const hyd = (typeof item.hydration === "number" && Number.isFinite(item.hydration)) ? item.hydration : 1;
       return Math.round(item.waterMl * hyd);
@@ -115,64 +115,65 @@
     return 0;
   }
 
-  function loadMedsAll(){
-    try{
+  function loadMedsAll() {
+    if (state.readOnly && state.meds) return state.meds;
+    try {
       const raw = localStorage.getItem(MEDS_KEY);
       const arr = raw ? JSON.parse(raw) : [];
       return Array.isArray(arr) ? arr : [];
-    }catch{
+    } catch {
       return [];
     }
   }
 
-  function parseMedStatus(v){
-    if(v == null || v === "") return { state: "none", mult: 0 };
-    if(typeof v === "number"){
-      if(v > 0) return { state: "taken", mult: v };
-      if(v < 0) return { state: "missed", mult: Math.abs(v) };
+  function parseMedStatus(v) {
+    if (v == null || v === "") return { state: "none", mult: 0 };
+    if (typeof v === "number") {
+      if (v > 0) return { state: "taken", mult: v };
+      if (v < 0) return { state: "missed", mult: Math.abs(v) };
       return { state: "none", mult: 0 };
     }
     const s = String(v);
-    if(/^[-+]?\d+(\.\d+)?$/.test(s)){
+    if (/^[-+]?\d+(\.\d+)?$/.test(s)) {
       const num = Number(s);
-      if(num > 0) return { state: "taken", mult: num };
-      if(num < 0) return { state: "missed", mult: Math.abs(num) };
+      if (num > 0) return { state: "taken", mult: num };
+      if (num < 0) return { state: "missed", mult: Math.abs(num) };
       return { state: "none", mult: 0 };
     }
-    if(s.startsWith("taken")){
+    if (s.startsWith("taken")) {
       const parts = s.split(":");
       const mult = Number(parts[1]);
       return { state: "taken", mult: Number.isFinite(mult) && mult > 0 ? mult : 1 };
     }
-    if(s === "missed" || s === "late") return { state: "missed", mult: 1 };
+    if (s === "missed" || s === "late") return { state: "missed", mult: 1 };
     return { state: "none", mult: 0 };
   }
 
-  function chartSvg(series){
+  function chartSvg(series) {
     const w = 320;
     const h = 80;
     const p = 6;
     const gridSteps = 4;
     const points = series.filter(s => s.values.length > 0);
-    if(!points.length) return "";
+    if (!points.length) return "";
 
     let min = Infinity;
     let max = -Infinity;
     let firstIndex = Infinity;
     let lastIndex = -1;
 
-    for(const s of points){
-      for(let i = 0; i < s.values.length; i += 1){
+    for (const s of points) {
+      for (let i = 0; i < s.values.length; i += 1) {
         const v = s.values[i];
-        if(v == null) continue;
-        if(v < min) min = v;
-        if(v > max) max = v;
-        if(i < firstIndex) firstIndex = i;
-        if(i > lastIndex) lastIndex = i;
+        if (v == null) continue;
+        if (v < min) min = v;
+        if (v > max) max = v;
+        if (i < firstIndex) firstIndex = i;
+        if (i > lastIndex) lastIndex = i;
       }
     }
-    if(!Number.isFinite(min) || !Number.isFinite(max)) return "";
-    if(!Number.isFinite(firstIndex) || lastIndex < firstIndex) return "";
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return "";
+    if (!Number.isFinite(firstIndex) || lastIndex < firstIndex) return "";
     const span = (max - min) || 1;
     const innerW = w - 2 * p;
     const innerH = h - 2 * p;
@@ -187,8 +188,8 @@
 
     const lines = points.map((s) => {
       const pts = s.values.map((v, i) => {
-        if(i < firstIndex || i > lastIndex) return null;
-        if(v == null) return null;
+        if (i < firstIndex || i > lastIndex) return null;
+        if (v == null) return null;
         const x = p + innerW * ((i - firstIndex) / denom);
         const y = p + innerH * (1 - (v - min) / span);
         return `${x.toFixed(1)},${y.toFixed(1)}`;
@@ -198,10 +199,10 @@
 
     const dots = points.map((s) => {
       const count = s.values.reduce((acc, v) => (v == null ? acc : acc + 1), 0);
-      if(count > 1) return "";
+      if (count > 1) return "";
       const circles = s.values.map((v, i) => {
-        if(i < firstIndex || i > lastIndex) return null;
-        if(v == null) return null;
+        if (i < firstIndex || i > lastIndex) return null;
+        if (v == null) return null;
         const x = p + innerW * ((i - firstIndex) / denom);
         const y = p + innerH * (1 - (v - min) / span);
         return `<circle class="chartPoint ${s.cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.5"/>`;
@@ -212,19 +213,19 @@
     return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">${grid}${axis}${lines}${dots}</svg>`;
   }
 
-  function renderSummary(items){
+  function renderSummary(items) {
     const waterTotal = items.reduce((sum, it) => sum + effectiveWaterMl(it), 0);
     const from = parseDateOnly(el("fromDate").value);
     const to = parseDateOnly(el("toDate").value);
     let dayCount = 0;
-    if(from && to){
+    if (from && to) {
       const fromMs = from.getTime();
       const toMs = to.getTime();
       dayCount = Math.max(1, Math.round((toMs - fromMs) / 86400000) + 1);
-    }else{
+    } else {
       const days = new Set();
-      for(const it of items){
-        if(it?.dt) days.add(dayKey(it.dt));
+      for (const it of items) {
+        if (it?.dt) days.add(dayKey(it.dt));
       }
       dayCount = days.size || 0;
     }
@@ -236,15 +237,15 @@
     const waterDaysEl = el("waterDays");
     const waterBarEl = el("waterBar");
 
-    if(waterTotalEl) waterTotalEl.textContent = String(waterTotal || 0);
-    if(waterTargetEl) waterTargetEl.textContent = targetTotal ? String(targetTotal) : "-";
-    if(waterDaysEl) waterDaysEl.textContent = dayCount ? `${dayCount} dni` : "brak zakresu";
-    if(waterBarEl){
+    if (waterTotalEl) waterTotalEl.textContent = String(waterTotal || 0);
+    if (waterTargetEl) waterTargetEl.textContent = targetTotal ? String(targetTotal) : "-";
+    if (waterDaysEl) waterDaysEl.textContent = dayCount ? `${dayCount} dni` : "brak zakresu";
+    if (waterBarEl) {
       const pct = targetTotal > 0 ? Math.min(100, Math.round((waterTotal / targetTotal) * 100)) : 0;
       waterBarEl.style.width = `${pct}%`;
     }
 
-    const sorted = [...items].sort((a,b) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
+    const sorted = [...items].sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
     const sysSeries = sorted.map(it => (typeof it.sys === "number" && it.sys > 0 ? it.sys : null));
     const diaSeries = sorted.map(it => (typeof it.dia === "number" && it.dia > 0 ? it.dia : null));
     const pulseSeries = sorted.map(it => (typeof it.pulse === "number" && it.pulse > 0 ? it.pulse : null));
@@ -255,25 +256,25 @@
     ]);
 
     const chartBox = el("bpPulseChart");
-    if(chartBox){
-      if(chart){
+    if (chartBox) {
+      if (chart) {
         chartBox.innerHTML = chart;
         chartBox.classList.add("hasChart");
-      }else{
+      } else {
         chartBox.textContent = "Brak danych w widoku.";
         chartBox.classList.remove("hasChart");
       }
     }
 
     const bpInfo = el("bpPulseInfo");
-    if(bpInfo){
+    if (bpInfo) {
       const latestBp = [...sorted].reverse().find(it => typeof it.sys === "number" && typeof it.dia === "number" && it.sys > 0 && it.dia > 0);
       const latestPulse = [...sorted].reverse().find(it => typeof it.pulse === "number" && it.pulse > 0);
       const bpCount = sysSeries.filter(v => v != null).length;
       const pulseCount = pulseSeries.filter(v => v != null).length;
 
       const rows = [];
-      if(latestBp){
+      if (latestBp) {
         const status = bpStatusInfo(latestBp.sys, latestBp.dia);
         const arrow = status.cls === "bad" ? "&#9650;&#9650;" : (status.cls === "warn" ? "&#9650;" : "&#9654;");
         const ariaText = [status.title, status.range].filter(Boolean).join(". ");
@@ -296,17 +297,17 @@
           </div>`
         );
       }
-      if(latestPulse){
+      if (latestPulse) {
         rows.push(
           `<div class="bpInfoRow"><span class="bpInfoLabel">Ostatni puls:</span><span class="bpInfoValue">${latestPulse.pulse}</span></div>`
         );
       }
-      if(latestBp){
+      if (latestBp) {
         rows.push(
           `<div class="bpInfoRow"><span class="bpInfoLabel">Kiedy:</span><span class="bpInfoValue">${formatWhen(latestBp.dt)}</span></div>`
         );
       }
-      if(bpCount || pulseCount){
+      if (bpCount || pulseCount) {
         rows.push(
           `<div class="bpInfoRow"><span class="bpInfoLabel">Wpisy:</span><span class="bpInfoValue">BP ${bpCount} | Tętno ${pulseCount}</span></div>`
         );
@@ -316,32 +317,32 @@
     }
 
     const medsBox = el("medsSummary");
-    if(medsBox){
+    if (medsBox) {
       const stats = new Map();
-      for(const it of items){
-        if(!it?.medications || typeof it.medications !== "object") continue;
-        for(const [id, status] of Object.entries(it.medications)){
-          if(!stats.has(id)) stats.set(id, { taken: 0, missed: 0 });
+      for (const it of items) {
+        if (!it?.medications || typeof it.medications !== "object") continue;
+        for (const [id, status] of Object.entries(it.medications)) {
+          if (!stats.has(id)) stats.set(id, { taken: 0, missed: 0 });
           const entry = stats.get(id);
           const parsed = parseMedStatus(status);
-          if(parsed.state === "taken") entry.taken += parsed.mult;
-          if(parsed.state === "missed") entry.missed += parsed.mult;
+          if (parsed.state === "taken") entry.taken += parsed.mult;
+          if (parsed.state === "missed") entry.missed += parsed.mult;
         }
       }
 
-      if(!stats.size){
+      if (!stats.size) {
         medsBox.textContent = "Brak danych w widoku.";
-      }else{
+      } else {
         const catalog = loadMedsAll();
         const nameById = new Map(catalog.map(m => [m.id, m]));
 
         const rows = [];
         const toTitleCase = (s) => {
           const base = String(s || "").replace(/[-_]+/g, " ").trim();
-          if(!base) return "";
+          if (!base) return "";
           return base.split(" ").map(w => w ? (w[0].toUpperCase() + w.slice(1)) : "").join(" ");
         };
-        for(const [id, v] of stats.entries()){
+        for (const [id, v] of stats.entries()) {
           const m = nameById.get(id);
           const rawName = m ? (m.name || "") : "";
           const hasUpper = /[A-Z]/.test(rawName);
@@ -360,34 +361,107 @@
     }
   }
 
-  function load(){
-    try{
+  async function load() {
+    state.readOnly = false;
+    state.meds = null;
+
+    const params = new URLSearchParams(window.location.search);
+    const viewUser = params.get("viewUser");
+
+    if (viewUser) {
+      state.readOnly = true;
+      const form = el("formCard");
+      if (form) form.style.display = "none";
+      const switcher = document.querySelector(".mobileSwitch");
+      if (switcher) switcher.style.display = "none";
+
+      try {
+        const res = await fetch(`/api/bp/view/${encodeURIComponent(viewUser)}`);
+        const json = await res.json();
+        if (json.ok) {
+          state.items = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
+          const medArr = typeof json.meds === "string" ? JSON.parse(json.meds) : (json.meds || []);
+          state.meds = Array.isArray(medArr) ? medArr : [];
+          render();
+          toast(`Podgląd: ${escapeHtml(json.owner)}`);
+        } else {
+          toast("Brak dostępu lub błąd.");
+        }
+      } catch (e) {
+        console.error(e);
+        toast("Błąd ładowania podglądu.");
+      }
+      return;
+    }
+
+    try {
       const raw = localStorage.getItem(STORAGE_KEY);
       state.items = raw ? JSON.parse(raw) : [];
-      if(!Array.isArray(state.items)) state.items = [];
-    }catch{
+      if (!Array.isArray(state.items)) state.items = [];
+    } catch {
       state.items = [];
     }
+    serverSync();
   }
 
-  function save(){
+  async function serverSync() {
+    if (state.readOnly) return;
+    try {
+      const res = await fetch("/api/bp/sync");
+      const json = await res.json();
+      if (json.ok) {
+        const serverItems = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
+
+        let dirty = false;
+        if (serverItems.length > state.items.length) {
+          state.items = serverItems;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+          render();
+          toast("Zaktualizowano z chmury.");
+        } else if (state.items.length > serverItems.length) {
+          dirty = true;
+        }
+
+        if (dirty || state.items.length > 0) {
+          serverPush();
+        }
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  async function serverPush() {
+    if (state.readOnly) return;
+    try {
+      const medsRaw = localStorage.getItem(MEDS_KEY);
+      const meds = medsRaw ? JSON.parse(medsRaw) : [];
+      await fetch("/api/bp/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: state.items, meds })
+      });
+    } catch (e) { console.error(e); }
+  }
+
+  function save() {
+    if (state.readOnly) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+    serverPush();
   }
 
-  function loadMedsCatalog(){
-    try{
+  function loadMedsCatalog() {
+    try {
       const raw = localStorage.getItem(MEDS_KEY);
       const arr = raw ? JSON.parse(raw) : [];
       const meds = Array.isArray(arr) ? arr : [];
       return meds.filter(m => m && m.active);
-    }catch{
+    } catch {
       return [];
     }
   }
 
-  function renderMedChecklist(selected){
+  function renderMedChecklist(selected) {
     const box = el("medChecklist");
-    if(!box) return;
+    if (!box) return;
 
     const meds = loadMedsCatalog();
     const cur = selected && typeof selected === "object" ? selected : {};
@@ -395,7 +469,7 @@
     const maxMult = 4;
     const minMult = -1;
 
-    if(!meds.length){
+    if (!meds.length) {
       box.innerHTML = `<div class="small">Nie masz zdefiniowanych leków. Dodaj je w Ustawieniach.</div>`;
       return;
     }
@@ -417,7 +491,7 @@
       const right = document.createElement("div");
       right.className = "right";
 
-      if(m.dose){
+      if (m.dose) {
         const doseBadge = document.createElement("span");
         doseBadge.className = "badge medDoseBadge";
         doseBadge.textContent = m.dose;
@@ -429,8 +503,8 @@
       hidden.setAttribute("data-med-id", m.id);
       const parsedCur = parseMedStatus(cur[m.id]);
       let curVal = 0;
-      if(parsedCur.state === "taken") curVal = parsedCur.mult;
-      else if(parsedCur.state === "missed") curVal = -parsedCur.mult;
+      if (parsedCur.state === "taken") curVal = parsedCur.mult;
+      else if (parsedCur.state === "missed") curVal = -parsedCur.mult;
       hidden.value = String(curVal);
 
       const multBox = document.createElement("div");
@@ -475,7 +549,7 @@
     });
   }
 
-  function syncSliders(){
+  function syncSliders() {
     const s = Number(el("severity").value);
     const a = Number(el("anxiety").value);
     el("severityVal").textContent = String(s);
@@ -484,7 +558,7 @@
     el("anxietyText").textContent = scaleLabel(a);
   }
 
-  function resetForm(){
+  function resetForm() {
     state.editingId = null;
     el("formTitle").textContent = "Dodaj wpis";
     el("cancelEditBtn").classList.add("hidden");
@@ -517,17 +591,17 @@
     syncSliders();
   }
 
-  function readForm(){
+  function readForm() {
     const dtLocal = el("dt").value;
     const dtISO = dtLocal ? new Date(dtLocal).toISOString() : new Date().toISOString();
 
     const medsStatus = {};
     const medsEnabled = Boolean(el("medsToggle").checked);
-    if(medsEnabled){
+    if (medsEnabled) {
       document.querySelectorAll('#medChecklist input[type="hidden"][data-med-id]').forEach(h => {
         const id = h.getAttribute("data-med-id");
         const v = h.value;
-        if(id && v && v !== "none" && v !== "0") medsStatus[id] = v;
+        if (id && v && v !== "none" && v !== "0") medsStatus[id] = v;
       });
     }
 
@@ -559,7 +633,7 @@
     };
   }
 
-  function writeForm(item){
+  function writeForm(item) {
     const d = new Date(item.dt);
     el("dt").value = Number.isNaN(d.getTime()) ? nowLocalInputValue() : toLocalInput(d);
 
@@ -591,21 +665,21 @@
     renderMedChecklist(item.medications || {});
   }
 
-  function upsert(){
+  function upsert() {
     const data = readForm();
 
-    if(state.editingId){
+    if (state.editingId) {
       const idx = state.items.findIndex(x => x.id === state.editingId);
-      if(idx >= 0){
+      if (idx >= 0) {
         state.items[idx] = { ...state.items[idx], ...data };
         save();
         toast("Zapisano zmiany.");
-      }else{
+      } else {
         state.items.push({ id: uuid(), createdAt: new Date().toISOString(), ...data });
         save();
         toast("Nie znalazłem wpisu do edycji. Zapisano jako nowy.");
       }
-    }else{
+    } else {
       state.items.push({ id: uuid(), createdAt: new Date().toISOString(), ...data });
       save();
       toast("Dodano wpis.");
@@ -616,9 +690,9 @@
     render();
   }
 
-  function startEdit(id){
+  function startEdit(id) {
     const it = state.items.find(x => x.id === id);
-    if(!it) return;
+    if (!it) return;
     state.editingId = id;
     el("formTitle").textContent = "Edytuj wpis";
     el("cancelEditBtn").classList.remove("hidden");
@@ -626,9 +700,9 @@
     writeForm(it);
   }
 
-  function remove(id){
+  function remove(id) {
     const ok = confirm("Usunąć ten wpis? Tego nie cofniesz.");
-    if(!ok) return;
+    if (!ok) return;
     state.items = state.items.filter(x => x.id !== id);
     save();
     load();
@@ -636,7 +710,7 @@
     render();
   }
 
-  function buildSearchBlob(item){
+  function buildSearchBlob(item) {
     const medsText = item.medications ? JSON.stringify(item.medications) : "";
     return normalizeText([
       item.food,
@@ -647,7 +721,7 @@
     ].join(" | "));
   }
 
-  function filtered(){
+  function filtered() {
     const q = normalizeText(el("q").value);
     const sort = el("sort").value;
 
@@ -657,23 +731,23 @@
     let fromTs = null;
     let toTs = null;
 
-    if(from){
-      from.setHours(0,0,0,0);
+    if (from) {
+      from.setHours(0, 0, 0, 0);
       fromTs = from.getTime();
     }
-    if(to){
-      to.setHours(23,59,59,999);
+    if (to) {
+      to.setHours(23, 59, 59, 999);
       toTs = to.getTime();
     }
 
     let items = [...state.items].filter(x => x && x.dt);
 
-    if(fromTs != null) items = items.filter(it => new Date(it.dt).getTime() >= fromTs);
-    if(toTs != null) items = items.filter(it => new Date(it.dt).getTime() <= toTs);
+    if (fromTs != null) items = items.filter(it => new Date(it.dt).getTime() >= fromTs);
+    if (toTs != null) items = items.filter(it => new Date(it.dt).getTime() <= toTs);
 
-    if(q) items = items.filter(it => buildSearchBlob(it).includes(q));
+    if (q) items = items.filter(it => buildSearchBlob(it).includes(q));
 
-    items.sort((a,b) => {
+    items.sort((a, b) => {
       const ta = new Date(a.dt).getTime();
       const tb = new Date(b.dt).getTime();
       return sort === "asc" ? ta - tb : tb - ta;
@@ -682,7 +756,7 @@
     return items;
   }
 
-  function render(){
+  function render() {
     const items = filtered();
     renderSummary(items);
     el("countPill").textContent = String(state.items.length);
@@ -690,7 +764,7 @@
     const list = el("list");
     list.innerHTML = "";
 
-    if(!items.length){
+    if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "small";
       empty.textContent = "Brak wpisów w tym widoku.";
@@ -700,27 +774,27 @@
 
     const showMetrics = Boolean(el("showMetrics")?.checked);
     let rendered = 0;
-    for(let idx = 0; idx < items.length; idx += 1){
+    for (let idx = 0; idx < items.length; idx += 1) {
       const it = items[idx];
       const lines = [];
 
-      if(it.medNotes) lines.push({k:"Uwagi do leków", v: it.medNotes});
-      if(it.food) lines.push({k:"Jedzenie", v: it.food});
-      if(it.events) lines.push({k:"Wydarzenia", v: it.events});
-      if(it.sleep) lines.push({k:"Sen", v: it.sleep});
-      if(it.substances) lines.push({k:"Substancje", v: it.substances});
-      if(it.symptoms) lines.push({k:"Objawy", v: it.symptoms});
-      if(it.hypothesis) lines.push({k:"Hipoteza", v: it.hypothesis});
-      if(it.notes) lines.push({k:"Notatki", v: it.notes});
+      if (it.medNotes) lines.push({ k: "Uwagi do leków", v: it.medNotes });
+      if (it.food) lines.push({ k: "Jedzenie", v: it.food });
+      if (it.events) lines.push({ k: "Wydarzenia", v: it.events });
+      if (it.sleep) lines.push({ k: "Sen", v: it.sleep });
+      if (it.substances) lines.push({ k: "Substancje", v: it.substances });
+      if (it.symptoms) lines.push({ k: "Objawy", v: it.symptoms });
+      if (it.hypothesis) lines.push({ k: "Hipoteza", v: it.hypothesis });
+      if (it.notes) lines.push({ k: "Notatki", v: it.notes });
 
-      if(!lines.length){
+      if (!lines.length) {
         const tags = [];
-        if(typeof it.sys === "number" && typeof it.dia === "number" && it.sys > 0 && it.dia > 0) tags.push("ciśnienie");
-        if(typeof it.pulse === "number" && it.pulse > 0) tags.push("puls");
-        if(typeof it.waterMl === "number" && it.waterMl > 0) tags.push("nawodnienie");
-        if(it.medications && typeof it.medications === "object" && Object.keys(it.medications).length) tags.push("leki");
-        if(!showMetrics || !tags.length) continue;
-        lines.push({k:"Wpis metryczny", v: tags.join(", ")});
+        if (typeof it.sys === "number" && typeof it.dia === "number" && it.sys > 0 && it.dia > 0) tags.push("ciśnienie");
+        if (typeof it.pulse === "number" && it.pulse > 0) tags.push("puls");
+        if (typeof it.waterMl === "number" && it.waterMl > 0) tags.push("nawodnienie");
+        if (it.medications && typeof it.medications === "object" && Object.keys(it.medications).length) tags.push("leki");
+        if (!showMetrics || !tags.length) continue;
+        lines.push({ k: "Wpis metryczny", v: tags.join(", ") });
       }
 
       const item = document.createElement("div");
@@ -740,7 +814,7 @@
       const content = document.createElement("div");
       content.className = "content";
 
-      for(const ln of lines){
+      for (const ln of lines) {
         const p = document.createElement("div");
         p.className = "line";
         p.innerHTML = `<span class="muted">${ln.k}:</span> ${escapeHtml(ln.v)}`;
@@ -761,8 +835,10 @@
       delBtn.textContent = "Usuń";
       delBtn.onclick = () => remove(it.id);
 
-      actions.appendChild(editBtn);
-      actions.appendChild(delBtn);
+      if (!state.readOnly) {
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+      }
 
       item.appendChild(meta);
       item.appendChild(content);
@@ -771,7 +847,7 @@
       list.appendChild(item);
       rendered += 1;
     }
-    if(!rendered){
+    if (!rendered) {
       const empty = document.createElement("div");
       empty.className = "small";
       empty.textContent = "Brak wpisów w tym widoku.";
@@ -779,22 +855,22 @@
     }
   }
 
-  function setDateRangeToToday(){
+  function setDateRangeToToday() {
     const d = new Date();
     const pad = (n) => String(n).padStart(2, "0");
-    const today = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const today = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     el("fromDate").value = today;
     el("toDate").value = today;
     render();
   }
 
-  function clearDateRange(){
+  function clearDateRange() {
     el("fromDate").value = "";
     el("toDate").value = "";
     render();
   }
 
-  function buildViewExportPayload(viewItems){
+  function buildViewExportPayload(viewItems) {
     return {
       exportedAt: new Date().toISOString(),
       app: "bp-chatlog",
@@ -810,15 +886,15 @@
     };
   }
 
-  async function copyTextToClipboard(text){
-    try{
-      if(navigator.clipboard?.writeText){
+  async function copyTextToClipboard(text) {
+    try {
+      if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
         return true;
       }
-    }catch{}
+    } catch { }
 
-    try{
+    try {
       const ta = document.createElement("textarea");
       ta.value = text;
       ta.setAttribute("readonly", "true");
@@ -830,21 +906,21 @@
       const ok = document.execCommand("copy");
       ta.remove();
       return ok;
-    }catch{
+    } catch {
       return false;
     }
   }
 
-  async function copyCurrentViewJson(){
+  async function copyCurrentViewJson() {
     const view = filtered();
     const payload = buildViewExportPayload(view);
     const text = JSON.stringify(payload, null, 2);
     const ok = await copyTextToClipboard(text);
-    if(ok) toast(`Skopiowano JSON z widoku. Wpisów: ${view.length}`);
+    if (ok) toast(`Skopiowano JSON z widoku. Wpisów: ${view.length}`);
     else alert("Nie udało się skopiować do schowka (blokada przeglądarki).");
   }
 
-  function init(){
+  function init() {
     load();
 
     const settings = window.Theme.loadSettings();
@@ -881,7 +957,7 @@
     el("medsToggle").addEventListener("change", () => {
       const on = el("medsToggle").checked;
       el("medsSection").classList.toggle("hidden", !on);
-      if(!on){
+      if (!on) {
         el("medNotes").value = "";
         renderMedChecklist({});
       }

@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="pl" data-mode="light">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ustawienia – Notatnik ciśnienia i analiza</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 
@@ -14,8 +15,10 @@
       <div class="brand">
         <div class="brandIcon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none">
-            <path d="M20 12h-3l-2 5-4-12-2 7H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 21s-7-4.5-9-9a5.5 5.5 0 0 1 9-5 5.5 5.5 0 0 1 9 5c-2 4.5-9 9-9 9Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M20 12h-3l-2 5-4-12-2 7H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <path d="M12 21s-7-4.5-9-9a5.5 5.5 0 0 1 9-5 5.5 5.5 0 0 1 9 5c-2 4.5-9 9-9 9Z" stroke="currentColor"
+              stroke-width="2" stroke-linejoin="round" />
           </svg>
         </div>
         <div>
@@ -77,7 +80,7 @@
           </div>
         </div>
 
-                        <div class="row mt10">
+        <div class="row mt10">
           <div class="rowInline">
             <div>
               <label for="medTime">Domyślna godzina</label>
@@ -101,7 +104,31 @@
 
         <div class="hr"></div>
 
+        <div class="hr"></div>
+
+        <h2 class="sectionTitle">Udostępnianie (Beta)</h2>
+        <div class="block">
+          <div class="small" style="margin-bottom:10px;">
+            Twoje dane są domyślnie prywatne. Tutaj możesz dać innym podgląd (tylko odczyt).
+          </div>
+          <div class="row" style="display:flex; gap:8px;">
+            <input id="shareEmail" placeholder="Wpisz email innej osoby..." style="flex:1;" />
+            <button id="shareBtn" type="button" class="ok">Dodaj</button>
+          </div>
+          <div class="mt10" id="shareList"></div>
+
+          <div class="hr"></div>
+
+          <div class="small" style="margin-bottom:5px;">
+            Dane udostępnione DLA Ciebie (kliknij, aby otworzyć podgląd):
+          </div>
+          <div class="mt10" id="sharedWithMeList"></div>
+        </div>
+
+        <div class="hr"></div>
+
         <h2 class="sectionTitle">Dane</h2>
+
 
         <div class="small" style="margin-bottom:10px;">
           Export i import działają na JSONie całej bazy w localStorage.
@@ -140,7 +167,7 @@
       const MEDS_KEY = "bp_chatlog_meds_v1";
       const STORAGE_KEY = "bp_chatlog_items_v4";
 
-      function toast(msg){
+      function toast(msg) {
         const t = document.getElementById("toast");
         t.textContent = msg;
         t.classList.remove("hidden");
@@ -148,7 +175,7 @@
         toast._tm = setTimeout(() => t.classList.add("hidden"), 2200);
       }
 
-      function slugify(s){
+      function slugify(s) {
         return String(s || "")
           .toLowerCase()
           .trim()
@@ -156,7 +183,7 @@
           .replace(/[^a-z0-9\-]/g, "");
       }
 
-      function escapeAttr(s){
+      function escapeAttr(s) {
         return String(s || "")
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")
@@ -164,25 +191,34 @@
           .replaceAll('"', "&quot;");
       }
 
-      function loadMeds(){
-        try{
+      function loadMeds() {
+        try {
           const raw = localStorage.getItem(MEDS_KEY);
           const arr = raw ? JSON.parse(raw) : [];
           return Array.isArray(arr) ? arr : [];
-        }catch{
+        } catch {
           return [];
         }
       }
 
-      function saveMeds(meds){
+      async function saveMeds(meds) {
         localStorage.setItem(MEDS_KEY, JSON.stringify(meds));
+        try {
+          const rawItems = localStorage.getItem(STORAGE_KEY);
+          const items = rawItems ? JSON.parse(rawItems) : [];
+          await fetch("/api/bp/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items, meds })
+          });
+        } catch (e) { console.error("Sync failed", e); }
       }
 
-      function renderMeds(){
+      function renderMeds() {
         const box = document.getElementById("medList");
         const meds = loadMeds();
 
-        if(!meds.length){
+        if (!meds.length) {
           box.innerHTML = `<div class="small">Brak leków na liście.</div>`;
           return;
         }
@@ -215,17 +251,17 @@
           edit.onclick = () => {
             const meds2 = loadMeds();
             const idx = meds2.findIndex(x => x.id === m.id);
-            if(idx < 0) return;
+            if (idx < 0) return;
             const med = meds2[idx];
             editingId = med.id;
             document.getElementById("medName").value = med.name || "";
             document.getElementById("medDose").value = med.dose || "";
-            if(medTimeInput) medTimeInput.dataset.lastTime = med.defaultTime || "";
-            if(medTimeInput) medTimeInput.value = med.defaultTime || "";
-            if(medPrnToggle) medPrnToggle.checked = Boolean(med.prn);
+            if (medTimeInput) medTimeInput.dataset.lastTime = med.defaultTime || "";
+            if (medTimeInput) medTimeInput.value = med.defaultTime || "";
+            if (medPrnToggle) medPrnToggle.checked = Boolean(med.prn);
             syncMedTimeState();
-            if(addMedBtn) addMedBtn.textContent = "Zapisz zmiany";
-            if(cancelMedBtn) cancelMedBtn.classList.remove("hidden");
+            if (addMedBtn) addMedBtn.textContent = "Zapisz zmiany";
+            if (cancelMedBtn) cancelMedBtn.classList.remove("hidden");
           };
 
           const toggle = document.createElement("button");
@@ -235,7 +271,7 @@
           toggle.onclick = () => {
             const meds2 = loadMeds();
             const idx = meds2.findIndex(x => x.id === m.id);
-            if(idx >= 0){
+            if (idx >= 0) {
               meds2[idx].active = !meds2[idx].active;
               saveMeds(meds2);
               renderMeds();
@@ -249,7 +285,7 @@
           del.textContent = "Usuń";
           del.onclick = () => {
             const ok = confirm(`Usunąć lek "${m.name}"?`);
-            if(!ok) return;
+            if (!ok) return;
             const meds2 = loadMeds().filter(x => x.id !== m.id);
             saveMeds(meds2);
             renderMeds();
@@ -272,33 +308,33 @@
       const cancelMedBtn = document.getElementById("cancelMedBtn");
       let editingId = null;
 
-      function syncMedTimeState(){
-        if(!medTimeInput || !medPrnToggle) return;
-        if(medPrnToggle.checked){
-          if(!medTimeInput.dataset.lastTime) medTimeInput.dataset.lastTime = medTimeInput.value || "";
+      function syncMedTimeState() {
+        if (!medTimeInput || !medPrnToggle) return;
+        if (medPrnToggle.checked) {
+          if (!medTimeInput.dataset.lastTime) medTimeInput.dataset.lastTime = medTimeInput.value || "";
           medTimeInput.value = "";
           medTimeInput.disabled = true;
-        }else{
+        } else {
           medTimeInput.disabled = false;
-          if(!medTimeInput.value) medTimeInput.value = medTimeInput.dataset.lastTime || "07:30";
+          if (!medTimeInput.value) medTimeInput.value = medTimeInput.dataset.lastTime || "07:30";
         }
       }
 
-      if(medPrnToggle) medPrnToggle.addEventListener("change", syncMedTimeState);
+      if (medPrnToggle) medPrnToggle.addEventListener("change", syncMedTimeState);
       syncMedTimeState();
 
-      function resetMedForm(){
+      function resetMedForm() {
         editingId = null;
         document.getElementById("medName").value = "";
         document.getElementById("medDose").value = "";
-        if(medPrnToggle) medPrnToggle.checked = false;
-        if(medTimeInput) medTimeInput.value = medTimeInput.dataset.lastTime || "07:30";
+        if (medPrnToggle) medPrnToggle.checked = false;
+        if (medTimeInput) medTimeInput.value = medTimeInput.dataset.lastTime || "07:30";
         syncMedTimeState();
-        if(addMedBtn) addMedBtn.textContent = "Dodaj lek";
-        if(cancelMedBtn) cancelMedBtn.classList.add("hidden");
+        if (addMedBtn) addMedBtn.textContent = "Dodaj lek";
+        if (cancelMedBtn) cancelMedBtn.classList.add("hidden");
       }
 
-      if(cancelMedBtn){
+      if (cancelMedBtn) {
         cancelMedBtn.addEventListener("click", resetMedForm);
       }
 
@@ -308,26 +344,26 @@
         const isPrn = Boolean(medPrnToggle?.checked);
         const defaultTime = isPrn ? "" : (medTimeInput?.value || "");
 
-        if(!name) return alert("Podaj nazw? leku.");
+        if (!name) return alert("Podaj nazw? leku.");
 
         const meds = loadMeds();
 
-        if(editingId){
+        if (editingId) {
           const idx = meds.findIndex(x => x.id === editingId);
-          if(idx >= 0){
+          if (idx >= 0) {
             meds[idx] = { ...meds[idx], name, dose, defaultTime, prn: isPrn };
             saveMeds(meds);
             renderMeds();
             resetMedForm();
             toast("Zapisano zmiany.");
             return;
-          }else{
+          } else {
             editingId = null;
           }
         }
 
         const id = slugify(name + "-" + dose);
-        if(meds.some(m => m.id === id)) return alert("Taki lek (o tej nazwie i dawce) już istnieje.");
+        if (meds.some(m => m.id === id)) return alert("Taki lek (o tej nazwie i dawce) już istnieje.");
 
         meds.push({ id, name, dose, defaultTime, prn: isPrn, active: true });
         saveMeds(meds);
@@ -351,7 +387,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `notatnik-export-${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `notatnik-export-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         toast("Wyeksportowano.");
@@ -374,7 +410,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `notatnik-leki-${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `notatnik-leki-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         toast("Wyeksportowano leki.");
@@ -386,57 +422,57 @@
 
       document.getElementById("importFile").addEventListener("change", async (e) => {
         const f = e.target.files?.[0];
-        if(!f) return;
-        try{
+        if (!f) return;
+        try {
           const txt = await f.text();
           const json = JSON.parse(txt);
           const items = Array.isArray(json?.items) ? json.items : null;
-          if(!items) return alert("Zły format. Oczekuję JSON z polem items[].");
+          if (!items) return alert("Zły format. Oczekuję JSON z polem items[].");
 
           const ok = confirm(`Zaimportować wpisy: ${items.length}? Nadpisze to obecną bazę.`);
-          if(!ok) return;
+          if (!ok) return;
 
           localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
           toast("Zaimportowano.");
-        }catch(err){
+        } catch (err) {
           alert("Import nie wyszedł. JSON jest uszkodzony albo w złym formacie.");
-        }finally{
+        } finally {
           e.target.value = "";
         }
       });
 
       document.getElementById("importMedsFile").addEventListener("change", async (e) => {
         const f = e.target.files?.[0];
-        if(!f) return;
-        try{
+        if (!f) return;
+        try {
           const txt = await f.text();
           const json = JSON.parse(txt);
           const meds = Array.isArray(json?.meds) ? json.meds : null;
-          if(!meds) return alert("Zły format. Oczekuję JSON z polem meds[].");
+          if (!meds) return alert("Zły format. Oczekuję JSON z polem meds[].");
 
           const ok = confirm(`Zaimportować leki: ${meds.length}? Nadpisze to obecną listę.`);
-          if(!ok) return;
+          if (!ok) return;
 
           saveMeds(meds);
           renderMeds();
           toast("Zaimportowano leki.");
-        }catch(err){
+        } catch (err) {
           alert("Import leków nie wyszedł. JSON jest uszkodzony albo w złym formacie.");
-        }finally{
+        } finally {
           e.target.value = "";
         }
       });
 
       document.getElementById("wipeBtn").addEventListener("click", () => {
         const ok = confirm("Wyczyścić WSZYSTKIE wpisy? Tego nie cofniesz.");
-        if(!ok) return;
+        if (!ok) return;
         localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
         toast("Wyczyszczono.");
       });
 
       document.getElementById("resetSettingsBtn").addEventListener("click", () => {
         const ok = confirm("Zresetować ustawienia motywu do domyślnych? (Lista leków zostaje)");
-        if(!ok) return;
+        if (!ok) return;
 
         const def = window.Theme.getDefaultSettings();
         window.Theme.saveSettings(def);
@@ -449,7 +485,126 @@
       });
 
       renderMeds();
+
+      /* Sync Logic */
+      async function syncMeds() {
+        try {
+          const res = await fetch("/api/bp/sync");
+          const json = await res.json();
+          if (json.ok) {
+            const serverMeds = json.meds || [];
+            const localMeds = loadMeds();
+
+            let finalMeds = localMeds;
+            let dirty = false;
+
+            // Simple Merge: Server wins if it has content and local is smaller/empty.
+            if (serverMeds.length > localMeds.length) {
+              finalMeds = serverMeds;
+              localStorage.setItem(MEDS_KEY, JSON.stringify(finalMeds));
+              renderMeds();
+              toast("Leki zaktualizowane z chmury.");
+            } else if (localMeds.length > serverMeds.length) {
+              dirty = true;
+            }
+
+            if (dirty || localMeds.length > 0) {
+              const rawItems = localStorage.getItem(STORAGE_KEY);
+              const items = rawItems ? JSON.parse(rawItems) : [];
+              await fetch("/api/bp/sync", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ items, meds: finalMeds })
+              });
+            }
+          }
+        } catch (e) { console.error(e); }
+      }
+      syncMeds();
+
+      /* Sharing Logic */
+      async function fetchSharing() {
+        try {
+          const res1 = await fetch("/api/bp/share");
+          const json1 = await res1.json();
+          const shareList = document.getElementById("shareList");
+          if (json1.ok && shareList) {
+            shareList.innerHTML = "";
+            json1.sharedTo.forEach(email => {
+              const row = document.createElement("div");
+              row.style.marginBottom = "4px";
+              row.style.display = "flex";
+              row.style.alignItems = "center";
+              row.style.gap = "8px";
+              row.innerHTML = `<div style="flex:1">${escapeAttr(email)}</div>`;
+              const btn = document.createElement("button");
+              btn.className = "danger";
+              btn.style.padding = "4px 8px";
+              btn.style.fontSize = "12px";
+              btn.textContent = "Usuń";
+              btn.onclick = async () => {
+                if (!confirm("Zabrać dostęp?")) return;
+                await fetch("/api/bp/share", {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ targetEmail: email })
+                });
+                fetchSharing();
+                toast("Usunięto dostęp.");
+              };
+              row.appendChild(btn);
+              shareList.appendChild(row);
+            });
+          }
+
+          const res2 = await fetch("/api/bp/shared-with-me");
+          const json2 = await res2.json();
+          const swmList = document.getElementById("sharedWithMeList");
+          if (json2.ok && swmList) {
+            swmList.innerHTML = "";
+            json2.owners.forEach(email => {
+              const row = document.createElement("div");
+              row.style.marginBottom = "4px";
+              const link = document.createElement("a");
+              link.href = `/bp-chatlog/index.html?viewUser=${encodeURIComponent(email)}`;
+              link.textContent = email;
+              link.className = "linkBtn";
+              link.style.display = "block";
+              link.style.background = "var(--bg-card)";
+              link.style.border = "1px solid var(--border)";
+              link.style.padding = "6px";
+              link.style.textAlign = "center";
+              row.appendChild(link);
+              swmList.appendChild(row);
+            });
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      if (document.getElementById("shareBtn")) {
+        fetchSharing();
+        document.getElementById("shareBtn").addEventListener("click", async () => {
+          const email = document.getElementById("shareEmail").value.trim();
+          if (!email) return alert("Podaj email.");
+          try {
+            const res = await fetch("/api/bp/share", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ targetEmail: email })
+            });
+            const json = await res.json();
+            if (json.ok) {
+              document.getElementById("shareEmail").value = "";
+              fetchSharing();
+              toast("Udostępniono.");
+            } else {
+              alert("Błąd: " + (json.error || "Nieznany"));
+            }
+          } catch (e) { alert("Błąd sieci."); }
+        });
+      }
     })();
   </script>
 </body>
+
 </html>
