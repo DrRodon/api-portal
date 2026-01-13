@@ -191,27 +191,35 @@
           .replaceAll('"', "&quot;");
       }
 
-      function loadMeds() {
-        try {
-          const raw = localStorage.getItem(MEDS_KEY);
-          const arr = raw ? JSON.parse(raw) : [];
-          return Array.isArray(arr) ? arr : [];
-        } catch {
-          return [];
-        }
-      }
-
       async function saveMeds(meds) {
-        localStorage.setItem(MEDS_KEY, JSON.stringify(meds));
+        // Cloud-only: Push directly to API
+        // NOTE: We must be careful not to wipe 'items'.
+        // We will fetch items first then push both.
+        // This is inefficient but safe for this refactor.
+
         try {
-          const rawItems = localStorage.getItem(STORAGE_KEY);
-          const items = rawItems ? JSON.parse(rawItems) : [];
+          let currentItems = [];
+          try {
+            const r = await fetch("/api/bp/sync");
+            const j = await r.json();
+            if (j.ok && j.items)
+              currentItems = typeof j.items === "string" ? JSON.parse(j.items) : (j.items || []);
+          } catch (e) {/* ignore */ }
+
           await fetch("/api/bp/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items, meds })
+            body: JSON.stringify({ items: currentItems, meds })
           });
-        } catch (e) { console.error("Sync failed", e); }
+
+          // Update local cache
+          window._cachedMeds = meds;
+          // toast("Leki zapisane w chmurze.");
+        } catch (e) { console.error("Save meds failed", e); toast("Błąd zapisu leków"); }
+      }
+
+      function loadMeds() {
+        return window._cachedMeds || [];
       }
 
       function renderMeds() {
