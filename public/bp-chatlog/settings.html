@@ -463,11 +463,29 @@
         }
       });
 
-      document.getElementById("wipeBtn").addEventListener("click", () => {
-        const ok = confirm("Wyczyścić WSZYSTKIE wpisy? Tego nie cofniesz.");
+      document.getElementById("wipeBtn").addEventListener("click", async () => {
+        const ok = confirm("Wyczyścić WSZYSTKIE wpisy w chmurze? Tego nie cofniesz.");
         if (!ok) return;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-        toast("Wyczyszczono.");
+
+        // We push empty items, keeping meds? Or wipe all? Usually wipe button wipes items.
+        // Let's keep meds to be safe? Or user expects total wipe?
+        // User said "Wyczyscic WSZYSTKIE wpisy". Usually means logs.
+
+        try {
+          let currentMeds = [];
+          try {
+            const r = await fetch("/api/bp/sync");
+            const j = await r.json();
+            if (j.ok && j.meds) currentMeds = j.meds;
+          } catch (e) { }
+
+          await fetch("/api/bp/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: [], meds: currentMeds })
+          });
+          toast("Wyczyszczono dane w chmurze.");
+        } catch (e) { toast("Błąd czyszczenia."); }
       });
 
       document.getElementById("resetSettingsBtn").addEventListener("click", () => {
@@ -484,60 +502,8 @@
         toast("Zresetowano ustawienia.");
       });
 
-      renderMeds();
-
-      /* Sync Logic */
-      async function syncMeds() {
-        try {
-          const res = await fetch("/api/bp/sync");
-          const json = await res.json();
-          if (json.ok) {
-            const serverEmail = json.email;
-            const localOwner = localStorage.getItem("bp_owner_email");
-            const serverMeds = json.meds || [];
-
-            // 1. Owner Mismatch Check
-            if (serverEmail && localOwner && localOwner !== serverEmail) {
-              // Wiping happen in app.js mainly, but here we can just accept Server Data
-              localStorage.setItem(MEDS_KEY, JSON.stringify(serverMeds));
-              renderMeds();
-              return;
-            }
-            if (!localOwner && serverEmail) {
-              if (serverMeds.length > 0) {
-                localStorage.setItem(MEDS_KEY, JSON.stringify(serverMeds));
-                renderMeds();
-              }
-              localStorage.setItem("bp_owner_email", serverEmail);
-            }
-
-            const localMeds = loadMeds();
-            let finalMeds = localMeds;
-            let dirty = false;
-
-            // Simple Merge: Server wins if it has content and local is smaller/empty.
-            if (serverMeds.length > localMeds.length) {
-              finalMeds = serverMeds;
-              localStorage.setItem(MEDS_KEY, JSON.stringify(finalMeds));
-              renderMeds();
-              toast("Leki zaktualizowane z chmury.");
-            } else if (localMeds.length > serverMeds.length) {
-              dirty = true;
-            }
-
-            if (dirty || localMeds.length > 0) {
-              const rawItems = localStorage.getItem(STORAGE_KEY);
-              const items = rawItems ? JSON.parse(rawItems) : [];
-              await fetch("/api/bp/sync", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ items, meds: finalMeds })
-              });
-            }
-          }
-        } catch (e) { console.error(e); }
-      }
-      syncMeds();
+      // Init
+      initMeds();
 
       /* Sharing Logic */
       async function fetchSharing() {

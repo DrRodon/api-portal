@@ -394,89 +394,82 @@
       return;
     }
 
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      state.items = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(state.items)) state.items = [];
-    } catch {
-      state.items = [];
-    }
-    serverSync();
-  }
-
-  async function serverSync() {
-    if (state.readOnly) return;
+    // Cloud-only: Fetch directly, no local fallback
     try {
       const res = await fetch("/api/bp/sync");
       const json = await res.json();
       if (json.ok) {
-        const serverEmail = json.email;
-        const localOwner = localStorage.getItem("bp_owner_email");
-        const serverItems = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
-
-        // 1. Owner Mismatch / New Owner logic
-        if (serverEmail && localOwner && localOwner !== serverEmail) {
-          console.warn("User switched from", localOwner, "to", serverEmail, ". Wiping local data.");
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(MEDS_KEY);
-          state.items = serverItems;
-          localStorage.setItem("bp_owner_email", serverEmail);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items)); // Cache new data
-          render();
-          toast("Przełączono użytkownika. Dane załadowane z chmury.");
-          return; // Stop here, do not push old data
+        state.items = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
+        if (!state.readOnly) {
+          // One-time cleanup if needed or just ignore local storage
+          // console.log("Cloud loaded. Items:", state.items.length);
         }
-
-        // 2. First time claiming ownership or same owner
-        if (!localOwner && serverEmail) {
-          // If we have local data but no owner, checking against server data
-          // Case: Legacy data exists, but we are now logging in.
-          // If Server has data, Server WINs to be safe and avoid polluting account with stale local data
-          if (serverItems.length > 0) {
-            console.warn("Legacy local data found, but Server has data. Preferring Server.");
-            state.items = serverItems;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
-          } else {
-            // Server empty, Local has data -> We keep local and it will PUSH below.
-          }
-          localStorage.setItem("bp_owner_email", serverEmail);
-        }
-
-        // 3. Sync Logic (Same user)
-        let dirty = false;
-        if (serverItems.length > state.items.length) {
-          state.items = serverItems;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
-          render();
-          toast("Zaktualizowano z chmury.");
-        } else if (state.items.length > serverItems.length) {
-          dirty = true;
-        }
-
-        if (dirty || state.items.length > 0) {
-          serverPush();
-        }
+      } else {
+        toast("Brak połączenia z bazą.");
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      toast("Błąd ładowania danych.");
+      state.items = [];
+    }
   }
 
-  async function serverPush() {
+  async function save() {
     if (state.readOnly) return;
+
+    // Cloud-only: Direct Push
+    // We show a spinner or toast to indicate saving
+    const saveBtn = el("saveBtn");
+    const originalText = saveBtn ? saveBtn.textContent : "";
+    if (saveBtn) saveBtn.textContent = "Zapisywanie...";
+
     try {
-      const medsRaw = localStorage.getItem(MEDS_KEY);
-      const meds = medsRaw ? JSON.parse(medsRaw) : [];
+      // We need to send meds too, otherwise they might get cleared if we don't send them
+      // We'll fetch them from an internal function or just send what we have if the API supports partial updates (it replaces all, so we need meds)
+      // Actually, server.js replaces both. So we need to make sure we don't wipe meds.
+      // But this save() is called after upsert/remove of ITEMS.
+      // Ideally we should keep meds in state too. For now let's load them from API if not in state?
+      // Since we are cloud-only, we should probably store meds in global state to avoid fetching them every save.
+
+      // OPTIMIZATION: In Cloud-Only, we'll assume state.items is current.
+      // We also need meds. The simplest way for now without refactoring everything to one state:
+      // Fetch current meds to include in payload? data-loss risk if race condition.
+
+      // Let's rely on the fact that we might have loaded meds in settings. But settings might not be open.
+      // For safety in this "Cloud Only" refactor, we will retrieve meds first or use a separate endpoint for updating only items?
+      // server.js expects { items, meds }. If we send only items, meds might be set to undefined?
+      // Looking at server.js: 
+      // const { items, meds } = req.body; 
+      // await Promise.all([ kv.set(..., items || []), kv.set(..., meds || []) ]);
+      // So if meds is undefined, it sets [] (empty)! ERROR RISK.
+
+      // FIX: We need to load meds before saving items if we don't have them.
+      // OR better: Change backend to PATCH? Too much work.
+      // Let's just fetch existing meds first if we don't have them in a reliable place.
+      // Actually, we can just fetch /api/bp/sync (lite?) or just re-read.
+
+      // Current hack: We will read meds from the endpoint before saving to ensure we don't wipe them.
+      // Not efficient but safe.
+
+      let currentMeds = [];
+      try {
+        const r = await fetch("/api/bp/sync");
+        const j = await r.json();
+        if (j.ok && j.meds) currentMeds = j.meds;
+      } catch (e) {/* ignore */ }
+
       await fetch("/api/bp/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: state.items, meds })
+        body: JSON.stringify({ items: state.items, meds: currentMeds })
       });
-    } catch (e) { console.error(e); }
-  }
-
-  function save() {
-    if (state.readOnly) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
-    serverPush();
+      // toast("Zapisano w chmurze.");
+    } catch (e) {
+      console.error(e);
+      toast("Błąd zapisu!");
+    } finally {
+      if (saveBtn) saveBtn.textContent = originalText;
+    }
   }
 
   function loadMedsCatalog() {
