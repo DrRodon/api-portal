@@ -1024,6 +1024,7 @@ body.theme-dark .theme-switch__control:focus-visible {
 @media (max-width: 560px) {
   .grid {
     grid-template-columns: 1fr;
+    grid-auto-rows: auto;
   }
 
   .gmail-preview {
