@@ -326,8 +326,8 @@
           }
         }
 
-        const id = slugify(name);
-        if(meds.some(m => m.id === id)) return alert("Taki lek ju? istnieje.");
+        const id = slugify(name + "-" + dose);
+        if(meds.some(m => m.id === id)) return alert("Taki lek (o tej nazwie i dawce) już istnieje.");
 
         meds.push({ id, name, dose, defaultTime, prn: isPrn, active: true });
         saveMeds(meds);
