@@ -402,8 +402,8 @@
         state.items = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
         if (!state.readOnly) {
           // One-time cleanup if needed or just ignore local storage
-          // console.log("Cloud loaded. Items:", state.items.length);
         }
+        render(); // Update UI after load
       } else {
         toast("Brak połączenia z bazą.");
       }
