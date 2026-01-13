@@ -1,122 +1,71 @@
 # Portal
 
-Modern web portal that groups multiple tools in a single UI: a blood pressure notebook (Notatnik cisnienia) and a Gmail preview panel with OAuth-based access. The portal runs as a Node.js server with a static frontend and optional KV-backed storage for Gmail tokens and allowlists.
+Nowoczesny portal webowy, który integruje wiele narzędzi w jednym wygodnym interfejsie:
+1. **Notatnik Ciśnienia (BP Log)**: Rejestrowanie ciśnienia, pulsu, leków i wydarzeń ze zdrowiem (z synchronizacją w chmurze i udostępnianiem).
+2. **Panel Gmail**: Podgląd ilości nieprzeczytanych wiadomości oraz ich treści z poziomu portalu.
 
-## Features
+Aplikacja działa jako serwer Node.js z frontendem HTML/JS i wykorzystuje **Vercel KV (Redis)** do bezpiecznego przechowywania danych oraz tokenów.
 
-- Notatnik cisnienia: add, browse, and analyze entries in an embedded panel.
-- Gmail panel: unread count, preview list, and detail view with actions (mark read, delete).
-- Mobile-friendly layouts for both the portal and the embedded Notatnik panel.
-- Optional Vercel KV / Upstash storage for OAuth tokens and allowlists.
-- Portal allowlist with KV override for stricter access control.
+## Główne Funkcje
 
-## Tech Stack
+### 1. Notatnik Ciśnienia (BP Log)
+- **Zapis Danych**: Dodawanie wpisów z ciśnieniem, pulsem, wagą, lekami i notatkami.
+- **Wykresy**: Wizualizacja pomiarów na wykresie SVG (Systolic, Diastolic, Puls).
+- **Synchronizacja w Chmurze**: Twoje dane są automatycznie zapisywane w **Vercel KV**, dzięki czemu masz do nich dostęp na dowolnym urządzeniu (wymaga logowania tym samym mailem).
+- **Udostępnianie**: Możesz bezpiecznie udostępnić swoje wyniki innej osobie (np. lekarzowi lub członkowi rodziny) w trybie "tylko do odczytu". Zarządzasz listą dostępów w zakładce *Ustawienia*.
+- **Lista Leków**: Definiowanie własnej listy leków z dawkami, które potem łatwo "odklikać" przy dodawaniu wpisu.
 
-- Node.js + Express (server)
-- Vanilla HTML/CSS/JS (frontend)
-- Google OAuth + Gmail API
-- Vercel KV / Upstash (optional)
+### 2. Panel Gmail
+- Podgląd licznika nieprzeczytanych wiadomości.
+- Lista ostatnich e-maili z podglądem treści.
+- Szybkie akcje: oznacz jako przeczytane, usuń.
 
-## Quick Start
+## Instalacja i Uruchomienie
 
-1) Install dependencies
-```
+### Wymagania
+- Node.js (v18+)
+- Konto Google (dla OAuth)
+- Konto Vercel (opcjonalnie dla bazy KV)
+
+### 1. Instalacja Zależności
+```bash
 npm install
 ```
 
-2) Create `.env` from template and fill required values
-```
-Copy-Item .env.example .env
-```
+### 2. Konfiguracja (.env)
+Stwórz plik `.env` na podstawie `.env.example` i uzupełnij go.
 
-3) Start the server
-```
-npm start
-```
-
-4) Open the portal and complete Google OAuth
-```
-http://localhost:3000
-```
-
-Do not open `public/index.html` via `file://` because OAuth callbacks require the running server.
-
-## Gmail Panel
-
-- Unread count + preview list inside the portal.
-- Click a message to open full content inside the portal.
-- Actions: mark as read, delete.
-- Auto-refresh every 30 seconds.
-- Each portal user authorizes their own Gmail account; tokens are stored per email (KV if configured).
-
-OAuth scope required:
-
-```
-https://www.googleapis.com/auth/gmail.modify
-```
-
-## Environment Variables
-
-Required for Gmail OAuth:
-
+**Wymagane dla Google OAuth:**
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_REDIRECT_URL` (if not using defaults)
+- `GOOGLE_REDIRECT_URL`
 
-Optional:
+**Wymagane dla Bazy Danych (Synchronizacja):**
+- `KV_REST_API_URL` (URL z Upstash/Vercel)
+- `KV_REST_API_TOKEN` (Token dostępu)
 
-- `HOST=127.0.0.1`
-- `ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000`
-- `PORTAL_TOKEN=` (leave empty to auto-generate)
-- `MAX_PREVIEW_MESSAGES=0` (0 = no limit)
-- `KV_REST_API_URL=` (Vercel KV / Upstash REST URL)
-- `KV_REST_API_TOKEN=` (Vercel KV / Upstash REST token)
-- `KV_TOKEN_KEY=portal:gmail:tokens`
-- `PORTAL_REDIRECT_URL=` (defaults to `/oauth2callback/portal`)
-- `PORTAL_AUTH_SECRET=` (defaults to `PORTAL_TOKEN`)
-- `PORTAL_SESSION_TTL_HOURS=24`
-- `ALLOWED_EMAILS=alice@example.com,bob@example.com`
-- `ALLOWED_EMAILS_KV_KEY=portal:allowed_emails`
-
-## Portal Allowlist (KV)
-
-If the KV key exists, it overrides `ALLOWED_EMAILS`. Bootstrap your account with `ALLOWED_EMAILS`, then manage the allowlist via API once logged in.
-
-Example (run in browser console after login):
-
-```js
-const { token } = await fetch("/api/config").then((r) => r.json());
-await fetch("/api/allowlist", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "X-Portal-Token": token
-  },
-  body: JSON.stringify({ emails: ["you@example.com", "other@example.com"] })
-});
+### 3. Uruchomienie Serwera
+```bash
+npm start
+# Server runs at http://localhost:3000
 ```
 
-Check session + Gmail connection (console):
+## Praca w Chmurze (Vercel)
+Projekt jest przystosowany do wdrożenia na Vercel (Serverless).
+- Upewnij się, że w panelu Vercel dodałeś zmienne środowiskowe (`KV_REST_API_URL` itd.).
+- Aplikacja automatycznie wykrywa środowisko Vercel i dostosowuje ścieżki (np. do ciasteczek).
 
-```js
-const { token } = await fetch("/api/config").then((r) => r.json());
-await fetch("/api/session", {
-  headers: { "X-Portal-Token": token }
-}).then((r) => r.json());
-```
+## Bezpieczeństwo
+- **Logowanie**: Dostęp do portalu jest chroniony przez Google OAuth.
+- **Izolacja Danych**: Każdy użytkownik widzi tylko swoje wpisy (chyba że ktoś mu je udostępni).
+- **Tokeny**: Tokeny dostępowe (Gmail) są szyfrowane i przechowywane bezpiecznie.
 
-Disconnect Gmail for current user (console):
+## Udostępnianie Danych
+Aby udostępnić komuś swoje wyniki:
+1. Wejdź w **Notatnik Ciśnienia -> Ustawienia** (ikona koła zębatego).
+2. W sekcji "Udostępnianie" wpisz adres email osoby docelowej.
+3. Ta osoba (musi również zalogować się do Portalu) zobaczy Twój email w sekcji "Dane udostępnione DLA Ciebie".
+4. Kliknięcie w link otworzy Twój dziennik w trybie Read-Only.
 
-```js
-const { token } = await fetch("/api/config").then((r) => r.json());
-await fetch("/api/gmail/disconnect", {
-  method: "POST",
-  headers: { "X-Portal-Token": token }
-}).then((r) => r.json());
-```
-
-## Local Data and Secrets
-
-- `.env` and `data/tokens.json` are required locally but must never be committed.
-- `.gitignore` already ignores these files.
-- If you publish the repo, rotate OAuth secrets and tokens.
+---
+*Created by Antigravity*
