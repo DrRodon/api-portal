@@ -74,7 +74,15 @@
           </div>
         </div>
         <div class="notatnik-panel__body">
-          <div id="notatnik-root" data-mode="dark">
+          <div id="notatnik-root" data-mode="dark" data-view="form">
+            <div class="mobileSwitch" role="tablist" aria-label="Widok notatnika">
+              <button class="mobileSwitch__btn is-active" type="button" data-notatnik-view="form" aria-pressed="true">
+                Dodaj wpis
+              </button>
+              <button class="mobileSwitch__btn" type="button" data-notatnik-view="list" aria-pressed="false">
+                Wpisy
+              </button>
+            </div>
             <main class="grid gridViewport">
             
                 <!-- LEWA: formularz -->
@@ -359,7 +367,7 @@
             
                 <!-- PRAWA: lista -->
             
-                <section class="card cardScroll">
+                <section class="card cardScroll" id="listCard">
             
                   <div class="topbar topbarFixed">
             
