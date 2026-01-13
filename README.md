@@ -63,9 +63,13 @@ Projekt jest przystosowany do wdrożenia na Vercel (Serverless).
 ## Udostępnianie Danych
 Aby udostępnić komuś swoje wyniki:
 1. Wejdź w **Notatnik Ciśnienia -> Ustawienia** (ikona koła zębatego).
-2. W sekcji "Udostępnianie" wpisz adres email osoby docelowej.
+2. W sekcji "Udostępnianie" wpisz adres email osoby docelowej i kliknij **Dodaj**.
 3. Ta osoba (musi również zalogować się do Portalu) zobaczy Twój email w sekcji "Dane udostępnione DLA Ciebie".
-4. Kliknięcie w link otworzy Twój dziennik w trybie Read-Only.
+4. Kliknięcie w link otworzy Twój dziennik w trybie **Tylko do odczytu (Read-Only)**.
+5. Możesz w każdej chwili odebrać dostęp klikając przycisk **Odbierz dostęp** przy odpowiednim mailu.
 
-### Ważne
-Aplikacja działa w trybie **Cloud Only**. Wymaga połączenia z internetem do działania (odczyt/zapis). Dane nie są przechowywane w przeglądarce (`localStorage`), co gwarantuje bezpieczeństwo i brak konfliktów przy synchronizacji.
+### Ważne: Tryb Cloud Only
+Aplikacja działa w trybie **Cloud Only**.
+- **Wymagane połączenie z internetem**: Do odczytu i zapisu danych niezbędny jest dostęp do sieci.
+- **Brak zapisu lokalnego**: Dane nie są przechowywane w przeglądarce (`localStorage`), co eliminuje problemy z synchronizacją i "duchami" starych wpisów po zmianie urządzenia.
+- **Pojedyncze źródło prawdy**: Wszystkie dane (pomiary, leki) są pobierane bezpośrednio z bazy Vercel KV.
