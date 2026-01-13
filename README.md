@@ -1,43 +1,86 @@
 # Portal
 
-## Start
+Modern web portal that groups multiple tools in a single UI: a blood pressure notebook (Notatnik cisnienia) and a Gmail preview panel with OAuth-based access. The portal runs as a Node.js server with a static frontend and optional KV-backed storage for Gmail tokens and allowlists.
 
-1) npm install
-2) Copy .env.example to .env and fill values:
-   - PowerShell: Copy-Item .env.example .env
-3) npm start
-4) Open http://localhost:3000 and finish Google OAuth (do not open index.html via file://)
+## Features
 
-## Gmail panel
+- Notatnik cisnienia: add, browse, and analyze entries in an embedded panel.
+- Gmail panel: unread count, preview list, and detail view with actions (mark read, delete).
+- Mobile-friendly layouts for both the portal and the embedded Notatnik panel.
+- Optional Vercel KV / Upstash storage for OAuth tokens and allowlists.
+- Portal allowlist with KV override for stricter access control.
 
-- Shows unread mail count and a preview panel in the portal UI.
+## Tech Stack
+
+- Node.js + Express (server)
+- Vanilla HTML/CSS/JS (frontend)
+- Google OAuth + Gmail API
+- Vercel KV / Upstash (optional)
+
+## Quick Start
+
+1) Install dependencies
+```
+npm install
+```
+
+2) Create `.env` from template and fill required values
+```
+Copy-Item .env.example .env
+```
+
+3) Start the server
+```
+npm start
+```
+
+4) Open the portal and complete Google OAuth
+```
+http://localhost:3000
+```
+
+Do not open `public/index.html` via `file://` because OAuth callbacks require the running server.
+
+## Gmail Panel
+
+- Unread count + preview list inside the portal.
 - Click a message to open full content inside the portal.
-- Actions available in detail view: mark as read and delete.
-- Auto-refresh runs every 30 seconds.
-- Each portal user authorizes their own Gmail account; tokens are stored per email in KV.
+- Actions: mark as read, delete.
+- Auto-refresh every 30 seconds.
+- Each portal user authorizes their own Gmail account; tokens are stored per email (KV if configured).
 
 OAuth scope required:
-- https://www.googleapis.com/auth/gmail.modify
 
-Optional settings (.env):
-- HOST=127.0.0.1
-- ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-- PORTAL_TOKEN= (leave empty to auto-generate)
-- MAX_PREVIEW_MESSAGES=0 (0 = no limit)
-- KV_REST_API_URL= (Vercel KV / Upstash REST URL for durable token storage)
-- KV_REST_API_TOKEN= (Vercel KV / Upstash REST token)
-- KV_TOKEN_KEY=portal:gmail:tokens (key used to store tokens in KV)
-- PORTAL_REDIRECT_URL= (portal login OAuth redirect, defaults to /oauth2callback/portal)
-- PORTAL_AUTH_SECRET= (signing secret for portal session cookie, defaults to PORTAL_TOKEN)
-- PORTAL_SESSION_TTL_HOURS=24
-- ALLOWED_EMAILS=alice@example.com,bob@example.com (portal allowlist)
-- ALLOWED_EMAILS_KV_KEY=portal:allowed_emails (KV key for allowlist)
+```
+https://www.googleapis.com/auth/gmail.modify
+```
 
-## Portal allowlist (KV)
+## Environment Variables
 
-- If the KV key exists, it overrides `ALLOWED_EMAILS`.
-- Bootstrap: set `ALLOWED_EMAILS` for your account so you can log in once.
-- Then update the KV allowlist via the API (requires portal session + X-Portal-Token).
+Required for Gmail OAuth:
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URL` (if not using defaults)
+
+Optional:
+
+- `HOST=127.0.0.1`
+- `ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000`
+- `PORTAL_TOKEN=` (leave empty to auto-generate)
+- `MAX_PREVIEW_MESSAGES=0` (0 = no limit)
+- `KV_REST_API_URL=` (Vercel KV / Upstash REST URL)
+- `KV_REST_API_TOKEN=` (Vercel KV / Upstash REST token)
+- `KV_TOKEN_KEY=portal:gmail:tokens`
+- `PORTAL_REDIRECT_URL=` (defaults to `/oauth2callback/portal`)
+- `PORTAL_AUTH_SECRET=` (defaults to `PORTAL_TOKEN`)
+- `PORTAL_SESSION_TTL_HOURS=24`
+- `ALLOWED_EMAILS=alice@example.com,bob@example.com`
+- `ALLOWED_EMAILS_KV_KEY=portal:allowed_emails`
+
+## Portal Allowlist (KV)
+
+If the KV key exists, it overrides `ALLOWED_EMAILS`. Bootstrap your account with `ALLOWED_EMAILS`, then manage the allowlist via API once logged in.
 
 Example (run in browser console after login):
 
@@ -72,8 +115,8 @@ await fetch("/api/gmail/disconnect", {
 }).then((r) => r.json());
 ```
 
-## Secrets and local data
+## Local Data and Secrets
 
-- .env and data/tokens.json are required locally but must never be committed.
-- .gitignore already ignores these files.
-- If you ever publish the repo, rotate OAuth client secrets and tokens.
+- `.env` and `data/tokens.json` are required locally but must never be committed.
+- `.gitignore` already ignores these files.
+- If you publish the repo, rotate OAuth secrets and tokens.
