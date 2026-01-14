@@ -129,15 +129,15 @@
 
 /* Result Grid */
 .cookbook-result-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  min-height: 0;
-  flex: 1;
+  display: grid !important;
+  grid-template-columns: 2fr 1fr !important;
+  gap: 20px !important;
+  min-height: 0 !important;
+  flex: 1 !important;
 }
 
 .cookbook-result-grid.no-shopping {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr !important;
 }
 
 .cookbook-recipe,
@@ -321,7 +321,14 @@ body.theme-dark .cookbook-item {
 /* Chef view handled above */
 
 .no-shopping .cookbook-recipe {
-  grid-column: 1 / -1;
+  grid-column: 1 / -1 !important;
+}
+
+.cookbook-recipe,
+.cookbook-shopping {
+  grid-column: auto !important;
+  /* Reset any spans */
+  width: auto !important;
 }
 
 .cookbook-recipe {

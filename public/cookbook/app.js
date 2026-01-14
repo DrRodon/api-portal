@@ -27,6 +27,7 @@
         peopleCountInput: document.getElementById('people-count-input'),
         generateBtn: document.getElementById('cookbook-generate-btn'),
         suggestShoppingCheckbox: document.getElementById('suggest-shopping-checkbox'),
+        title: document.getElementById('cookbook-title'),
 
         resultArea: document.getElementById('cookbook-result-area'),
         recipeSection: document.getElementById('recipe-display-section'),
@@ -158,9 +159,17 @@
     };
 
     function switchView(viewName) {
-        const { viewsContainer } = getElements();
+        const { viewsContainer, title } = getElements();
         if (viewsContainer) {
             viewsContainer.dataset.view = viewName;
+
+            // Update Title
+            const titles = {
+                'chef': 'Twój Kucharz',
+                'pantry': 'Spiżarnia',
+                'settings': 'Urządzenia'
+            };
+            if (title) title.textContent = titles[viewName] || 'Kucharz AI';
         }
     }
 
