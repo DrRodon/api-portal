@@ -770,12 +770,22 @@ Zasady:
     );
 
     const data = await response.json();
-    const recipe = data.candidates?.[0]?.content?.parts?.[0]?.text || "Nie udało się wygenerować przepisu.";
+
+    if (data.error) {
+      console.error("Gemini API Error:", JSON.stringify(data.error, null, 2));
+      return res.status(500).json({ ok: false, error: data.error.message });
+    }
+
+    const recipe = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!recipe) {
+      console.error("Gemini API Empty Response:", JSON.stringify(data, null, 2));
+      return res.status(500).json({ ok: false, error: "Empty response from Gemini" });
+    }
 
     res.json({ ok: true, recipe });
   } catch (e) {
-    console.error("Gemini error:", e);
-    res.status(500).json({ ok: false });
+    console.error("Recipe Generation Exception:", e);
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 

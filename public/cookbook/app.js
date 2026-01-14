@@ -156,14 +156,17 @@
                 })
             });
 
-            if (!response.ok) throw new Error('Błąd generowania');
-
             const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Błąd generowania');
+            }
+
             recipeContent.innerHTML = formatMarkdown(data.recipe);
             recipeSection.classList.remove('hidden');
             recipeSection.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
-            alert('Nie udało się wygenerować przepisu. Sprawdź klucz API Gemini.');
+            alert(`Nie udało się wygenerować przepisu: ${err.message}`);
         } finally {
             generateBtn.disabled = false;
             generateBtn.innerHTML = originalBtnText;
