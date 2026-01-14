@@ -375,6 +375,7 @@
           const medArr = typeof json.meds === "string" ? JSON.parse(json.meds) : (json.meds || []);
           state.meds = Array.isArray(medArr) ? medArr : [];
           render();
+          renderMedChecklist({});
           toast(`Podgląd: ${escapeHtml(json.owner)}`);
         } else {
           toast("Brak dostępu lub błąd.");
@@ -395,6 +396,7 @@
         const medArr = typeof json.meds === "string" ? JSON.parse(json.meds) : (json.meds || []);
         state.meds = Array.isArray(medArr) ? medArr : [];
         render(); // Update UI after load
+        renderMedChecklist({}); // Update checklist after load
       } else {
         toast("Brak połączenia z bazą.");
       }
