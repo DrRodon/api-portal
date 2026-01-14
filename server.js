@@ -577,7 +577,7 @@ app.get("/api/config", (_req, res) => {
 });
 
 app.use("/api", (req, res, next) => {
-  if (req.path === "/config" || req.path.startsWith("/bp/")) {
+  if (req.path === "/config" || req.path.startsWith("/bp/") || req.path.startsWith("/cookbook/")) {
     return next();
   }
   const token = req.get("X-Portal-Token");
