@@ -38,6 +38,9 @@
         itemQtyInput: document.getElementById('item-qty'),
         itemUnitInput: document.getElementById('item-unit'),
         itemExpInput: document.getElementById('item-exp'),
+        pantryJsonInput: document.getElementById('pantry-json-input'),
+        pantryJsonImportBtn: document.getElementById('pantry-json-import-btn'),
+        pantryJsonSchemaBtn: document.getElementById('pantry-json-schema-btn'),
     });
 
     async function loadData() {
@@ -62,7 +65,7 @@
             renderPantry();
             renderAppliances();
         } catch (err) {
-            console.error('Błąd ładowania danych:', err);
+            console.error('Blad ladowania danych:', err);
         }
     }
 
@@ -74,8 +77,78 @@
                 body: JSON.stringify({ pantry })
             });
         } catch (err) {
-            console.error('Błąd zapisu spiżarni:', err);
+            console.error('Blad zapisu spizarni:', err);
         }
+    }
+
+    const pantryJsonSchema = {
+        schema: {
+            type: "array",
+            items: {
+                type: "object",
+                required: ["name", "qty"],
+                properties: {
+                    name: { type: "string" },
+                    qty: { type: "string" },
+                    unit: { type: "string" },
+                    expDate: { type: "string", description: "YYYY-MM-DD" }
+                }
+            }
+        },
+        example: [
+            { name: "Jajka", qty: "6", unit: "szt.", expDate: "2026-01-14" },
+            { name: "Mleko", qty: "1", unit: "l" }
+        ]
+    };
+
+    function downloadPantrySchema() {
+        const data = JSON.stringify(pantryJsonSchema, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'pantry-schema.json';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function normalizePantryItem(item) {
+        if (!item || typeof item !== 'object') return null;
+        const name = String(item.name || '').trim();
+        const qty = String(item.qty || '').trim();
+        if (!name || !qty) return null;
+        const unit = item.unit ? String(item.unit).trim() : '';
+        const expDate = item.expDate ? String(item.expDate).trim() : '';
+        return { name, qty, unit, expDate };
+    }
+
+    async function importPantryJson(raw) {
+        let parsed;
+        try {
+            parsed = JSON.parse(raw);
+        } catch (err) {
+            alert('Niepoprawny JSON. Sprawdz skladnie.');
+            return false;
+        }
+
+        const list = Array.isArray(parsed) ? parsed : parsed.pantry;
+        if (!Array.isArray(list)) {
+            alert('JSON musi byc lista produktow lub obiektem z polem pantry.');
+            return false;
+        }
+
+        const normalized = list.map(normalizePantryItem).filter(Boolean);
+        if (normalized.length === 0) {
+            alert('Brak poprawnych produktow do importu.');
+            return false;
+        }
+
+        pantry = pantry.concat(normalized);
+        renderPantry();
+        await savePantry();
+        return true;
     }
 
     async function saveAppliances() {
@@ -175,10 +248,11 @@
     }
 
     window.editPantryItem = (index) => {
-        const { modal, modalTitle, itemNameInput, itemQtyInput, itemUnitInput, itemExpInput } = getElements();
+        const {modal, modalTitle, itemNameInput, itemQtyInput, itemUnitInput, itemExpInput, pantryJsonInput} = getElements();
         const item = pantry[index];
         editingId = index;
         modalTitle.textContent = 'Edytuj produkt';
+        if (pantryJsonInput) pantryJsonInput.value = '';
         itemNameInput.value = item.name;
         itemQtyInput.value = item.qty;
         itemUnitInput.value = item.unit || '';
@@ -187,7 +261,7 @@
     };
 
     window.deletePantryItem = async (index) => {
-        if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
+        if (confirm('Czy na pewno chcesz usunac ten produkt?')) {
             pantry.splice(index, 1);
             renderPantry();
             await savePantry();
@@ -294,10 +368,25 @@
             editingId = null;
             el.modalTitle.textContent = 'Dodaj produkt';
             el.modalForm.reset();
+            if (el.pantryJsonInput) el.pantryJsonInput.value = '';
             el.modal.classList.remove('hidden');
         });
 
         el.modalCancelBtn?.addEventListener('click', () => el.modal.classList.add('hidden'));
+
+        el.pantryJsonImportBtn?.addEventListener('click', async () => {
+            const raw = el.pantryJsonInput?.value.trim();
+            if (!raw) return;
+            const ok = await importPantryJson(raw);
+            if (ok) {
+                el.pantryJsonInput.value = '';
+                el.modal.classList.add('hidden');
+            }
+        });
+
+        el.pantryJsonSchemaBtn?.addEventListener('click', () => {
+            downloadPantrySchema();
+        });
 
         el.modalForm?.addEventListener('submit', async (e) => {
             e.preventDefault();

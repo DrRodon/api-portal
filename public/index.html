@@ -706,18 +706,39 @@
         <form id="pantry-form">
           <div class="cookbook-form-group">
             <label for="item-name">Nazwa produktu</label>
-            <input type="text" id="item-name" required placeholder="np. Jajka">
+            <input type="text" id="item-name" class="cookbook-input" required placeholder="np. Jajka">
           </div>
           <div class="cookbook-form-row">
             <div class="cookbook-form-group">
-              <label for="item-qty">Ilość</label>
-              <input type="text" id="item-qty" required placeholder="np. 6">
+              <label for="item-qty">Ilosc</label>
+              <input type="text" id="item-qty" class="cookbook-input" required placeholder="np. 6">
             </div>
             <div class="cookbook-form-group">
               <label for="item-unit">Jednostka</label>
-              <input type="text" id="item-unit" placeholder="np. szt.">
+              <input type="text" id="item-unit" class="cookbook-input" placeholder="np. szt.">
             </div>
           </div>
+          <div class="cookbook-form-group">
+            <label for="item-exp">Data waznosci (opcjonalnie)</label>
+            <input type="date" id="item-exp" class="cookbook-input">
+          </div>
+          <div class="cookbook-modal-divider"></div>
+          <div class="cookbook-form-group">
+            <label for="pantry-json-input">JSON (lista produktow)</label>
+            <textarea id="pantry-json-input" class="cookbook-textarea" rows="5"
+              placeholder='[{"name":"Jajka","qty":"6","unit":"szt.","expDate":"2026-01-14"}]'></textarea>
+          </div>
+          <div class="cookbook-modal-actions cookbook-modal-actions--split">
+            <button type="button" id="pantry-json-import-btn" class="cookbook-btn cookbook-btn--ghost">Importuj JSON</button>
+            <button type="button" id="pantry-json-schema-btn" class="cookbook-btn cookbook-btn--ghost">Pobierz schemat JSON</button>
+          </div>
+          <div class="cookbook-modal-actions">
+            <button type="button" id="modal-cancel-btn" class="cookbook-btn cookbook-btn--ghost">Anuluj</button>
+            <button type="submit" class="cookbook-btn cookbook-btn--primary">Zapisz</button>
+          </div>
+        </form>
+      </div>
+    </div>
           <div class="cookbook-form-group">
             <label for="item-exp">Data ważności (opcjonalnie)</label>
             <input type="date" id="item-exp">

@@ -107,6 +107,13 @@
     gap: 4px !important;
 }
 
+.cookbook-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
 .cookbook-horizontal-form .cookbook-form-group--inline {
     flex-direction: row !important;
     align-items: center !important;
@@ -143,6 +150,23 @@
     background-size: 6px 6px, 6px 6px;
     background-repeat: no-repeat;
     padding-right: 32px;
+}
+
+.cookbook-textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--tile-border);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    resize: vertical;
+    min-height: 110px;
+}
+
+.cookbook-textarea::placeholder,
+.cookbook-input::placeholder {
+    color: var(--muted);
 }
 
 .cookbook-toggle-label {
@@ -418,4 +442,27 @@ body.theme-dark .cookbook-settings-item {
     border-radius: 24px;
     width: min(500px, 90%);
     box-shadow: var(--shadow);
+}
+
+.cookbook-modal-content h2 {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+}
+
+.cookbook-modal-divider {
+    height: 1px;
+    background: var(--tile-border);
+    margin: 18px 0;
+}
+
+.cookbook-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.cookbook-modal-actions--split {
+    justify-content: space-between;
+    margin-top: 10px;
 }
