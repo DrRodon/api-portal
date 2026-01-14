@@ -41,8 +41,14 @@
                 fetch('/api/cookbook/appliances')
             ]);
 
-            if (pantryRes.ok) pantry = await pantryRes.json();
-            if (appliancesRes.ok) appliances = await appliancesRes.json();
+            if (pantryRes.ok) {
+                const data = await pantryRes.json();
+                pantry = data.pantry || [];
+            }
+            if (appliancesRes.ok) {
+                const data = await appliancesRes.json();
+                appliances = data.appliances || [];
+            }
 
             renderPantry();
             renderAppliances();
