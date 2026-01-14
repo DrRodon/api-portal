@@ -1,238 +1,224 @@
-/**
- * AI Cookbook - app.js
- */
+// public/cookbook/app.js - Integrated Version
+(function () {
+    let pantry = [];
+    let appliances = [];
+    let editingId = null;
 
-let state = {
-    pantry: [],
-    appliances: [],
-    email: '',
-    editingIndex: -1
-};
+    // DOM Elements - scoped to the panel in index.html
+    const getElements = () => ({
+        pantryList: document.getElementById('pantry-list-container'),
+        pantryAddBtn: document.getElementById('pantry-add-btn'),
+        appliancesContainer: document.getElementById('appliances-container'),
+        mealTypeSelect: document.getElementById('meal-type-select'),
+        peopleCountInput: document.getElementById('people-count-input'),
+        generateBtn: document.getElementById('cookbook-generate-btn'),
+        recipeSection: document.getElementById('recipe-display-section'),
+        recipeContent: document.getElementById('recipe-display-content'),
+        recipeCloseBtn: document.getElementById('recipe-close-btn'),
+        modal: document.getElementById('pantry-modal'),
+        modalTitle: document.getElementById('modal-title'),
+        modalForm: document.getElementById('pantry-form'),
+        modalCancelBtn: document.getElementById('modal-cancel-btn'),
+        itemNameInput: document.getElementById('item-name'),
+        itemQtyInput: document.getElementById('item-qty'),
+        itemUnitInput: document.getElementById('item-unit'),
+        itemExpInput: document.getElementById('item-exp'),
+    });
 
-const DEFAULT_APPLIANCES = [
-    "Piekarnik", "Frytkownica beztłuszczowa (Air Fryer)", "Mikrofalówka",
-    "Blender", "Toster", "Gofrownica", "Wyciskarka", "Multicooker"
-];
+    const availableAppliances = [
+        { id: 'piekarnik', label: 'Piekarnik' },
+        { id: 'frytkownica', label: 'Frytkownica beztłuszczowa' },
+        { id: 'mikrofalowka', label: 'Mikrofalówka' },
+        { id: 'blender', label: 'Blender' },
+        { id: 'patelnia', label: 'Patelnia' },
+        { id: 'wolnowar', label: 'Wolnowar' }
+    ];
 
-// --- API Functions ---
+    async function loadData() {
+        try {
+            const [pantryRes, appliancesRes] = await Promise.all([
+                fetch('/api/cookbook/pantry'),
+                fetch('/api/cookbook/appliances')
+            ]);
 
-async function fetchSession() {
-    try {
-        const res = await fetch('/api/session');
-        const data = await res.json();
-        if (data.ok) {
-            state.email = data.email;
-            document.getElementById('user-email').textContent = data.email;
+            if (pantryRes.ok) pantry = await pantryRes.json();
+            if (appliancesRes.ok) appliances = await appliancesRes.json();
+
+            renderPantry();
+            renderAppliances();
+        } catch (err) {
+            console.error('Błąd ładowania danych:', err);
         }
-    } catch (e) {
-        console.error('Session fetch failed');
     }
-}
 
-async function loadData() {
-    try {
-        const [pantryRes, appliancesRes] = await Promise.all([
-            fetch('/api/cookbook/pantry'),
-            fetch('/api/cookbook/appliances')
-        ]);
-
-        const pantryData = await pantryRes.json();
-        const appliancesData = await appliancesRes.json();
-
-        if (pantryData.ok) state.pantry = pantryData.pantry;
-        if (appliancesData.ok) state.appliances = appliancesData.appliances;
-
-        renderPantry();
-        renderAppliances();
-    } catch (e) {
-        showToast('Błąd ładowania danych');
-    }
-}
-
-async function saveData() {
-    try {
-        await Promise.all([
-            fetch('/api/cookbook/pantry', {
+    async function savePantry() {
+        try {
+            await fetch('/api/cookbook/pantry', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pantry: state.pantry })
-            }),
-            fetch('/api/cookbook/appliances', {
+                body: JSON.stringify(pantry)
+            });
+        } catch (err) {
+            console.error('Błąd zapisu spiżarni:', err);
+        }
+    }
+
+    async function saveAppliances() {
+        try {
+            await fetch('/api/cookbook/appliances', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ appliances: state.appliances })
-            })
-        ]);
-    } catch (e) {
-        showToast('Błąd zapisu danych');
-    }
-}
-
-async function generateRecipe() {
-    const mealType = document.getElementById('meal-type').value;
-    const peopleCount = document.getElementById('people-count').value;
-    const btn = document.getElementById('generate-btn');
-    const recipeSection = document.getElementById('recipe-section');
-    const recipeContent = document.getElementById('recipe-content');
-
-    btn.disabled = true;
-    btn.textContent = '⌛ Kucharz AI myśli...';
-    recipeSection.classList.remove('hidden');
-    recipeContent.innerHTML = '<p class="empty-msg">Siekam warzywa, przyprawiam Gemini... 🥗</p>';
-    recipeSection.scrollIntoView({ behavior: 'smooth' });
-
-    try {
-        const res = await fetch('/api/cookbook/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mealType, peopleCount })
-        });
-        const data = await res.json();
-
-        if (data.ok) {
-            // Simple markdown-ish to HTML conversion
-            recipeContent.innerHTML = formatRecipe(data.recipe);
-        } else {
-            recipeContent.innerHTML = `<p class="empty-msg" style="color:red">Błąd: ${data.error || 'Nie udało się wygenerować przepisu'}</p>`;
+                body: JSON.stringify(appliances)
+            });
+        } catch (err) {
+            console.error('Błąd zapisu urządzeń:', err);
         }
-    } catch (e) {
-        recipeContent.innerHTML = '<p class="empty-msg" style="color:red">Błąd połączenia z serwerem.</p>';
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '🌟 Wygeneruj Przepis (Gemini)';
-    }
-}
-
-// --- UI Rendering ---
-
-function renderPantry() {
-    const list = document.getElementById('pantry-list');
-    if (state.pantry.length === 0) {
-        list.innerHTML = '<p class="empty-msg">Twoja spiżarnia jest pusta. Dodaj coś!</p>';
-        return;
     }
 
-    list.innerHTML = state.pantry.map((item, idx) => `
-        <div class="pantry-item">
-            <div class="info">
-                <span class="name">${item.name}</span>
-                <span class="qty">${item.qty} ${item.unit || ''}</span>
-                ${item.exp ? `<span class="exp">Ważne do: ${item.exp}</span>` : ''}
-            </div>
-            <div class="item-actions">
-                <button class="btn btn-ghost btn-sm" onclick="editItem(${idx})">✏️</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteItem(${idx})">🗑️</button>
-            </div>
+    function renderPantry() {
+        const { pantryList } = getElements();
+        if (!pantryList) return;
+
+        if (pantry.length === 0) {
+            pantryList.innerHTML = '<p class="cookbook-empty">Twoja spiżarnia jest pusta.</p>';
+            return;
+        }
+
+        pantryList.innerHTML = pantry.map((item, index) => `
+      <div class="cookbook-item">
+        <div class="cookbook-item__info">
+          <span class="cookbook-item__name">${item.name}</span>
+          <span class="cookbook-item__qty">${item.qty} ${item.unit || ''}</span>
+          ${item.expDate ? `<span class="cookbook-item__exp">Ważne do: ${item.expDate}</span>` : ''}
         </div>
+        <div class="cookbook-item__actions">
+          <button onclick="window.editPantryItem(${index})" class="cookbook-btn cookbook-btn--icon" title="Edytuj">✏️</button>
+          <button onclick="window.deletePantryItem(${index})" class="cookbook-btn cookbook-btn--icon" title="Usuń">🗑️</button>
+        </div>
+      </div>
     `).join('');
-}
+    }
 
-function renderAppliances() {
-    const grid = document.getElementById('appliances-grid');
-    grid.innerHTML = DEFAULT_APPLIANCES.map(app => `
-        <label class="appliance-chip">
-            <input type="checkbox" value="${app}" ${state.appliances.includes(app) ? 'checked' : ''} onchange="toggleAppliance('${app}')">
-            ${app}
-        </label>
+    function renderAppliances() {
+        const { appliancesContainer } = getElements();
+        if (!appliancesContainer) return;
+
+        appliancesContainer.innerHTML = availableAppliances.map(app => `
+      <label class="cookbook-checkbox">
+        <input type="checkbox" value="${app.id}" ${appliances.includes(app.id) ? 'checked' : ''} onchange="window.toggleAppliance('${app.id}')">
+        <span>${app.label}</span>
+      </label>
     `).join('');
-}
-
-// --- Logic functions ---
-
-function toggleAppliance(app) {
-    if (state.appliances.includes(app)) {
-        state.appliances = state.appliances.filter(a => a !== app);
-    } else {
-        state.appliances.push(app);
-    }
-    saveData();
-}
-
-function deleteItem(idx) {
-    if (confirm('Usunąć ten produkt?')) {
-        state.pantry.splice(idx, 1);
-        renderPantry();
-        saveData();
-    }
-}
-
-function editItem(idx) {
-    const item = state.pantry[idx];
-    state.editingIndex = idx;
-
-    document.getElementById('modal-title').textContent = 'Edytuj Produkt';
-    document.getElementById('item-name').value = item.name;
-    document.getElementById('item-qty').value = item.qty;
-    document.getElementById('item-unit').value = item.unit || '';
-    document.getElementById('item-exp').value = item.exp || '';
-
-    document.getElementById('pantry-modal').classList.remove('hidden');
-}
-
-function openAddModal() {
-    state.editingIndex = -1;
-    document.getElementById('modal-title').textContent = 'Dodaj Produkt';
-    document.getElementById('item-name').value = '';
-    document.getElementById('item-qty').value = '';
-    document.getElementById('item-unit').value = '';
-    document.getElementById('item-exp').value = '';
-    document.getElementById('pantry-modal').classList.remove('hidden');
-}
-
-function saveModal() {
-    const name = document.getElementById('item-name').value.trim();
-    const qty = document.getElementById('item-qty').value.trim();
-    const unit = document.getElementById('item-unit').value.trim();
-    const exp = document.getElementById('item-exp').value;
-
-    if (!name) return showToast('Nazwa jest wymagana');
-
-    const newItem = { name, qty, unit, exp };
-
-    if (state.editingIndex > -1) {
-        state.pantry[state.editingIndex] = newItem;
-    } else {
-        state.pantry.push(newItem);
     }
 
-    renderPantry();
-    saveData();
-    document.getElementById('pantry-modal').classList.add('hidden');
-}
+    window.editPantryItem = (index) => {
+        const { modal, modalTitle, itemNameInput, itemQtyInput, itemUnitInput, itemExpInput } = getElements();
+        const item = pantry[index];
+        editingId = index;
+        modalTitle.textContent = 'Edytuj produkt';
+        itemNameInput.value = item.name;
+        itemQtyInput.value = item.qty;
+        itemUnitInput.value = item.unit || '';
+        itemExpInput.value = item.expDate || '';
+        modal.classList.remove('hidden');
+    };
 
-function formatRecipe(text) {
-    // Very simple MD-to-HTML
-    return text
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-        .replace(/^\* (.*$)/gim, '<li>$1</li>')
-        .replace(/^- (.*$)/gim, '<li>$1</li>')
-        .replace(/\n\n/g, '<br><br>')
-        .replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>');
-}
+    window.deletePantryItem = async (index) => {
+        if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
+            pantry.splice(index, 1);
+            renderPantry();
+            await savePantry();
+        }
+    };
 
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.remove('hidden');
-    setTimeout(() => t.classList.add('hidden'), 3000);
-}
+    window.toggleAppliance = async (id) => {
+        if (appliances.includes(id)) {
+            appliances = appliances.filter(a => a !== id);
+        } else {
+            appliances.push(id);
+        }
+        await saveAppliances();
+    };
 
-// --- Initialization ---
+    async function generateRecipe() {
+        const { generateBtn, recipeSection, recipeContent, mealTypeSelect, peopleCountInput } = getElements();
+        const originalBtnText = generateBtn.innerHTML;
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '✨ Tworzenie...';
 
-document.addEventListener('DOMContentLoaded', () => {
-    fetchSession();
-    loadData();
+        try {
+            const response = await fetch('/api/cookbook/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mealType: mealTypeSelect.value,
+                    peopleCount: peopleCountInput.value
+                })
+            });
 
-    document.getElementById('add-item-btn').onclick = openAddModal;
-    document.getElementById('modal-cancel').onclick = () => document.getElementById('pantry-modal').classList.add('hidden');
-    document.getElementById('modal-save').onclick = saveModal;
-    document.getElementById('generate-btn').onclick = generateRecipe;
-    document.getElementById('close-recipe').onclick = () => document.getElementById('recipe-section').classList.add('hidden');
+            if (!response.ok) throw new Error('Błąd generowania');
 
-    // Close modal on backdrop click
-    document.getElementById('pantry-modal').onclick = (e) => {
-        if (e.target.id === 'pantry-modal') document.getElementById('pantry-modal').classList.add('hidden');
+            const data = await response.json();
+            recipeContent.innerHTML = formatMarkdown(data.recipe);
+            recipeSection.classList.remove('hidden');
+            recipeSection.scrollIntoView({ behavior: 'smooth' });
+        } catch (err) {
+            alert('Nie udało się wygenerować przepisu. Sprawdź klucz API Gemini.');
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalBtnText;
+        }
     }
-});
+
+    function formatMarkdown(text) {
+        return text
+            .replace(/^### (.*$)/gim, '<h4>$1</h4>')
+            .replace(/^## (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^# (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^\* (.*$)/gim, '<li>$1</li>')
+            .replace(/^- (.*$)/gim, '<li>$1</li>')
+            .replace(/\n\n/g, '<br><br>')
+            .replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>');
+    }
+
+    let isInitialized = false;
+    window.initCookbook = () => {
+        if (isInitialized) return;
+        const el = getElements();
+        if (!el.pantryAddBtn) return;
+
+        el.pantryAddBtn.addEventListener('click', () => {
+            editingId = null;
+            el.modalTitle.textContent = 'Dodaj produkt';
+            el.modalForm.reset();
+            el.modal.classList.remove('hidden');
+        });
+
+        el.modalCancelBtn.addEventListener('click', () => el.modal.classList.add('hidden'));
+
+        el.modalForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newItem = {
+                name: el.itemNameInput.value,
+                qty: el.itemQtyInput.value,
+                unit: el.itemUnitInput.value,
+                expDate: el.itemExpInput.value
+            };
+
+            if (editingId !== null) pantry[editingId] = newItem;
+            else pantry.push(newItem);
+
+            renderPantry();
+            el.modal.classList.add('hidden');
+            await savePantry();
+        });
+
+        el.generateBtn.addEventListener('click', generateRecipe);
+        el.recipeCloseBtn.addEventListener('click', () => el.recipeSection.classList.add('hidden'));
+
+        loadData();
+        isInitialized = true;
+    };
+
+    window.loadCookbookData = loadData;
+})();

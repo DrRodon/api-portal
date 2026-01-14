@@ -563,12 +563,122 @@
       </div>
     </section>
 
-    <a class="tile tile--active tile--cookbook" href="/cookbook/index.html">
+    <a class="tile tile--active tile--cookbook" href="/cookbook/index.html" aria-controls="cookbook-panel"
+      aria-expanded="false" id="cookbook-tile">
       <div class="tile__tag">Kucharz AI</div>
       <h2>Twój Kucharz</h2>
       <p>Generuj przepisy na podstawie tego, co masz w lodówce.</p>
       <span class="tile__cta">Otwórz kuchnię</span>
     </a>
+
+    <!-- Cookbook Panel -->
+    <section class="cookbook-panel" id="cookbook-panel" aria-live="polite" hidden>
+      <div class="cookbook-panel__header">
+        <div>
+          <p class="cookbook-panel__eyebrow">Kucharz AI</p>
+          <h2>Twój Kucharz</h2>
+          <p class="cookbook-panel__lede">Zarządzaj spiżarnią i generuj przepisy.</p>
+        </div>
+        <div class="cookbook-panel__actions">
+          <button class="cookbook-panel__icon cookbook-panel__close" type="button" id="cookbook-panel-close"
+            aria-label="Zamknij">
+            Zamknij
+          </button>
+        </div>
+      </div>
+      <div class="cookbook-panel__body">
+        <div id="cookbook-root" class="cookbook-grid">
+          <!-- Pantry Section -->
+          <section class="cookbook-card cookbook-pantry">
+            <div class="cookbook-card__header">
+              <h3>📦 Spiżarnia</h3>
+              <button id="pantry-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm">+ Dodaj</button>
+            </div>
+            <div id="pantry-list-container" class="cookbook-pantry-list">
+              <p class="cookbook-empty">Ładowanie zapasów...</p>
+            </div>
+          </section>
+
+          <!-- Tools & Action Section -->
+          <div class="cookbook-tools-col">
+            <section class="cookbook-card">
+              <div class="cookbook-card__header">
+                <h3>🔌 Urządzenia</h3>
+              </div>
+              <div id="appliances-container" class="cookbook-appliances-grid">
+                <!-- JS will render this -->
+              </div>
+            </section>
+
+            <section class="cookbook-card">
+              <div class="cookbook-card__header">
+                <h3>🍳 Co jemy?</h3>
+              </div>
+              <div class="cookbook-form">
+                <div class="cookbook-form-group">
+                  <label>Typ posiłku</label>
+                  <select id="meal-type-select">
+                    <option value="Śniadanie">Śniadanie</option>
+                    <option value="Obiad">Obiad</option>
+                    <option value="Kolacja">Kolacja</option>
+                    <option value="Przekąska">Przekąska</option>
+                  </select>
+                </div>
+                <div class="cookbook-form-group">
+                  <label>Liczba osób</label>
+                  <input type="number" id="people-count-input" value="2" min="1">
+                </div>
+                <button id="cookbook-generate-btn" class="cookbook-btn cookbook-btn--accent cookbook-btn--large">
+                  🌟 Wygeneruj Przepis
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <!-- Recipe Section -->
+          <section class="cookbook-card cookbook-recipe hidden" id="recipe-display-section">
+            <div class="cookbook-card__header">
+              <h3>📖 Przepis od AI</h3>
+              <button id="recipe-close-btn" class="cookbook-btn cookbook-btn--ghost">Zamknij</button>
+            </div>
+            <div id="recipe-display-content" class="cookbook-recipe-content">
+              <!-- AI Recipe here -->
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal for adding/editing pantry items -->
+    <div id="pantry-modal" class="cookbook-modal hidden">
+      <div class="cookbook-modal-content">
+        <h2 id="modal-title">Dodaj produkt</h2>
+        <form id="pantry-form">
+          <div class="cookbook-form-group">
+            <label for="item-name">Nazwa produktu</label>
+            <input type="text" id="item-name" required placeholder="np. Jajka">
+          </div>
+          <div class="cookbook-form-row">
+            <div class="cookbook-form-group">
+              <label for="item-qty">Ilość</label>
+              <input type="text" id="item-qty" required placeholder="np. 6">
+            </div>
+            <div class="cookbook-form-group">
+              <label for="item-unit">Jednostka</label>
+              <input type="text" id="item-unit" placeholder="np. szt.">
+            </div>
+          </div>
+          <div class="cookbook-form-group">
+            <label for="item-exp">Data ważności (opcjonalnie)</label>
+            <input type="date" id="item-exp">
+          </div>
+          <div class="cookbook-modal-actions">
+            <button type="button" id="modal-cancel-btn" class="cookbook-btn cookbook-btn--ghost">Anuluj</button>
+            <button type="submit" class="cookbook-btn cookbook-btn--primary">Zapisz</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <div class="tile tile--placeholder" role="button" aria-disabled="true">
       <div class="tile__tag">Wkrótce</div>
@@ -615,6 +725,7 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="/cookbook/app.js"></script>
   <script src="/bp-chatlog/themes.js"></script>
   <script src="/bp-chatlog/app.js"></script>
 </body>

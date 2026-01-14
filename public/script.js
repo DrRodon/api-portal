@@ -15,6 +15,9 @@ const gmailPreviewBody = document.getElementById("gmail-preview-body");
 const gmailPreviewClose = document.getElementById("gmail-preview-close");
 const gmailPreviewBack = document.getElementById("gmail-preview-back");
 const gmailPreviewAuth = document.getElementById("gmail-preview-auth");
+const cookbookTile = document.getElementById("cookbook-tile");
+const cookbookPanel = document.getElementById("cookbook-panel");
+const cookbookPanelClose = document.getElementById("cookbook-panel-close");
 const gmailActionTrash = document.getElementById("gmail-action-trash");
 const gmailActionRead = document.getElementById("gmail-action-read");
 const themeSelect = document.getElementById("theme-select");
@@ -32,6 +35,8 @@ let notatnikPanelOpen = false;
 let currentMessageId = null;
 let previewCloseHandler = null;
 let notatnikCloseHandler = null;
+let cookbookCloseHandler = null;
+let cookbookPanelOpen = false;
 let portalToken = null;
 let portalTokenPromise = null;
 
@@ -443,6 +448,44 @@ const setNotatnikOpen = (isOpen) => {
   }
 };
 
+const setCookbookOpen = (isOpen) => {
+  cookbookPanelOpen = isOpen;
+  if (cookbookPanel) {
+    if (isOpen) {
+      if (cookbookCloseHandler) {
+        cookbookPanel.removeEventListener("transitionend", cookbookCloseHandler);
+        cookbookCloseHandler = null;
+      }
+      cookbookPanel.hidden = false;
+      cookbookPanel.classList.remove("is-closing");
+      requestAnimationFrame(() => {
+        cookbookPanel.classList.add("is-open");
+      });
+      // Initialize cookbook app if needed
+      if (window.initCookbook) {
+        window.initCookbook();
+      }
+    } else {
+      cookbookPanel.classList.remove("is-open");
+      cookbookPanel.classList.add("is-closing");
+      const onTransitionEnd = (event) => {
+        if (event.propertyName !== "opacity") {
+          return;
+        }
+        cookbookPanel.hidden = true;
+        cookbookPanel.classList.remove("is-closing");
+        cookbookPanel.removeEventListener("transitionend", onTransitionEnd);
+        cookbookCloseHandler = null;
+      };
+      cookbookCloseHandler = onTransitionEnd;
+      cookbookPanel.addEventListener("transitionend", onTransitionEnd);
+    }
+  }
+  if (cookbookTile) {
+    cookbookTile.setAttribute("aria-expanded", String(isOpen));
+  }
+};
+
 const setNotatnikView = (view) => {
   if (!notatnikRoot) {
     return;
@@ -582,6 +625,9 @@ window.addEventListener("load", () => {
       if (gmailPreviewOpen && !gmailDetailOpen) {
         loadGmailPreview();
       }
+      if (cookbookPanelOpen && window.loadCookbookData) {
+        window.loadCookbookData();
+      }
     }, REFRESH_INTERVAL_MS);
   }
 });
@@ -624,6 +670,24 @@ if (gmailTile) {
       setNotatnikOpen(false);
     }
     setPreviewOpen(!gmailPreviewOpen);
+  });
+}
+
+if (cookbookTile) {
+  cookbookTile.addEventListener("click", (event) => {
+    if (!cookbookPanel) {
+      return;
+    }
+    event.preventDefault();
+    if (notatnikPanelOpen) setNotatnikOpen(false);
+    if (gmailPreviewOpen) setPreviewOpen(false);
+    setCookbookOpen(!cookbookPanelOpen);
+  });
+}
+
+if (cookbookPanelClose) {
+  cookbookPanelClose.addEventListener("click", () => {
+    setCookbookOpen(false);
   });
 }
 
@@ -673,6 +737,9 @@ document.addEventListener("keydown", (event) => {
   }
   if (notatnikPanelOpen) {
     setNotatnikOpen(false);
+  }
+  if (cookbookPanelOpen) {
+    setCookbookOpen(false);
   }
 });
 
