@@ -67,11 +67,16 @@
   height: 100%;
 }
 
+.cookbook-panel__header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+  margin-bottom: 20px !important;
+}
+
 [data-view="chef"] .cookbook-view--chef {
   display: flex !important;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
 }
 
 [data-view="pantry"] .cookbook-view--pantry {
@@ -92,23 +97,28 @@
 
 /* Horizontal Form */
 .cookbook-horizontal-form .cookbook-form {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1.5fr auto;
-  align-items: end;
-  gap: 12px;
-  width: 100%;
+  display: grid !important;
+  grid-template-columns: 1fr 0.5fr 1fr auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  width: 100% !important;
 }
 
 .cookbook-horizontal-form .cookbook-form-group {
-  margin-bottom: 0;
+  margin-bottom: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
 }
 
 .cookbook-horizontal-form .cookbook-form-group--inline {
   display: flex !important;
-  align-items: center;
-  gap: 8px;
-  padding-bottom: 10px;
-  /* Align with inputs */
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  height: 100% !important;
+  padding-top: 1.2rem !important;
+  /* Push checkbox down to align with label-less row */
 }
 
 .cookbook-horizontal-form .cookbook-btn--accent {
@@ -139,6 +149,7 @@
 
 .cookbook-shopping {
   background: var(--accent-cookbook-soft);
+  min-height: 0;
 }
 
 .cookbook-pantry-list {
