@@ -115,6 +115,15 @@
     return 0;
   }
 
+  function getWaterTypeName(mult) {
+    if (mult >= 1) return "woda";
+    if (mult >= 0.99) return "kawa";
+    if (mult >= 0.9) return "herbata";
+    if (mult >= 0.85) return "woda z sokiem";
+    if (mult >= 0.7) return "sok";
+    return "płyn";
+  }
+
   function loadMedsAll() {
     return Array.isArray(state.meds) ? state.meds : [];
   }
@@ -753,7 +762,6 @@
     for (let idx = 0; idx < items.length; idx += 1) {
       const it = items[idx];
       const lines = [];
-
       if (it.medNotes) lines.push({ k: "Uwagi do leków", v: it.medNotes });
       if (it.food) lines.push({ k: "Jedzenie", v: it.food });
       if (it.events) lines.push({ k: "Wydarzenia", v: it.events });
@@ -763,14 +771,44 @@
       if (it.hypothesis) lines.push({ k: "Hipoteza", v: it.hypothesis });
       if (it.notes) lines.push({ k: "Notatki", v: it.notes });
 
+      if (showMetrics) {
+        if (typeof it.sys === "number" && typeof it.dia === "number" && it.sys > 0 && it.dia > 0) {
+          const pulsePart = it.pulse ? ` (tętno: ${it.pulse})` : "";
+          lines.push({ k: "Ciśnienie", v: `${it.sys}/${it.dia}${pulsePart}` });
+        } else if (typeof it.pulse === "number" && it.pulse > 0) {
+          lines.push({ k: "Tętno", v: String(it.pulse) });
+        }
+
+        if (typeof it.waterMl === "number" && it.waterMl > 0) {
+          const type = getWaterTypeName(it.hydration);
+          const real = effectiveWaterMl(it);
+          lines.push({ k: "Nawodnienie", v: `${it.waterMl} ml (${type}) | realne: ${real} ml` });
+        }
+
+        if (it.medications && typeof it.medications === "object" && Object.keys(it.medications).length) {
+          const catalog = loadMedsAll();
+          const nameById = new Map(catalog.map(m => [m.id, m]));
+          const medLabels = Object.entries(it.medications).map(([id, status]) => {
+            const m = nameById.get(id);
+            const name = m ? (m.name || id) : id;
+            const parsed = parseMedStatus(status);
+            const icon = parsed.state === "taken" ? "✓" : (parsed.state === "missed" ? "✕" : "?");
+            const mult = parsed.mult > 1 ? ` x${parsed.mult}` : "";
+            return `${icon} ${name}${mult}`;
+          });
+          lines.push({ k: "Leki", v: medLabels.join(", ") });
+        }
+      }
+
       if (!lines.length) {
+        if (!showMetrics) continue;
         const tags = [];
         if (typeof it.sys === "number" && typeof it.dia === "number" && it.sys > 0 && it.dia > 0) tags.push("ciśnienie");
         if (typeof it.pulse === "number" && it.pulse > 0) tags.push("puls");
         if (typeof it.waterMl === "number" && it.waterMl > 0) tags.push("nawodnienie");
         if (it.medications && typeof it.medications === "object" && Object.keys(it.medications).length) tags.push("leki");
-        if (!showMetrics || !tags.length) continue;
-        lines.push({ k: "Wpis metryczny", v: tags.join(", ") });
+        if (tags.length) lines.push({ k: "Wpis metryczny", v: tags.join(", ") });
+        else continue;
       }
 
       const item = document.createElement("div");
