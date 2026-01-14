@@ -751,18 +751,18 @@ app.post("/api/cookbook/generate", async (req, res) => {
       .join(", ");
     const applianceList = (appliances || []).join(", ");
 
-    let prompt = `Jesteś kreatywnym kucharzem. Przygotuj przepis na ${mealType} dla ${peopleCount} osób.
-Dostępne składniki w spiżarni: ${pantryList || "brak danych"}.
-Dostępne urządzenia: ${applianceList || "podstawowe wyposażenie kuchni"}.
+    let prompt = `Jestes kreatywnym kucharzem. Przygotuj przepis na ${mealType} dla ${peopleCount} osob.
+Dostepne skladniki w spizarni: ${pantryList || "brak danych"}.
+Dostepne urzadzenia: ${applianceList || "podstawowe wyposazenie kuchni"}.
 
 ZASADY:
-1. ${suggestShopping ? "Możesz użyć brakujących składników, ale tylko jeśli są niezbędne." : "Używaj WYŁĄCZNIE składników wymienionych w spiżarni. Nie dodawaj niczego spoza listy (nawet soli/pieprzu, jeśli ich nie ma)."}
-2. Przepis musi być możliwy do wykonania za pomocą dostępnych urządzeń.
-3. Odpowiedź sformatuj w czytelnym Markdownie (Tytuł, Składniki, Instrukcja).
+1. ${suggestShopping ? "Mozesz uzyc brakujacych skladnikow, ale tylko jesli sa niezbedne." : "Uzywaj WYLACZNIE skladnikow wymienionych w spizarni. Nie dodawaj niczego spoza listy (nawet soli/pieprzu, jesli ich nie ma)."}
+2. Przepis musi byc mozliwy do wykonania za pomoca dostepnych urzadzen.
+3. Odpowiedz sformatuj w czytelnym Markdownie (Tytul, Skladniki, Instrukcja).
 4. Pisz po polsku.`;
 
     if (suggestShopping) {
-      prompt += `\n5. Jeśli brakuje jakichkolwiek składników, wymień je WYŁĄCZNIE na samym końcu odpowiedzi, pod sekcją przepisu, oddzielając je dokładnie tym znakiem (bez dodatkowego tekstu przed nim): ---SHOPPING_LIST---`;
+      prompt += `\n5. Jesli brakuje jakichkolwiek skladnikow, wymien je WYLACZNIE na samym koncu odpowiedzi, pod sekcja przepisu, oddzielajac je dokladnie tym znakiem (bez dodatkowego tekstu przed nim): ---SHOPPING_LIST---`;
     }
 
     const response = await fetch(
