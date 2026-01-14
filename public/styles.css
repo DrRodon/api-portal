@@ -38,7 +38,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: calc(var(--tile-row) * 3 + 40px);
+  height: 680px;
+  overflow: hidden;
   grid-column: 1 / -1;
   grid-row: 2 / span 3;
   opacity: 0;
@@ -78,42 +79,39 @@
   display: flex !important;
 }
 
-.cookbook-panel__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+.cookbook-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 5px;
+  /* For body scroll */
 }
 
 /* Horizontal Form */
 .cookbook-horizontal-form .cookbook-form {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr auto;
+  align-items: end;
   gap: 12px;
-  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .cookbook-horizontal-form .cookbook-form-group {
-  flex: 1 1 auto;
   margin-bottom: 0;
 }
 
 .cookbook-horizontal-form .cookbook-form-group--inline {
-  flex: 0 0 auto;
   display: flex !important;
   align-items: center;
   gap: 8px;
-  padding-top: 18px;
-  /* Align with label-top groups */
+  padding-bottom: 10px;
+  /* Align with inputs */
 }
 
 .cookbook-horizontal-form .cookbook-btn--accent {
-  flex: 0 0 auto;
   padding: 0 20px;
   height: 38px;
-  align-self: flex-end;
+  white-space: nowrap;
 }
 
 /* Result Grid */
@@ -289,7 +287,8 @@ body.theme-dark .cookbook-item {
 
 .cookbook-recipe-content {
   line-height: 1.6;
-  max-height: 480px;
+  max-height: 380px;
+  /* Reduced to fit in 680px panel */
   overflow-y: auto;
   padding-right: 12px;
   scrollbar-width: thin;
@@ -305,9 +304,21 @@ body.theme-dark .cookbook-item {
   border-radius: 10px;
 }
 
-.cookbook-recipe {
+.cookbook-view--chef {
+  height: 100%;
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.no-shopping .cookbook-recipe {
   grid-column: 1 / -1;
+}
+
+.cookbook-recipe {
   margin-top: 10px;
+  min-height: 0;
+  /* Allow shrinking */
 }
 
 .cookbook-recipe-content h2 {
@@ -1120,7 +1131,8 @@ body.theme-dark .gmail-preview__link--ghost {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: calc(var(--tile-row) * 3 + 40px);
+  height: 680px;
+  overflow: hidden;
   grid-column: 1 / -1;
   grid-row: 2 / span 3;
   opacity: 0;
