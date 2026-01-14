@@ -119,6 +119,7 @@
     if (mult >= 1) return "woda";
     if (mult >= 0.99) return "kawa";
     if (mult >= 0.9) return "herbata";
+    if (mult >= 0.88) return "herbata z sokiem";
     if (mult >= 0.85) return "woda z sokiem";
     if (mult >= 0.7) return "sok";
     return "płyn";
