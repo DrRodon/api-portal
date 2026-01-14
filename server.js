@@ -762,7 +762,7 @@ ZASADY:
 4. Pisz po polsku.`;
 
     if (suggestShopping) {
-      prompt += `\n5. Na końcu przepisu dodaj sekcję "Lista zakupów" poprzedzoną dokładnie tym tekstem: ---SHOPPING_LIST--- `;
+      prompt += `\n5. Jeśli brakuje jakichkolwiek składników, wymień je WYŁĄCZNIE na samym końcu odpowiedzi, pod sekcją przepisu, oddzielając je dokładnie tym znakiem (bez dodatkowego tekstu przed nim): ---SHOPPING_LIST---`;
     }
 
     const response = await fetch(

@@ -69,6 +69,9 @@
 
 [data-view="chef"] .cookbook-view--chef {
   display: flex !important;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 [data-view="pantry"] .cookbook-view--pantry {
@@ -304,12 +307,7 @@ body.theme-dark .cookbook-item {
   border-radius: 10px;
 }
 
-.cookbook-view--chef {
-  height: 100%;
-  display: flex !important;
-  flex-direction: column;
-  overflow: hidden;
-}
+/* Chef view handled above */
 
 .no-shopping .cookbook-recipe {
   grid-column: 1 / -1;

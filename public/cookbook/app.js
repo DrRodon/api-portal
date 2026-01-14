@@ -208,21 +208,21 @@
             }
 
             // Split recipe and shopping list
-            const parts = data.recipe.split('---SHOPPING_LIST---');
-            const recipeMd = parts[0];
-            const shoppingMd = parts[1] || '';
+            const [recipeMd, shoppingMd = ''] = data.recipe.split('---SHOPPING_LIST---');
 
-            recipeContent.innerHTML = formatMarkdown(recipeMd);
-            recipeSection.classList.remove('hidden');
-
+            // Set grid state first
             if (shoppingMd.trim()) {
+                resultArea.classList.remove('no-shopping');
                 shoppingContent.innerHTML = formatMarkdown(shoppingMd);
                 shoppingSection.classList.remove('hidden');
-                resultArea.classList.remove('no-shopping');
             } else {
-                shoppingSection.classList.add('hidden');
                 resultArea.classList.add('no-shopping');
+                shoppingSection.classList.add('hidden');
             }
+
+            // Then show recipe
+            recipeContent.innerHTML = formatMarkdown(recipeMd);
+            recipeSection.classList.remove('hidden');
 
             recipeSection.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
