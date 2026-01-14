@@ -23,6 +23,10 @@
   padding: 0;
 }
 
+
+
+
+
 body {
   min-height: 100vh;
   font-family: "Candara", "Trebuchet MS", sans-serif;
@@ -715,7 +719,8 @@ body.theme-dark .gmail-preview__link--ghost {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: calc(var(--tile-row) * 3 + 40px);
+  height: 680px;
+  overflow: hidden;
   grid-column: 1 / -1;
   grid-row: 2 / span 3;
   opacity: 0;

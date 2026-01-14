@@ -577,7 +577,7 @@ app.get("/api/config", (_req, res) => {
 });
 
 app.use("/api", (req, res, next) => {
-  if (req.path === "/config" || req.path.startsWith("/bp/")) {
+  if (req.path === "/config" || req.path.startsWith("/bp/") || req.path.startsWith("/cookbook/")) {
     return next();
   }
   const token = req.get("X-Portal-Token");
@@ -667,6 +667,134 @@ const bpMedsKey = (email) => `${BP_KV_PREFIX}:meds:${email}`;
 const bpAclKey = (email) => `${BP_KV_PREFIX}:acl:${email}`; // Set of emails allowed to view 'email's data
 const bpSharedWithKey = (email) => `${BP_KV_PREFIX}:shared_with:${email}`; // Set of emails that 'email' can view
 const bpGlobalLiquidsKey = `${BP_KV_PREFIX}:liquids:global`;
+
+/* Cookbook (Kucharz AI) API */
+const COOKBOOK_KV_PREFIX = "cookbook:v1";
+const pantryKey = (email) => `${COOKBOOK_KV_PREFIX}:pantry:${email}`;
+const appliancesKey = (email) => `${COOKBOOK_KV_PREFIX}:appliances:${email}`;
+
+app.get("/api/cookbook/pantry", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const kv = getKvClient();
+  if (!kv) return res.json({ ok: true, pantry: [] });
+  try {
+    const pantry = await kv.get(pantryKey(email));
+    res.json({ ok: true, pantry: pantry || [] });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/cookbook/pantry", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  // Handle both { pantry: [...] } and direct [...] array
+  const pantry = Array.isArray(req.body) ? req.body : req.body.pantry;
+  const kv = getKvClient();
+  if (!kv) return res.status(503).json({ ok: false });
+  try {
+    await kv.set(pantryKey(email), pantry || []);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.get("/api/cookbook/appliances", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const kv = getKvClient();
+  if (!kv) return res.json({ ok: true, appliances: [] });
+  try {
+    const appliances = await kv.get(appliancesKey(email));
+    res.json({ ok: true, appliances: appliances || [] });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/cookbook/appliances", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  // Handle both { appliances: [...] } and direct [...] array
+  const appliances = Array.isArray(req.body) ? req.body : req.body.appliances;
+  const kv = getKvClient();
+  if (!kv) return res.status(503).json({ ok: false });
+  try {
+    await kv.set(appliancesKey(email), appliances || []);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/cookbook/generate", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+
+  const { mealType, peopleCount, suggestShopping } = req.body;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ ok: false, error: "MISSING_API_KEY" });
+  }
+
+  const kv = getKvClient();
+  try {
+    const [pantry, appliances] = await Promise.all([
+      kv ? kv.get(pantryKey(email)) : [],
+      kv ? kv.get(appliancesKey(email)) : [],
+    ]);
+
+    const pantryList = (pantry || [])
+      .map((i) => `${i.name} (${i.qty} ${i.unit || ""})`)
+      .join(", ");
+    const applianceList = (appliances || []).join(", ");
+
+    let prompt = `Jestes kreatywnym kucharzem. Przygotuj przepis na ${mealType} dla ${peopleCount} osob.
+Dostepne skladniki w spizarni: ${pantryList || "brak danych"}.
+Dostepne urzadzenia: ${applianceList || "podstawowe wyposazenie kuchni"}.
+
+ZASADY:
+1. ${suggestShopping ? "Mozesz uzyc brakujacych skladnikow, ale tylko jesli sa niezbedne." : "Uzywaj WYLACZNIE skladnikow wymienionych w spizarni. Nie dodawaj niczego spoza listy (nawet soli/pieprzu, jesli ich nie ma)."}
+2. Przepis musi byc mozliwy do wykonania za pomoca dostepnych urzadzen.
+3. Odpowiedz sformatuj w czytelnym Markdownie (Tytul, Skladniki, Instrukcja).
+4. Pisz po polsku.`;
+
+    if (suggestShopping) {
+      prompt += `\n5. Jesli brakuje jakichkolwiek skladnikow, wymien je WYLACZNIE na samym koncu odpowiedzi, pod sekcja przepisu, oddzielajac je dokladnie tym znakiem (bez dodatkowego tekstu przed nim): ---SHOPPING_LIST---`;
+    }
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Gemini API Error:", JSON.stringify(data.error, null, 2));
+      return res.status(500).json({ ok: false, error: data.error.message });
+    }
+
+    const recipe = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!recipe) {
+      console.error("Gemini API Empty Response:", JSON.stringify(data, null, 2));
+      return res.status(500).json({ ok: false, error: "Empty response from Gemini" });
+    }
+
+    res.json({ ok: true, recipe });
+  } catch (e) {
+    console.error("Recipe Generation Exception:", e);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 app.get("/api/bp/sync", async (req, res) => {
   const email = req.portalUser?.email;
