@@ -116,12 +116,10 @@
   }
 
   function getWaterTypeName(mult) {
+    if (mult >= 1.05) return "sok";
     if (mult >= 1) return "woda";
-    if (mult >= 0.99) return "kawa";
-    if (mult >= 0.9) return "herbata";
-    if (mult >= 0.88) return "herbata z sokiem";
-    if (mult >= 0.85) return "woda z sokiem";
-    if (mult >= 0.7) return "sok";
+    if (mult >= 0.99) return "kawa/herbata";
+    if (mult >= 0.98) return "płyn z sokiem";
     return "płyn";
   }
 
