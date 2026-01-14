@@ -34,7 +34,6 @@
         recipeContent: document.getElementById('recipe-display-content'),
         shoppingSection: document.getElementById('shopping-list-section'),
         shoppingContent: document.getElementById('shopping-list-content'),
-        recipeCloseBtn: document.getElementById('recipe-close-btn'),
 
         modal: document.getElementById('pantry-modal'),
         modalTitle: document.getElementById('modal-title'),
@@ -319,11 +318,6 @@
 
         // Chef Actions
         el.generateBtn?.addEventListener('click', generateRecipe);
-        el.recipeCloseBtn?.addEventListener('click', () => {
-            el.recipeSection.classList.add('hidden');
-            el.shoppingSection.classList.add('hidden');
-            el.resultArea.classList.add('no-shopping');
-        });
 
         loadData();
         isInitialized = true;
