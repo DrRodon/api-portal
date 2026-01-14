@@ -259,9 +259,46 @@ body.theme-dark .cookbook-item {
   border-radius: 10px;
 }
 
+.cookbook-recipe {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
+
+.cookbook-recipe-content h2 {
+  font-size: 1.25rem;
+  margin-top: 10px;
+}
+
+.cookbook-recipe-content h3 {
+  font-size: 1.1rem;
+  margin-top: 10px;
+}
+
 .cookbook-recipe-content h4 {
-  margin: 15px 0 8px;
-  color: var(--accent-cookbook);
+  font-size: 1rem;
+  margin-top: 8px;
+}
+
+.cookbook-recipe-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 0.85rem;
+}
+
+.cookbook-recipe-content th,
+.cookbook-recipe-content td {
+  border: 1px solid var(--tile-border);
+  padding: 6px;
+  text-align: left;
+}
+
+.cookbook-recipe-content th {
+  background: var(--accent-cookbook-soft);
+}
+
+.cookbook-recipe-content li {
+  margin-left: 20px;
 }
 
 .cookbook-modal {

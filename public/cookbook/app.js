@@ -163,14 +163,61 @@
     }
 
     function formatMarkdown(text) {
-        return text
-            .replace(/^### (.*$)/gim, '<h4>$1</h4>')
-            .replace(/^## (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^# (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^\* (.*$)/gim, '<li>$1</li>')
-            .replace(/^- (.*$)/gim, '<li>$1</li>')
-            .replace(/\n\n/g, '<br><br>')
-            .replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>');
+        let lines = text.split('\n');
+        let html = [];
+        let inTable = false;
+        let inList = false;
+
+        for (let line of lines) {
+            let row = line.trim();
+
+            // Tables
+            if (row.startsWith('|') && row.endsWith('|')) {
+                if (!inTable) {
+                    inTable = true;
+                    html.push('<table>');
+                }
+                if (row.includes('---')) continue; // Skip separator
+                let cells = row.split('|').filter((_, i, arr) => i > 0 && i < arr.length - 1);
+                let tag = html[html.length - 1] === '<table>' ? 'th' : 'td';
+                html.push(`<tr>${cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('')}</tr>`);
+                continue;
+            } else if (inTable) {
+                inTable = false;
+                html.push('</table>');
+            }
+
+            // Headers
+            if (row.startsWith('### ')) {
+                html.push(`<h4>${row.substring(4)}</h4>`);
+            } else if (row.startsWith('## ')) {
+                html.push(`<h3>${row.substring(3)}</h3>`);
+            } else if (row.startsWith('# ')) {
+                html.push(`<h2>${row.substring(2)}</h2>`);
+            }
+            // Lists
+            else if (row.startsWith('* ') || row.startsWith('- ')) {
+                if (!inList) {
+                    inList = true;
+                    html.push('<ul>');
+                }
+                html.push(`<li>${row.substring(2)}</li>`);
+            } else {
+                if (inList) {
+                    inList = false;
+                    html.push('</ul>');
+                }
+                if (row === '') {
+                    html.push('<br>');
+                } else {
+                    html.push(`<p>${row.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`);
+                }
+            }
+        }
+        if (inTable) html.push('</table>');
+        if (inList) html.push('</ul>');
+
+        return html.join('\n');
     }
 
     let isInitialized = false;
