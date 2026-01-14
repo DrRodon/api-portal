@@ -702,27 +702,26 @@
     renderMedChecklist(item.medications || {});
   }
 
-  function upsert() {
+  async function upsert() {
     const data = readForm();
 
     if (state.editingId) {
       const idx = state.items.findIndex(x => x.id === state.editingId);
       if (idx >= 0) {
         state.items[idx] = { ...state.items[idx], ...data };
-        save();
+        await save();
         toast("Zapisano zmiany.");
       } else {
         state.items.push({ id: uuid(), createdAt: new Date().toISOString(), ...data });
-        save();
+        await save();
         toast("Nie znalazłem wpisu do edycji. Zapisano jako nowy.");
       }
     } else {
       state.items.push({ id: uuid(), createdAt: new Date().toISOString(), ...data });
-      save();
+      await save();
       toast("Dodano wpis.");
     }
 
-    load();
     resetForm();
     render();
   }
@@ -737,12 +736,11 @@
     writeForm(it);
   }
 
-  function remove(id) {
+  async function remove(id) {
     const ok = confirm("Usunąć ten wpis? Tego nie cofniesz.");
     if (!ok) return;
     state.items = state.items.filter(x => x.id !== id);
-    save();
-    load();
+    await save();
     toast("Usunięto wpis.");
     render();
   }
