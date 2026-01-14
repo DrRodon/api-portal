@@ -104,6 +104,31 @@
 
         <div class="hr"></div>
 
+        <h2 class="sectionTitle">Rodzaje płynów</h2>
+        <div class="small" style="margin-bottom:10px;">
+          Zdefiniuj własne rodzaje napojów i ich współczynnik nawodnienia (BHI).
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="liquidName">Nazwa</label>
+            <input id="liquidName" placeholder="np. Matcha Latte" />
+          </div>
+          <div>
+            <label for="liquidMult">Współczynnik (np. 1.05 = 105%)</label>
+            <input id="liquidMult" type="number" step="0.01" value="1.00" />
+          </div>
+        </div>
+
+        <div class="row mt10">
+          <div style="display:grid; align-content:end; gap:8px;">
+            <button id="addLiquidBtn" type="button" class="ok">Dodaj płyn</button>
+            <button id="cancelLiquidBtn" type="button" class="secondary hidden">Anuluj</button>
+          </div>
+        </div>
+
+        <div class="mt10" id="liquidList"></div>
+
         <div class="hr"></div>
 
         <h2 class="sectionTitle">Udostępnianie (Beta)</h2>
@@ -192,42 +217,55 @@
       }
 
       async function saveMeds(meds) {
-        // Cloud-only: Push directly to API
-        // NOTE: We must be careful not to wipe 'items'.
-        // We will fetch items first then push both.
-        // This is inefficient but safe for this refactor.
+        saveCloudData({ meds });
+      }
 
+      async function saveLiquids(liquids) {
+        saveCloudData({ liquids });
+      }
+
+      async function saveCloudData(partial) {
         try {
-          let currentItems = [];
+          let current = { items: [], meds: [], liquids: [] };
           try {
             const r = await fetch("/api/bp/sync");
             const j = await r.json();
-            if (j.ok && j.items)
-              currentItems = typeof j.items === "string" ? JSON.parse(j.items) : (j.items || []);
-          } catch (e) {/* ignore */ }
+            if (j.ok) {
+              current.items = typeof j.items === "string" ? JSON.parse(j.items) : (j.items || []);
+              current.meds = typeof j.meds === "string" ? JSON.parse(j.meds) : (j.meds || []);
+              current.liquids = typeof j.liquids === "string" ? JSON.parse(j.liquids) : (j.liquids || []);
+            }
+          } catch (e) { }
 
+          const data = { ...current, ...partial };
           await fetch("/api/bp/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: currentItems, meds })
+            body: JSON.stringify(data)
           });
 
-          // Update local cache
-          window._cachedMeds = meds;
-          // toast("Leki zapisane w chmurze.");
-        } catch (e) { console.error("Save meds failed", e); toast("Błąd zapisu leków"); }
+          if (partial.meds) window._cachedMeds = partial.meds;
+          if (partial.liquids) window._cachedLiquids = partial.liquids;
+        } catch (e) {
+          console.error("Save failed", e);
+          toast("Błąd zapisu danych");
+        }
       }
 
-      async function initMeds() {
+      async function initData() {
         try {
           const r = await fetch("/api/bp/sync");
           const j = await r.json();
           if (j.ok) {
             const cloudMeds = typeof j.meds === "string" ? JSON.parse(j.meds) : (j.meds || []);
             window._cachedMeds = Array.isArray(cloudMeds) ? cloudMeds : [];
+
+            const cloudLiquids = typeof j.liquids === "string" ? JSON.parse(j.liquids) : (j.liquids || []);
+            window._cachedLiquids = Array.isArray(cloudLiquids) ? cloudLiquids : [];
           }
         } catch (e) { console.error(e); }
         renderMeds();
+        renderLiquids();
       }
 
       function loadMeds() {
@@ -322,6 +360,67 @@
         });
       }
 
+      function loadLiquids() {
+        return window._cachedLiquids || [];
+      }
+
+      function renderLiquids() {
+        const box = document.getElementById("liquidList");
+        const list = loadLiquids();
+
+        if (!list.length) {
+          box.innerHTML = `<div class="small">Brak zdefiniowanych płynów.</div>`;
+          return;
+        }
+
+        box.innerHTML = "";
+        list.forEach((m) => {
+          const safeName = escapeAttr(m.name || "-");
+          const safeMult = (m.mult || 1).toFixed(2);
+          const row = document.createElement("div");
+          row.className = "medItem";
+
+          const left = document.createElement("div");
+          left.className = "left";
+          left.innerHTML = `
+            <div class="name"><span>${safeName}</span></div>
+            <div class="hint">Nawodnienie: ${(m.mult * 100).toFixed(0)}% (${safeMult})</div>
+          `;
+
+          const right = document.createElement("div");
+          right.className = "right";
+
+          const edit = document.createElement("button");
+          edit.type = "button";
+          edit.className = "secondary";
+          edit.textContent = "Edytuj";
+          edit.onclick = () => {
+            editingLiquidId = m.id;
+            document.getElementById("liquidName").value = m.name || "";
+            document.getElementById("liquidMult").value = m.mult || 1;
+            if (addLiquidBtn) addLiquidBtn.textContent = "Zapisz zmiany";
+            if (cancelLiquidBtn) cancelLiquidBtn.classList.remove("hidden");
+          };
+
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "danger";
+          del.textContent = "Usuń";
+          del.onclick = () => {
+            if (!confirm(`Usunąć płyn "${m.name}"?`)) return;
+            const updated = loadLiquids().filter(x => x.id !== m.id);
+            saveLiquids(updated);
+            renderLiquids();
+          };
+
+          right.appendChild(edit);
+          right.appendChild(del);
+          row.appendChild(left);
+          row.appendChild(right);
+          box.appendChild(row);
+        });
+      }
+
       const medTimeInput = document.getElementById("medTime");
       const medPrnToggle = document.getElementById("medPrn");
       const addMedBtn = document.getElementById("addMedBtn");
@@ -392,6 +491,53 @@
         renderMeds();
         toast("Dodano lek.");
       });
+
+      const addLiquidBtn = document.getElementById("addLiquidBtn");
+      const cancelLiquidBtn = document.getElementById("cancelLiquidBtn");
+      let editingLiquidId = null;
+
+      function resetLiquidForm() {
+        editingLiquidId = null;
+        document.getElementById("liquidName").value = "";
+        document.getElementById("liquidMult").value = "1.00";
+        if (addLiquidBtn) addLiquidBtn.textContent = "Dodaj płyn";
+        if (cancelLiquidBtn) cancelLiquidBtn.classList.add("hidden");
+      }
+
+      if (cancelLiquidBtn) cancelLiquidBtn.addEventListener("click", resetLiquidForm);
+
+      if (addLiquidBtn) {
+        addLiquidBtn.addEventListener("click", () => {
+          const name = document.getElementById("liquidName").value.trim();
+          const mult = parseFloat(document.getElementById("liquidMult").value);
+
+          if (!name) return alert("Podaj nazwę płynu.");
+          if (isNaN(mult)) return alert("Podaj poprawny współczynnik.");
+
+          const list = loadLiquids();
+
+          if (editingLiquidId) {
+            const idx = list.findIndex(x => x.id === editingLiquidId);
+            if (idx >= 0) {
+              list[idx] = { ...list[idx], name, mult };
+              saveLiquids(list);
+              renderLiquids();
+              resetLiquidForm();
+              toast("Zapisano zmiany.");
+              return;
+            }
+          }
+
+          const id = slugify(name);
+          if (list.some(m => m.id === id)) return alert("Taki płyn już istnieje.");
+
+          list.push({ id, name, mult });
+          saveLiquids(list);
+          resetLiquidForm();
+          renderLiquids();
+          toast("Dodano płyn.");
+        });
+      }
 
       document.getElementById("exportAllBtn").addEventListener("click", () => {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -487,22 +633,22 @@
         const ok = confirm("Wyczyścić WSZYSTKIE wpisy w chmurze? Tego nie cofniesz.");
         if (!ok) return;
 
-        // We push empty items, keeping meds? Or wipe all? Usually wipe button wipes items.
-        // Let's keep meds to be safe? Or user expects total wipe?
-        // User said "Wyczyscic WSZYSTKIE wpisy". Usually means logs.
-
         try {
           let currentMeds = [];
+          let currentLiquids = [];
           try {
             const r = await fetch("/api/bp/sync");
             const j = await r.json();
-            if (j.ok && j.meds) currentMeds = j.meds;
+            if (j.ok) {
+              currentMeds = j.meds || [];
+              currentLiquids = j.liquids || [];
+            }
           } catch (e) { }
 
           await fetch("/api/bp/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: [], meds: currentMeds })
+            body: JSON.stringify({ items: [], meds: currentMeds, liquids: currentLiquids })
           });
           toast("Wyczyszczono dane w chmurze.");
         } catch (e) { toast("Błąd czyszczenia."); }
@@ -523,7 +669,7 @@
       });
 
       // Init
-      initMeds();
+      initData();
 
       /* Sharing Logic */
       /* Sharing Logic */

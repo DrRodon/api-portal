@@ -5,7 +5,7 @@
   const DEFAULT_WATER_TARGET = 2000;
 
   const el = (id) => document.getElementById(id);
-  const state = { items: [], meds: [], editingId: null };
+  const state = { items: [], meds: [], liquids: [], editingId: null };
   const isEmbedded = Boolean(document.getElementById("notatnik-panel"));
 
   function uuid() {
@@ -116,11 +116,36 @@
   }
 
   function getWaterTypeName(mult) {
+    if (state.liquids && state.liquids.length) {
+      const match = state.liquids.find(l => Math.abs(l.mult - mult) < 0.001);
+      if (match) return match.name;
+    }
     if (mult >= 1.05) return "sok";
     if (mult >= 1) return "woda";
     if (mult >= 0.99) return "kawa/herbata";
     if (mult >= 0.98) return "płyn z sokiem";
     return "płyn";
+  }
+
+  function syncWaterTypeOptions() {
+    const sel = el("waterType");
+    if (!sel) return;
+
+    if (!state.liquids || !state.liquids.length) {
+      // Keep hardcoded defaults if no custom ones
+      return;
+    }
+
+    const currentVal = sel.value;
+    sel.innerHTML = "";
+    state.liquids.forEach(l => {
+      const opt = document.createElement("option");
+      opt.value = String(l.mult);
+      opt.textContent = `${l.name} (${(l.mult * 100).toFixed(0)}%)`;
+      sel.appendChild(opt);
+    });
+
+    if (currentVal) sel.value = currentVal;
   }
 
   function loadMedsAll() {
@@ -365,6 +390,7 @@
   async function load() {
     state.readOnly = false;
     state.meds = [];
+    state.liquids = [];
 
     const params = new URLSearchParams(window.location.search);
     const viewUser = params.get("viewUser");
@@ -382,8 +408,11 @@
           state.items = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
           const medArr = typeof json.meds === "string" ? JSON.parse(json.meds) : (json.meds || []);
           state.meds = Array.isArray(medArr) ? medArr : [];
+          const liqArr = typeof json.liquids === "string" ? JSON.parse(json.liquids) : (json.liquids || []);
+          state.liquids = Array.isArray(liqArr) ? liqArr : [];
           render();
           renderMedChecklist({});
+          syncWaterTypeOptions();
           toast(`Podgląd: ${escapeHtml(json.owner)}`);
         } else {
           toast("Brak dostępu lub błąd.");
@@ -403,8 +432,11 @@
         state.items = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
         const medArr = typeof json.meds === "string" ? JSON.parse(json.meds) : (json.meds || []);
         state.meds = Array.isArray(medArr) ? medArr : [];
+        const liqArr = typeof json.liquids === "string" ? JSON.parse(json.liquids) : (json.liquids || []);
+        state.liquids = Array.isArray(liqArr) ? liqArr : [];
         render(); // Update UI after load
         renderMedChecklist({}); // Update checklist after load
+        syncWaterTypeOptions();
       } else {
         toast("Brak połączenia z bazą.");
       }
@@ -428,7 +460,7 @@
       await fetch("/api/bp/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: state.items, meds: state.meds || [] })
+        body: JSON.stringify({ items: state.items, meds: state.meds || [], liquids: state.liquids || [] })
       });
       // toast("Zapisano w chmurze.");
     } catch (e) {

@@ -666,6 +666,7 @@ const bpDataKey = (email) => `${BP_KV_PREFIX}:data:${email}`;
 const bpMedsKey = (email) => `${BP_KV_PREFIX}:meds:${email}`;
 const bpAclKey = (email) => `${BP_KV_PREFIX}:acl:${email}`; // Set of emails allowed to view 'email's data
 const bpSharedWithKey = (email) => `${BP_KV_PREFIX}:shared_with:${email}`; // Set of emails that 'email' can view
+const bpLiquidsKey = (email) => `${BP_KV_PREFIX}:liquids:${email}`;
 
 app.get("/api/bp/sync", async (req, res) => {
   const email = req.portalUser?.email;
@@ -674,11 +675,12 @@ app.get("/api/bp/sync", async (req, res) => {
   if (!kv) return res.json({ ok: true, items: [], meds: [] }); // Fallback or empty if no KV
 
   try {
-    const [items, meds] = await Promise.all([
+    const [items, meds, liquids] = await Promise.all([
       kv.get(bpDataKey(email)),
       kv.get(bpMedsKey(email)),
+      kv.get(bpLiquidsKey(email)),
     ]);
-    res.json({ ok: true, items: items || [], meds: meds || [], email });
+    res.json({ ok: true, items: items || [], meds: meds || [], liquids: liquids || [], email });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false });
@@ -688,7 +690,7 @@ app.get("/api/bp/sync", async (req, res) => {
 app.post("/api/bp/sync", async (req, res) => {
   const email = req.portalUser?.email;
   if (!email) return res.status(401).json({ ok: false });
-  const { items, meds } = req.body;
+  const { items, meds, liquids } = req.body;
   const kv = getKvClient();
   if (!kv) return res.status(503).json({ ok: false, error: "KV_DISABLED" });
 
@@ -696,6 +698,7 @@ app.post("/api/bp/sync", async (req, res) => {
     await Promise.all([
       kv.set(bpDataKey(email), items || []),
       kv.set(bpMedsKey(email), meds || []),
+      kv.set(bpLiquidsKey(email), liquids || []),
     ]);
     res.json({ ok: true });
   } catch (e) {
@@ -788,14 +791,16 @@ app.get("/api/bp/view/:ownerEmail", async (req, res) => {
       return res.status(403).json({ ok: false, error: "ACCESS_DENIED" });
     }
 
-    const [items, meds] = await Promise.all([
+    const [items, meds, liquids] = await Promise.all([
       kv.get(bpDataKey(owner)),
       kv.get(bpMedsKey(owner)),
+      kv.get(bpLiquidsKey(owner)),
     ]);
     res.json({
       ok: true,
       items: items || [],
       meds: meds || [],
+      liquids: liquids || [],
       readOnly: true,
       owner,
     });
