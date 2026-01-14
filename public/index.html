@@ -572,83 +572,102 @@
     </a>
 
     <!-- Cookbook Panel -->
-    <section class="cookbook-panel" id="cookbook-panel" aria-live="polite" hidden>
+    <!-- Cookbook Panel -->
+    <div class="cookbook-panel" id="cookbook-panel" hidden>
       <div class="cookbook-panel__header">
         <div>
           <p class="cookbook-panel__eyebrow">Kucharz AI</p>
-          <h2>Twój Kucharz</h2>
-          <p class="cookbook-panel__lede">Zarządzaj spiżarnią i generuj przepisy.</p>
+          <h3 id="cookbook-title">Twój Kucharz</h3>
         </div>
         <div class="cookbook-panel__actions">
-          <a class="cookbook-panel__link" href="/cookbook/settings.html" target="_blank" rel="noreferrer">
-            Ustawienia
-          </a>
+          <button class="cookbook-panel__link" id="view-chef-btn" type="button">Kucharz</button>
+          <button class="cookbook-panel__link" id="view-pantry-btn" type="button">Spiżarnia</button>
+          <button class="cookbook-panel__link" id="view-settings-btn" type="button">Ustawienia</button>
           <button class="cookbook-panel__icon cookbook-panel__close" type="button" id="cookbook-panel-close"
             aria-label="Zamknij">
             Zamknij
           </button>
         </div>
       </div>
-      <div class="cookbook-panel__body">
-        <div id="cookbook-root" class="cookbook-grid">
-          <!-- Pantry Section -->
-          <section class="cookbook-card cookbook-pantry">
+
+      <div class="cookbook-panel__body" id="cookbook-views-container" data-view="chef">
+        <!-- VIEW: CHEF (Main) -->
+        <div class="cookbook-view cookbook-view--chef">
+          <section class="cookbook-card cookbook-horizontal-form">
+            <div class="cookbook-form">
+              <div class="cookbook-form-group">
+                <label>Typ posiłku</label>
+                <select id="meal-type-select">
+                  <option value="Śniadanie">Śniadanie</option>
+                  <option value="Obiad">Obiad</option>
+                  <option value="Kolacja">Kolacja</option>
+                  <option value="Przekąska">Przekąska</option>
+                </select>
+              </div>
+              <div class="cookbook-form-group">
+                <label>Liczba osób</label>
+                <input type="number" id="people-count-input" value="2" min="1">
+              </div>
+              <div class="cookbook-form-group checkbox-group">
+                <input type="checkbox" id="suggest-shopping-checkbox">
+                <label for="suggest-shopping-checkbox">Proponuj zakupy</label>
+              </div>
+              <button id="cookbook-generate-btn" class="cookbook-btn cookbook-btn--accent">
+                🌟 Wygeneruj
+              </button>
+            </div>
+          </section>
+
+          <div class="cookbook-result-grid no-shopping" id="cookbook-result-area">
+            <section class="cookbook-card cookbook-recipe hidden" id="recipe-display-section">
+              <div class="cookbook-card__header">
+                <h3>📖 Przepis</h3>
+                <button id="recipe-close-btn" class="cookbook-btn cookbook-btn--sm cookbook-btn--ghost">Zamknij</button>
+              </div>
+              <div id="recipe-display-content" class="cookbook-recipe-content"></div>
+            </section>
+
+            <section class="cookbook-card cookbook-shopping hidden" id="shopping-list-section">
+              <div class="cookbook-card__header">
+                <h3>🛒 Lista zakupów</h3>
+              </div>
+              <div id="shopping-list-content" class="cookbook-recipe-content"></div>
+            </section>
+          </div>
+        </div>
+
+        <!-- VIEW: PANTRY -->
+        <div class="cookbook-view cookbook-view--pantry">
+          <section class="cookbook-card">
             <div class="cookbook-card__header">
               <h3>📦 Spiżarnia</h3>
-              <button id="pantry-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm">+ Dodaj</button>
+              <div>
+                <button id="pantry-back-btn" class="cookbook-btn cookbook-btn--sm cookbook-btn--ghost">Powrót</button>
+                <button id="pantry-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm">+ Dodaj</button>
+              </div>
             </div>
             <div id="pantry-list-container" class="cookbook-pantry-list">
               <p class="cookbook-empty">Ładowanie zapasów...</p>
             </div>
           </section>
+        </div>
 
-          <!-- Tools & Action Section -->
-          <div class="cookbook-tools-col">
-
-            <section class="cookbook-card">
-              <div class="cookbook-card__header">
-                <h3>🍳 Co jemy?</h3>
-              </div>
-              <div class="cookbook-form">
-                <div class="cookbook-form-group">
-                  <label>Typ posiłku</label>
-                  <select id="meal-type-select">
-                    <option value="Śniadanie">Śniadanie</option>
-                    <option value="Obiad">Obiad</option>
-                    <option value="Kolacja">Kolacja</option>
-                    <option value="Przekąska">Przekąska</option>
-                  </select>
-                </div>
-                <div class="cookbook-form-group">
-                  <label>Liczba osób</label>
-                  <input type="number" id="people-count-input" value="2" min="1">
-                </div>
-                <div class="cookbook-form-group checkbox-group">
-                  <input type="checkbox" id="suggest-shopping-checkbox">
-                  <label for="suggest-shopping-checkbox">Proponuj zakupy (jeśli brakuje składników)</label>
-                </div>
-                <button id="cookbook-generate-btn" class="cookbook-btn cookbook-btn--accent cookbook-btn--large">
-                  🌟 Wygeneruj Przepis
-                </button>
-              </div>
-            </section>
-          </div>
-
-          <!-- Recipe Section -->
-          <section class="cookbook-card cookbook-recipe hidden" id="recipe-display-section">
+        <!-- VIEW: SETTINGS (Appliances) -->
+        <div class="cookbook-view cookbook-view--settings">
+          <section class="cookbook-card">
             <div class="cookbook-card__header">
-              <h3>📖 Przepis od AI</h3>
-              <button id="recipe-close-btn" class="cookbook-btn cookbook-btn--ghost">Zamknij</button>
+              <h3>🔌 Aktywne Urządzenia</h3>
+              <button id="settings-back-btn" class="cookbook-btn cookbook-btn--sm cookbook-btn--ghost">Powrót</button>
             </div>
-            <div id="recipe-display-content" class="cookbook-recipe-content">
-              <!-- AI Recipe here -->
+            <p class="cookbook-panel__lede">Zaznacz urządzenia, które posiadasz w kuchni.</p>
+            <div id="appliances-container" class="cookbook-settings-grid">
+              <!-- Checkboxes from JS -->
             </div>
+            <button id="save-settings-btn" class="cookbook-btn cookbook-btn--primary">Zapisz ustawienia</button>
           </section>
         </div>
       </div>
-    </section>
-
-    <!-- Modal for adding/editing pantry items -->
+    </div>
     <div id="pantry-modal" class="cookbook-modal hidden">
       <div class="cookbook-modal-content">
         <h2 id="modal-title">Dodaj produkt</h2>

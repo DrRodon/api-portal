@@ -762,7 +762,7 @@ ZASADY:
 4. Pisz po polsku.`;
 
     if (suggestShopping) {
-      prompt += `\n5. Na końcu przepisu dodaj sekcję "Lista zakupów" z produktami, których brakuje w spiżarni a są potrzebne do tego przepisu.`;
+      prompt += `\n5. Na końcu przepisu dodaj sekcję "Lista zakupów" poprzedzoną dokładnie tym tekstem: ---SHOPPING_LIST--- `;
     }
 
     const response = await fetch(
