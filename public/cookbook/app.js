@@ -126,7 +126,7 @@
     };
 
     async function generateRecipe() {
-        const { generateBtn, recipeSection, recipeContent, mealTypeSelect, peopleCountInput } = getElements();
+        const { generateBtn, recipeSection, recipeContent, mealTypeSelect, peopleCountInput, suggestShoppingCheckbox } = getElements();
         const originalBtnText = generateBtn.innerHTML;
         generateBtn.disabled = true;
         generateBtn.innerHTML = '✨ Tworzenie...';
