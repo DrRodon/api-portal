@@ -157,15 +157,18 @@
             });
 
             const data = await response.json();
+            console.log('Cookbook API Response:', data);
 
             if (!response.ok) {
-                throw new Error(data.error || 'Błąd generowania');
+                const errorMsg = data.error || data.message || 'Unknown server error';
+                throw new Error(errorMsg);
             }
 
             recipeContent.innerHTML = formatMarkdown(data.recipe);
             recipeSection.classList.remove('hidden');
             recipeSection.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
+            console.error('Cookbook Error:', err);
             alert(`Nie udało się wygenerować przepisu: ${err.message}`);
         } finally {
             generateBtn.disabled = false;
