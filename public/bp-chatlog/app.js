@@ -131,13 +131,18 @@
     const sel = el("waterType");
     if (!sel) return;
 
+    const currentVal = sel.value;
+    sel.innerHTML = "";
+
     if (!state.liquids || !state.liquids.length) {
-      // Keep hardcoded defaults if no custom ones
+      // If no liquids defined yet, show empty or placeholder
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Brak zdefiniowanych płynów";
+      sel.appendChild(opt);
       return;
     }
 
-    const currentVal = sel.value;
-    sel.innerHTML = "";
     state.liquids.forEach(l => {
       const opt = document.createElement("option");
       opt.value = String(l.mult);
@@ -408,8 +413,16 @@
           state.items = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
           const medArr = typeof json.meds === "string" ? JSON.parse(json.meds) : (json.meds || []);
           state.meds = Array.isArray(medArr) ? medArr : [];
-          const liqArr = typeof json.liquids === "string" ? JSON.parse(json.liquids) : (json.liquids || []);
-          state.liquids = Array.isArray(liqArr) ? liqArr : [];
+
+          // Fetch global liquids
+          try {
+            const resLiq = await fetch("/api/bp/liquids/global");
+            const jsonLiq = await resLiq.json();
+            if (jsonLiq.ok) {
+              state.liquids = Array.isArray(jsonLiq.liquids) ? jsonLiq.liquids : [];
+            }
+          } catch (e) { console.error("Global liquids load failed", e); }
+
           render();
           renderMedChecklist({});
           syncWaterTypeOptions();
@@ -432,8 +445,16 @@
         state.items = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
         const medArr = typeof json.meds === "string" ? JSON.parse(json.meds) : (json.meds || []);
         state.meds = Array.isArray(medArr) ? medArr : [];
-        const liqArr = typeof json.liquids === "string" ? JSON.parse(json.liquids) : (json.liquids || []);
-        state.liquids = Array.isArray(liqArr) ? liqArr : [];
+
+        // Fetch global liquids
+        try {
+          const resLiq = await fetch("/api/bp/liquids/global");
+          const jsonLiq = await resLiq.json();
+          if (jsonLiq.ok) {
+            state.liquids = Array.isArray(jsonLiq.liquids) ? jsonLiq.liquids : [];
+          }
+        } catch (e) { console.error("Global liquids load failed", e); }
+
         render(); // Update UI after load
         renderMedChecklist({}); // Update checklist after load
         syncWaterTypeOptions();

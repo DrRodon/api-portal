@@ -221,19 +221,28 @@
       }
 
       async function saveLiquids(liquids) {
-        saveCloudData({ liquids });
+        try {
+          await fetch("/api/bp/liquids/global", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ liquids })
+          });
+          window._cachedLiquids = liquids;
+        } catch (e) {
+          console.error("Save liquids failed", e);
+          toast("Błąd zapisu bazy płynów");
+        }
       }
 
       async function saveCloudData(partial) {
         try {
-          let current = { items: [], meds: [], liquids: [] };
+          let current = { items: [], meds: [] };
           try {
             const r = await fetch("/api/bp/sync");
             const j = await r.json();
             if (j.ok) {
               current.items = typeof j.items === "string" ? JSON.parse(j.items) : (j.items || []);
               current.meds = typeof j.meds === "string" ? JSON.parse(j.meds) : (j.meds || []);
-              current.liquids = typeof j.liquids === "string" ? JSON.parse(j.liquids) : (j.liquids || []);
             }
           } catch (e) { }
 
@@ -245,7 +254,6 @@
           });
 
           if (partial.meds) window._cachedMeds = partial.meds;
-          if (partial.liquids) window._cachedLiquids = partial.liquids;
         } catch (e) {
           console.error("Save failed", e);
           toast("Błąd zapisu danych");
@@ -254,13 +262,17 @@
 
       async function initData() {
         try {
-          const r = await fetch("/api/bp/sync");
-          const j = await r.json();
-          if (j.ok) {
-            const cloudMeds = typeof j.meds === "string" ? JSON.parse(j.meds) : (j.meds || []);
+          const r1 = await fetch("/api/bp/sync");
+          const j1 = await r1.json();
+          if (j1.ok) {
+            const cloudMeds = typeof j1.meds === "string" ? JSON.parse(j1.meds) : (j1.meds || []);
             window._cachedMeds = Array.isArray(cloudMeds) ? cloudMeds : [];
+          }
 
-            const cloudLiquids = typeof j.liquids === "string" ? JSON.parse(j.liquids) : (j.liquids || []);
+          const r2 = await fetch("/api/bp/liquids/global");
+          const j2 = await r2.json();
+          if (j2.ok) {
+            const cloudLiquids = typeof j2.liquids === "string" ? JSON.parse(j2.liquids) : (j2.liquids || []);
             window._cachedLiquids = Array.isArray(cloudLiquids) ? cloudLiquids : [];
           }
         } catch (e) { console.error(e); }
@@ -635,20 +647,18 @@
 
         try {
           let currentMeds = [];
-          let currentLiquids = [];
           try {
             const r = await fetch("/api/bp/sync");
             const j = await r.json();
             if (j.ok) {
               currentMeds = j.meds || [];
-              currentLiquids = j.liquids || [];
             }
           } catch (e) { }
 
           await fetch("/api/bp/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: [], meds: currentMeds, liquids: currentLiquids })
+            body: JSON.stringify({ items: [], meds: currentMeds })
           });
           toast("Wyczyszczono dane w chmurze.");
         } catch (e) { toast("Błąd czyszczenia."); }
