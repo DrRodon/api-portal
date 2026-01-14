@@ -668,6 +668,117 @@ const bpAclKey = (email) => `${BP_KV_PREFIX}:acl:${email}`; // Set of emails all
 const bpSharedWithKey = (email) => `${BP_KV_PREFIX}:shared_with:${email}`; // Set of emails that 'email' can view
 const bpGlobalLiquidsKey = `${BP_KV_PREFIX}:liquids:global`;
 
+/* Cookbook (Kucharz AI) API */
+const COOKBOOK_KV_PREFIX = "cookbook:v1";
+const pantryKey = (email) => `${COOKBOOK_KV_PREFIX}:pantry:${email}`;
+const appliancesKey = (email) => `${COOKBOOK_KV_PREFIX}:appliances:${email}`;
+
+app.get("/api/cookbook/pantry", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const kv = getKvClient();
+  if (!kv) return res.json({ ok: true, pantry: [] });
+  try {
+    const pantry = await kv.get(pantryKey(email));
+    res.json({ ok: true, pantry: pantry || [] });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/cookbook/pantry", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const { pantry } = req.body;
+  const kv = getKvClient();
+  if (!kv) return res.status(503).json({ ok: false });
+  try {
+    await kv.set(pantryKey(email), pantry || []);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.get("/api/cookbook/appliances", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const kv = getKvClient();
+  if (!kv) return res.json({ ok: true, appliances: [] });
+  try {
+    const appliances = await kv.get(appliancesKey(email));
+    res.json({ ok: true, appliances: appliances || [] });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/cookbook/appliances", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+  const { appliances } = req.body;
+  const kv = getKvClient();
+  if (!kv) return res.status(503).json({ ok: false });
+  try {
+    await kv.set(appliancesKey(email), appliances || []);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
+app.post("/api/cookbook/generate", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+
+  const { mealType, peopleCount } = req.body;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ ok: false, error: "MISSING_API_KEY" });
+  }
+
+  const kv = getKvClient();
+  try {
+    const [pantry, appliances] = await Promise.all([
+      kv ? kv.get(pantryKey(email)) : [],
+      kv ? kv.get(appliancesKey(email)) : [],
+    ]);
+
+    const pantryList = (pantry || [])
+      .map((i) => `${i.name} (${i.qty} ${i.unit || ""})`)
+      .join(", ");
+    const applianceList = (appliances || []).join(", ");
+
+    const prompt = `Jesteś kreatywnym kucharzem. Przygotuj przepis na ${mealType} dla ${peopleCount} osób.
+Dostępne składniki w spiżarni: ${pantryList || "brak danych (improwizuj z podstawowych składników)"}.
+Dostępne urządzenia: ${applianceList || "podstawowe wyposażenie kuchni"}.
+Zasady:
+1. Skup się na wykorzystaniu produktów ze spiżarni.
+2. Przepis musi być możliwy do wykonania za pomocą dostępnych urządzeń.
+3. Odpowiedź sformatuj w czytelnym Markdownie (Tytuł, Składniki, Instrukcja).
+4. Pisz po polsku.`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      }
+    );
+
+    const data = await response.json();
+    const recipe = data.candidates?.[0]?.content?.parts?.[0]?.text || "Nie udało się wygenerować przepisu.";
+
+    res.json({ ok: true, recipe });
+  } catch (e) {
+    console.error("Gemini error:", e);
+    res.status(500).json({ ok: false });
+  }
+});
+
 app.get("/api/bp/sync", async (req, res) => {
   const email = req.portalUser?.email;
   if (!email) return res.status(401).json({ ok: false });

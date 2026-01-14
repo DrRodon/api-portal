@@ -1,642 +1,622 @@
 <!doctype html>
 <html lang="pl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Portal aplikacji</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="notatnik.css" />
-  </head>
-  <body>
-    <div class="backdrop" aria-hidden="true"></div>
-    <header class="hero">
-      <p class="eyebrow">Portal aplikacji</p>
-      <h1>Twoje aplikacje w jednym miejscu</h1>
-      <p class="lede lede__shadow">
-        Wybierz aplikację z kafelków poniżej.
-        Każdy moduł otwiera się na osobnej stronie, a wolne sloty czekają na kolejne pomysły.
-      </p>
-    </header>
 
-    <main class="grid" aria-label="Lista aplikacji">
-      <a
-        class="tile tile--active tile--notatnik"
-        href="/bp-chatlog/index.html"
-        aria-controls="notatnik-panel"
-        aria-expanded="false"
-      >
-        <div class="tile__tag">Aktywne</div>
-        <h2>Notatnik ciśnienia</h2>
-        <p>Rejestrowanie pomiarów i analiza trendów w jednym widoku.</p>
-      </a>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portal aplikacji</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="notatnik.css" />
+</head>
 
-      <section class="notatnik-panel" id="notatnik-panel" aria-live="polite" hidden>
-        <div class="notatnik-panel__header">
-          <div>
-            <p class="notatnik-panel__eyebrow">Notatnik</p>
-            <h2>Notatnik cisnienia</h2>
-            <p class="notatnik-panel__lede">Zapisuj wpisy i analizuj trendy bez opuszczania portalu.</p>
-          </div>
-          <div class="notatnik-panel__actions">
-            <a
-              class="notatnik-panel__link"
-              href="/bp-chatlog/index.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Otworz pelny
-            </a>
-            <a
-              class="notatnik-panel__link"
-              href="/bp-chatlog/summary.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Podsumowania
-            </a>
-            <a
-              class="notatnik-panel__link"
-              href="/bp-chatlog/settings.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Ustawienia
-            </a>
-            <button
-              class="notatnik-panel__icon notatnik-panel__close"
-              type="button"
-              id="notatnik-panel-close"
-              aria-label="Zamknij"
-            >
-              Zamknij
+<body>
+  <div class="backdrop" aria-hidden="true"></div>
+  <header class="hero">
+    <p class="eyebrow">Portal aplikacji</p>
+    <h1>Twoje aplikacje w jednym miejscu</h1>
+    <p class="lede lede__shadow">
+      Wybierz aplikację z kafelków poniżej.
+      Każdy moduł otwiera się na osobnej stronie, a wolne sloty czekają na kolejne pomysły.
+    </p>
+  </header>
+
+  <main class="grid" aria-label="Lista aplikacji">
+    <a class="tile tile--active tile--notatnik" href="/bp-chatlog/index.html" aria-controls="notatnik-panel"
+      aria-expanded="false">
+      <div class="tile__tag">Aktywne</div>
+      <h2>Notatnik ciśnienia</h2>
+      <p>Rejestrowanie pomiarów i analiza trendów w jednym widoku.</p>
+    </a>
+
+    <section class="notatnik-panel" id="notatnik-panel" aria-live="polite" hidden>
+      <div class="notatnik-panel__header">
+        <div>
+          <p class="notatnik-panel__eyebrow">Notatnik</p>
+          <h2>Notatnik cisnienia</h2>
+          <p class="notatnik-panel__lede">Zapisuj wpisy i analizuj trendy bez opuszczania portalu.</p>
+        </div>
+        <div class="notatnik-panel__actions">
+          <a class="notatnik-panel__link" href="/bp-chatlog/index.html" target="_blank" rel="noreferrer">
+            Otworz pelny
+          </a>
+          <a class="notatnik-panel__link" href="/bp-chatlog/summary.html" target="_blank" rel="noreferrer">
+            Podsumowania
+          </a>
+          <a class="notatnik-panel__link" href="/bp-chatlog/settings.html" target="_blank" rel="noreferrer">
+            Ustawienia
+          </a>
+          <button class="notatnik-panel__icon notatnik-panel__close" type="button" id="notatnik-panel-close"
+            aria-label="Zamknij">
+            Zamknij
+          </button>
+        </div>
+      </div>
+      <div class="notatnik-panel__body">
+        <div id="notatnik-root" data-mode="dark" data-view="form">
+          <div class="mobileSwitch" role="tablist" aria-label="Widok notatnika">
+            <button class="mobileSwitch__btn is-active" type="button" data-notatnik-view="form" aria-pressed="true">
+              Dodaj wpis
+            </button>
+            <button class="mobileSwitch__btn" type="button" data-notatnik-view="list" aria-pressed="false">
+              Wpisy
             </button>
           </div>
-        </div>
-        <div class="notatnik-panel__body">
-          <div id="notatnik-root" data-mode="dark" data-view="form">
-            <div class="mobileSwitch" role="tablist" aria-label="Widok notatnika">
-              <button class="mobileSwitch__btn is-active" type="button" data-notatnik-view="form" aria-pressed="true">
-                Dodaj wpis
-              </button>
-              <button class="mobileSwitch__btn" type="button" data-notatnik-view="list" aria-pressed="false">
-                Wpisy
-              </button>
-            </div>
-            <main class="grid gridViewport">
-            
-                <!-- LEWA: formularz -->
-            
-                <section class="card cardScroll" id="formCard">
-            
-                  <div class="cardHead">
-            
-                    <h2 id="formTitle">Dodaj wpis</h2>
-            
-                    <div class="cardHeadActions">
-            
-                      <button id="saveBtn" class="ok" type="button">Zapisz</button>
-            
-                      <button id="resetBtn" class="secondary" type="button">Wyczyść formularz</button>
-            
-                      <span class="pill">Wpisów: <strong id="countPill">0</strong></span>
-            
-                    </div>
-            
+          <main class="grid gridViewport">
+
+            <!-- LEWA: formularz -->
+
+            <section class="card cardScroll" id="formCard">
+
+              <div class="cardHead">
+
+                <h2 id="formTitle">Dodaj wpis</h2>
+
+                <div class="cardHeadActions">
+
+                  <button id="saveBtn" class="ok" type="button">Zapisz</button>
+
+                  <button id="resetBtn" class="secondary" type="button">Wyczyść formularz</button>
+
+                  <span class="pill">Wpisów: <strong id="countPill">0</strong></span>
+
+                </div>
+
+              </div>
+
+
+
+              <div class="cardBodyScroll">
+
+                <div class="block">
+
+                  <label for="notes">Notatki</label>
+
+                  <textarea id="notes" placeholder="dowolne"></textarea>
+
+                </div>
+
+
+
+                <div class="hr"></div>
+
+
+
+                <div class="row">
+
+                  <div>
+
+                    <label for="dt">Data i czas wpisu</label>
+
+                    <input id="dt" type="datetime-local" />
+
                   </div>
-            
-            
-            
-                  <div class="cardBodyScroll">
-            
-                    <div class="block">
-            
-                      <label for="notes">Notatki</label>
-            
-                      <textarea id="notes" placeholder="dowolne"></textarea>
-            
-                    </div>
-            
-            
-            
-                    <div class="hr"></div>
-            
-            
-            
-                    <div class="row">
-            
-                      <div>
-            
-                        <label for="dt">Data i czas wpisu</label>
-            
-                        <input id="dt" type="datetime-local" />
-            
-                      </div>
-            
-                      <div class="toggleField">
-            
-                        <label for="medsToggle">Wpis leków</label>
-            
-                        <div class="toggleInput">
-            
-                          <span class="toggleText">Przyjęte leki</span>
-            
-                          <label class="switch" aria-label="Przyjęte leki">
-            
-                            <input type="checkbox" id="medsToggle" />
-            
-                            <span class="slider"></span>
-            
-                          </label>
-            
-                        </div>
-            
-                      </div>
-            
-                    </div>
-            
-            
-            
-                    <div class="row3 mt10">
-            
-                      <div>
-            
-                        <label for="sys">SYS</label>
-            
-                        <input id="sys" inputmode="numeric" placeholder="np. 128" />
-            
-                      </div>
-            
-                      <div>
-            
-                        <label for="dia">DIA</label>
-            
-                        <input id="dia" inputmode="numeric" placeholder="np. 84" />
-            
-                      </div>
-            
-                      <div>
-            
-                        <label for="pulse">Tętno</label>
-            
-                        <input id="pulse" inputmode="numeric" placeholder="np. 72" />
-            
-                      </div>
-            
-                    </div>
-            
-            
-            
-                    <div class="mt10" id="medsSection">
-            
-                      <label>Leki (lista z Ustawień)</label>
-            
-                      <div id="medChecklist" class="medChecklist"></div>
-            
-            
-            
-                      <div class="mt10">
-            
-                        <label for="medNotes">Uwagi do leków</label>
-            
-                        <input id="medNotes" placeholder="np. Atacand wypadł z ręki, nie byłem pewien" />
-            
-                      </div>
-            
-                    </div>
-            
-            
-            
-                    <div class="hr"></div>
-            
-            
-            
-                    <div class="mt10">
-            
-                      <label for="food">Jedzenie</label>
-            
-                      <input id="food" placeholder="np. 2 kanapki, obiad, słodycze" />
-            
-                    </div>
-            
-            
-            
-                    <div class="row mt10">
-            
-                      <div>
-            
-                        <label for="waterAmount">Nawodnienie (ml)</label>
-            
-                        <input id="waterAmount" inputmode="numeric" placeholder="np. 250" />
-            
-                      </div>
-            
-                      <div>
-            
-                        <label for="waterType">Rodzaj płynu (procent wody)</label>
-            
-                        <select id="waterType">
-            
-                          <option value="1">woda (100%)</option>
-            
-                          <option value="0.85">woda z sokiem (85%)</option>
-            
-                          <option value="0.9">herbata (90%)</option>
-            
-                          <option value="0.99">kawa (99%)</option>
-            
-                          <option value="0.7">sok (70%)</option>
-            
-                        </select>
-            
-                      </div>
-            
-                    </div>
-            
-            
-            
-                    <div class="row mt10">
-            
-                      <div>
-            
-                        <label for="substances">Kofeina, alkohol, nikotyna</label>
-            
-                        <input id="substances" placeholder="np. kawa x2, bez alkoholu" />
-            
-                      </div>
-            
-                      <div>
-            
-                        <label for="sleep">Sen</label>
-            
-                        <input id="sleep" placeholder="np. 6:30, pobudki x2" />
-            
-                      </div>
-            
-                    </div>
-            
-            
-            
-                    <div class="mt10">
-            
-                      <label for="events">Wydarzenia (seks, stres, wysiłek)</label>
-            
-                      <input id="events" placeholder="np. rano seks, stres w pracy" />
-            
-                    </div>
-            
-            
-            
-                    <div class="mt10">
-            
-                      <label for="symptoms">Objawy (Twoje słowa)</label>
-            
-                      <input id="symptoms" placeholder="np. mam zjazd, jestem skołowany" />
-            
-                    </div>
-            
-            
-            
-                    <div class="row mt10">
-            
-                      <div class="sliderBox">
-            
-                        <div class="sliderTop">
-            
-                          <label for="severity">Nasilenie bólu</label>
-            
-                          <div class="sliderReadout">
-            
-                            <strong id="severityVal">0</strong>
-            
-                            <span id="severityText" class="sliderText">brak</span>
-            
-                          </div>
-            
-                        </div>
-            
-                        <input id="severity" type="range" min="0" max="10" step="1" />
-            
-                      </div>
-            
-            
-            
-                      <div class="sliderBox">
-            
-                        <div class="sliderTop">
-            
-                          <label for="anxiety">Lęk lub napięcie</label>
-            
-                          <div class="sliderReadout">
-            
-                            <strong id="anxietyVal">0</strong>
-            
-                            <span id="anxietyText" class="sliderText">brak</span>
-            
-                          </div>
-            
-                        </div>
-            
-                        <input id="anxiety" type="range" min="0" max="10" step="1" />
-            
-                      </div>
-            
-                    </div>
-            
-            
-            
-                    <div class="mt10">
-            
-                      <label for="hypothesis">Hipoteza</label>
-            
-                      <textarea id="hypothesis" placeholder="np. pominąłem dawkę + słabe nawodnienie"></textarea>
-            
-                    </div>
-            
-                    <div class="btns">
-            
-                      <button id="cancelEditBtn" class="secondary hidden" type="button">Anuluj edycję</button>
-            
-                    </div>
-            
-                  </div>
-            
-                </section>
-            
-            
-            
-                <!-- PRAWA: lista -->
-            
-                <section class="card cardScroll" id="listCard">
-            
-                  <div class="topbar topbarFixed">
-            
-                    <div class="filters">
-            
-                      <input id="q" placeholder="Szukaj w wpisach" />
-            
-                      <div class="dateRange">
-            
-                        <span class="dateLabel">Od <input id="fromDate" type="date" /></span>
-            
-                        <span class="dateLabel">Do <input id="toDate" type="date" /></span>
-            
-                        <button id="todayBtn" type="button" class="secondary">Dziś</button>
-            
-                        <button id="allBtn" type="button" class="secondary">Wszystko</button>
-            
-                      </div>
-            
-                    </div>
-            
-            
-            
-                    <div class="btns" style="margin-top:6px;">
-            
-                      <select id="sort" style="width:auto;">
-            
-                        <option value="desc">Sortowanie: najnowsze</option>
-            
-                        <option value="asc">Sortowanie: najstarsze</option>
-            
-                      </select>
-            
-                      <label class="iconToggle" title="Pokaż wpisy metryczne">
-            
-                        <input id="showMetrics" type="checkbox" aria-label="Pokaż wpisy metryczne" />
-            
-                        <span class="iconBtn" aria-hidden="true">
-            
-                          <svg viewBox="0 0 24 24" fill="none">
-            
-                            <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2"/>
-            
-                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-            
-                          </svg>
-            
-                        </span>
-            
+
+                  <div class="toggleField">
+
+                    <label for="medsToggle">Wpis leków</label>
+
+                    <div class="toggleInput">
+
+                      <span class="toggleText">Przyjęte leki</span>
+
+                      <label class="switch" aria-label="Przyjęte leki">
+
+                        <input type="checkbox" id="medsToggle" />
+
+                        <span class="slider"></span>
+
                       </label>
-            
-                      <button id="copyViewBtn" type="button" class="iconBtn" aria-label="Kopiuj JSON z widoku" title="Kopiuj JSON z widoku">
-            
-                        <svg viewBox="0 0 24 24" fill="none">
-            
-                          <path d="M8 8h10v12H8z" stroke="currentColor" stroke-width="2"/>
-            
-                          <path d="M6 16H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/>
-            
-                        </svg>
-            
-                      </button>
-            
+
                     </div>
-            
-            
-            
+
                   </div>
-            
-            
-            
-                  <div class="listScroll">
-            
-                    <div class="summaryWrap">
-            
-                      <div class="summaryPanel" id="viewSummary">
-            
-                        <div class="summaryBlock">
-            
-                          <div class="summaryTitle">Nawodnienie</div>
-            
-                          <div class="summaryValue"><span id="waterTotal">-</span> / <span id="waterTarget">-</span> ml</div>
-            
-                          <div class="summaryHint" id="waterDays">- dni</div>
-            
-                          <div class="summaryBar">
-            
-                            <div class="summaryBarFill" id="waterBar"></div>
-            
-                          </div>
-            
-                        </div>
-            
-            
-            
-                        <div class="summaryBlock meds">
-            
-                          <div class="summaryTitle">Leki</div>
-            
-                          <div class="medsTable" id="medsSummary"></div>
-            
-                        </div>
-            
-            
-            
-                        <div class="summaryBlock bp">
-            
-                          <div class="summaryTitle">Ciśnienie i puls</div>
-            
-                          <div class="bpGrid">
-            
-                            <div class="bpChartCol">
-            
-                              <div class="summaryChart" id="bpPulseChart">Brak danych w widoku.</div>
-            
-                              <div class="summaryLegend">
-            
-                                <span class="legendItem sys">SYS</span>
-            
-                                <span class="legendItem dia">DIA</span>
-            
-                                <span class="legendItem pulse">Tętno</span>
-            
-                              </div>
-            
-                            </div>
-            
-                            <div class="bpInfo" id="bpPulseInfo">-</div>
-            
-                          </div>
-            
-                        </div>
-            
+
+                </div>
+
+
+
+                <div class="row3 mt10">
+
+                  <div>
+
+                    <label for="sys">SYS</label>
+
+                    <input id="sys" inputmode="numeric" placeholder="np. 128" />
+
+                  </div>
+
+                  <div>
+
+                    <label for="dia">DIA</label>
+
+                    <input id="dia" inputmode="numeric" placeholder="np. 84" />
+
+                  </div>
+
+                  <div>
+
+                    <label for="pulse">Tętno</label>
+
+                    <input id="pulse" inputmode="numeric" placeholder="np. 72" />
+
+                  </div>
+
+                </div>
+
+
+
+                <div class="mt10" id="medsSection">
+
+                  <label>Leki (lista z Ustawień)</label>
+
+                  <div id="medChecklist" class="medChecklist"></div>
+
+
+
+                  <div class="mt10">
+
+                    <label for="medNotes">Uwagi do leków</label>
+
+                    <input id="medNotes" placeholder="np. Atacand wypadł z ręki, nie byłem pewien" />
+
+                  </div>
+
+                </div>
+
+
+
+                <div class="hr"></div>
+
+
+
+                <div class="mt10">
+
+                  <label for="food">Jedzenie</label>
+
+                  <input id="food" placeholder="np. 2 kanapki, obiad, słodycze" />
+
+                </div>
+
+
+
+                <div class="row mt10">
+
+                  <div>
+
+                    <label for="waterAmount">Nawodnienie (ml)</label>
+
+                    <input id="waterAmount" inputmode="numeric" placeholder="np. 250" />
+
+                  </div>
+
+                  <div>
+
+                    <label for="waterType">Rodzaj płynu (procent wody)</label>
+
+                    <select id="waterType">
+
+                      <option value="1">woda (100%)</option>
+
+                      <option value="0.85">woda z sokiem (85%)</option>
+
+                      <option value="0.9">herbata (90%)</option>
+
+                      <option value="0.99">kawa (99%)</option>
+
+                      <option value="0.7">sok (70%)</option>
+
+                    </select>
+
+                  </div>
+
+                </div>
+
+
+
+                <div class="row mt10">
+
+                  <div>
+
+                    <label for="substances">Kofeina, alkohol, nikotyna</label>
+
+                    <input id="substances" placeholder="np. kawa x2, bez alkoholu" />
+
+                  </div>
+
+                  <div>
+
+                    <label for="sleep">Sen</label>
+
+                    <input id="sleep" placeholder="np. 6:30, pobudki x2" />
+
+                  </div>
+
+                </div>
+
+
+
+                <div class="mt10">
+
+                  <label for="events">Wydarzenia (seks, stres, wysiłek)</label>
+
+                  <input id="events" placeholder="np. rano seks, stres w pracy" />
+
+                </div>
+
+
+
+                <div class="mt10">
+
+                  <label for="symptoms">Objawy (Twoje słowa)</label>
+
+                  <input id="symptoms" placeholder="np. mam zjazd, jestem skołowany" />
+
+                </div>
+
+
+
+                <div class="row mt10">
+
+                  <div class="sliderBox">
+
+                    <div class="sliderTop">
+
+                      <label for="severity">Nasilenie bólu</label>
+
+                      <div class="sliderReadout">
+
+                        <strong id="severityVal">0</strong>
+
+                        <span id="severityText" class="sliderText">brak</span>
+
                       </div>
-            
+
                     </div>
-            
-                    <div class="list" id="list"></div>
-            
+
+                    <input id="severity" type="range" min="0" max="10" step="1" />
+
                   </div>
-            
-                </section>
-            
-              </main>
 
-            <div id="toast" class="toast hidden"></div>
-          </div>
+
+
+                  <div class="sliderBox">
+
+                    <div class="sliderTop">
+
+                      <label for="anxiety">Lęk lub napięcie</label>
+
+                      <div class="sliderReadout">
+
+                        <strong id="anxietyVal">0</strong>
+
+                        <span id="anxietyText" class="sliderText">brak</span>
+
+                      </div>
+
+                    </div>
+
+                    <input id="anxiety" type="range" min="0" max="10" step="1" />
+
+                  </div>
+
+                </div>
+
+
+
+                <div class="mt10">
+
+                  <label for="hypothesis">Hipoteza</label>
+
+                  <textarea id="hypothesis" placeholder="np. pominąłem dawkę + słabe nawodnienie"></textarea>
+
+                </div>
+
+                <div class="btns">
+
+                  <button id="cancelEditBtn" class="secondary hidden" type="button">Anuluj edycję</button>
+
+                </div>
+
+              </div>
+
+            </section>
+
+
+
+            <!-- PRAWA: lista -->
+
+            <section class="card cardScroll" id="listCard">
+
+              <div class="topbar topbarFixed">
+
+                <div class="filters">
+
+                  <input id="q" placeholder="Szukaj w wpisach" />
+
+                  <div class="dateRange">
+
+                    <span class="dateLabel">Od <input id="fromDate" type="date" /></span>
+
+                    <span class="dateLabel">Do <input id="toDate" type="date" /></span>
+
+                    <button id="todayBtn" type="button" class="secondary">Dziś</button>
+
+                    <button id="allBtn" type="button" class="secondary">Wszystko</button>
+
+                  </div>
+
+                </div>
+
+
+
+                <div class="btns" style="margin-top:6px;">
+
+                  <select id="sort" style="width:auto;">
+
+                    <option value="desc">Sortowanie: najnowsze</option>
+
+                    <option value="asc">Sortowanie: najstarsze</option>
+
+                  </select>
+
+                  <label class="iconToggle" title="Pokaż wpisy metryczne">
+
+                    <input id="showMetrics" type="checkbox" aria-label="Pokaż wpisy metryczne" />
+
+                    <span class="iconBtn" aria-hidden="true">
+
+                      <svg viewBox="0 0 24 24" fill="none">
+
+                        <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="2" />
+
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+
+                      </svg>
+
+                    </span>
+
+                  </label>
+
+                  <button id="copyViewBtn" type="button" class="iconBtn" aria-label="Kopiuj JSON z widoku"
+                    title="Kopiuj JSON z widoku">
+
+                    <svg viewBox="0 0 24 24" fill="none">
+
+                      <path d="M8 8h10v12H8z" stroke="currentColor" stroke-width="2" />
+
+                      <path d="M6 16H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor"
+                        stroke-width="2" />
+
+                    </svg>
+
+                  </button>
+
+                </div>
+
+
+
+              </div>
+
+
+
+              <div class="listScroll">
+
+                <div class="summaryWrap">
+
+                  <div class="summaryPanel" id="viewSummary">
+
+                    <div class="summaryBlock">
+
+                      <div class="summaryTitle">Nawodnienie</div>
+
+                      <div class="summaryValue"><span id="waterTotal">-</span> / <span id="waterTarget">-</span> ml
+                      </div>
+
+                      <div class="summaryHint" id="waterDays">- dni</div>
+
+                      <div class="summaryBar">
+
+                        <div class="summaryBarFill" id="waterBar"></div>
+
+                      </div>
+
+                    </div>
+
+
+
+                    <div class="summaryBlock meds">
+
+                      <div class="summaryTitle">Leki</div>
+
+                      <div class="medsTable" id="medsSummary"></div>
+
+                    </div>
+
+
+
+                    <div class="summaryBlock bp">
+
+                      <div class="summaryTitle">Ciśnienie i puls</div>
+
+                      <div class="bpGrid">
+
+                        <div class="bpChartCol">
+
+                          <div class="summaryChart" id="bpPulseChart">Brak danych w widoku.</div>
+
+                          <div class="summaryLegend">
+
+                            <span class="legendItem sys">SYS</span>
+
+                            <span class="legendItem dia">DIA</span>
+
+                            <span class="legendItem pulse">Tętno</span>
+
+                          </div>
+
+                        </div>
+
+                        <div class="bpInfo" id="bpPulseInfo">-</div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div class="list" id="list"></div>
+
+              </div>
+
+            </section>
+
+          </main>
+
+          <div id="toast" class="toast hidden"></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <a
-        class="tile tile--active tile--gmail"
-        href="/auth"
-        aria-controls="gmail-preview"
-        aria-expanded="false"
-      >
-        <div class="tile__tag">Gmail</div>
-        <h2>Skrzynka Gmail</h2>
-        <p>Podgląd liczby nieprzeczytanych wiadomości na żywo.</p>
-        <div class="tile__status">
-          <span class="tile__badge" id="gmail-count">...</span>
-          <span class="tile__status-text" id="gmail-status">Sprawdzanie połączenia</span>
+    <a class="tile tile--active tile--gmail" href="/auth" aria-controls="gmail-preview" aria-expanded="false">
+      <div class="tile__tag">Gmail</div>
+      <h2>Skrzynka Gmail</h2>
+      <p>Podgląd liczby nieprzeczytanych wiadomości na żywo.</p>
+      <div class="tile__status">
+        <span class="tile__badge" id="gmail-count">...</span>
+        <span class="tile__status-text" id="gmail-status">Sprawdzanie połączenia</span>
+      </div>
+      <span class="tile__cta" id="gmail-cta">Połącz konto</span>
+    </a>
+
+    <section class="gmail-preview" id="gmail-preview" aria-live="polite" hidden>
+      <div class="gmail-preview__header">
+        <div>
+          <p class="gmail-preview__eyebrow">Gmail</p>
+          <h2>Podgląd skrzynki</h2>
+          <p class="gmail-preview__lede">Nieprzeczytane wiadomości z inboxa.</p>
         </div>
-        <span class="tile__cta" id="gmail-cta">Połącz konto</span>
-      </a>
-
-      <section class="gmail-preview" id="gmail-preview" aria-live="polite" hidden>
-        <div class="gmail-preview__header">
-          <div>
-            <p class="gmail-preview__eyebrow">Gmail</p>
-            <h2>Podgląd skrzynki</h2>
-            <p class="gmail-preview__lede">Nieprzeczytane wiadomości z inboxa.</p>
-          </div>
-          <div class="gmail-preview__actions">
-            <a
-              class="gmail-preview__link gmail-preview__link--header"
-              href="https://mail.google.com/"
-              target="_blank"
-              rel="noreferrer"
-              id="gmail-preview-open"
-            >
-              Otwórz Gmail
-            </a>
-            <div class="gmail-preview__detail-actions" aria-label="Akcje wiadomości">
-              <button class="gmail-preview__icon gmail-preview__action" type="button" id="gmail-action-trash" aria-label="Usuń">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 7h16M9 7V5h6v2M9 11v6M15 11v6M6 7l1 12h10l1-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
-              <button class="gmail-preview__icon gmail-preview__action" type="button" id="gmail-action-read" aria-label="Oznacz jako przeczytane">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 7h16v10H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                  <path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
-            </div>
-            <button class="gmail-preview__icon gmail-preview__back" type="button" id="gmail-preview-back" aria-label="Powrót" hidden>
+        <div class="gmail-preview__actions">
+          <a class="gmail-preview__link gmail-preview__link--header" href="https://mail.google.com/" target="_blank"
+            rel="noreferrer" id="gmail-preview-open">
+            Otwórz Gmail
+          </a>
+          <div class="gmail-preview__detail-actions" aria-label="Akcje wiadomości">
+            <button class="gmail-preview__icon gmail-preview__action" type="button" id="gmail-action-trash"
+              aria-label="Usuń">
               <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M4 7h16M9 7V5h6v2M9 11v6M15 11v6M6 7l1 12h10l1-12" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </button>
-            <button class="gmail-preview__icon gmail-preview__close" type="button" id="gmail-preview-close" aria-label="Zamknij">
-              Zamknij
+            <button class="gmail-preview__icon gmail-preview__action" type="button" id="gmail-action-read"
+              aria-label="Oznacz jako przeczytane">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16v10H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                <path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
             </button>
           </div>
+          <button class="gmail-preview__icon gmail-preview__back" type="button" id="gmail-preview-back"
+            aria-label="Powrót" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button class="gmail-preview__icon gmail-preview__close" type="button" id="gmail-preview-close"
+            aria-label="Zamknij">
+            Zamknij
+          </button>
         </div>
-        <div class="gmail-preview__body" id="gmail-preview-body">
-          <div class="gmail-preview__empty">Ładuje podgląd...</div>
-        </div>
-        <div class="gmail-preview__footer">
-          <a class="gmail-preview__link gmail-preview__link--ghost" href="/auth" id="gmail-preview-auth">
-            Połącz konto
-          </a>
-        </div>
-      </section>
-
-      <div class="tile tile--placeholder" role="button" aria-disabled="true">
-        <div class="tile__tag">Wkrótce</div>
-        <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł.</p>
-        <span class="tile__cta">Dodaj pomysł</span>
       </div>
-
-      <div class="tile tile--placeholder" role="button" aria-disabled="true">
-        <div class="tile__tag">Wkrótce</div>
-        <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł.</p>
-        <span class="tile__cta">Dodaj pomysł</span>
+      <div class="gmail-preview__body" id="gmail-preview-body">
+        <div class="gmail-preview__empty">Ładuje podgląd...</div>
       </div>
-
-      <div class="tile tile--placeholder" role="button" aria-disabled="true">
-        <div class="tile__tag">Wkrótce</div>
-        <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł.</p>
-        <span class="tile__cta">Dodaj pomysł</span>
+      <div class="gmail-preview__footer">
+        <a class="gmail-preview__link gmail-preview__link--ghost" href="/auth" id="gmail-preview-auth">
+          Połącz konto
+        </a>
       </div>
+    </section>
 
-      <div class="tile tile--placeholder" role="button" aria-disabled="true">
-        <div class="tile__tag">Wkrótce</div>
-        <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł.</p>
-        <span class="tile__cta">Dodaj pomysł</span>
-      </div>
+    <a class="tile tile--active tile--cookbook" href="/cookbook/index.html">
+      <div class="tile__tag">Kucharz AI</div>
+      <h2>Twój Kucharz</h2>
+      <p>Generuj przepisy na podstawie tego, co masz w lodówce.</p>
+      <span class="tile__cta">Otwórz kuchnię</span>
+    </a>
 
-      <div class="tile tile--placeholder" role="button" aria-disabled="true">
-        <div class="tile__tag">Wkrótce</div>
-        <h2>Kolejna aplikacja</h2>
-        <p>Slot gotowy na nowy moduł.</p>
-        <span class="tile__cta">Dodaj pomysł</span>
-      </div>
-    </main>
+    <div class="tile tile--placeholder" role="button" aria-disabled="true">
+      <div class="tile__tag">Wkrótce</div>
+      <h2>Kolejna aplikacja</h2>
+      <p>Slot gotowy na nowy moduł.</p>
+      <span class="tile__cta">Dodaj pomysł</span>
+    </div>
 
-        <footer class="footer">
-      <span>Portal aplikacji - wersja bazowa</span>
-      <div class="footer__actions">
-        <label class="theme-switch" for="theme-select">
-          <span class="theme-switch__label">Motyw</span>
-          <select id="theme-select" class="theme-switch__control">
-            <option value="auto">Auto</option>
-            <option value="day">Dzień</option>
-            <option value="night">Noc</option>
-          </select>
-        </label>
-        <a class="logout-link" href="/logout">Wyloguj</a>
-      </div>
-    </footer>
+    <div class="tile tile--placeholder" role="button" aria-disabled="true">
+      <div class="tile__tag">Wkrótce</div>
+      <h2>Kolejna aplikacja</h2>
+      <p>Slot gotowy na nowy moduł.</p>
+      <span class="tile__cta">Dodaj pomysł</span>
+    </div>
 
-    <script src="script.js"></script>
-    <script src="/bp-chatlog/themes.js"></script>
-    <script src="/bp-chatlog/app.js"></script>
-  </body>
+    <div class="tile tile--placeholder" role="button" aria-disabled="true">
+      <div class="tile__tag">Wkrótce</div>
+      <h2>Kolejna aplikacja</h2>
+      <p>Slot gotowy na nowy moduł.</p>
+      <span class="tile__cta">Dodaj pomysł</span>
+    </div>
+
+    <div class="tile tile--placeholder" role="button" aria-disabled="true">
+      <div class="tile__tag">Wkrótce</div>
+      <h2>Kolejna aplikacja</h2>
+      <p>Slot gotowy na nowy moduł.</p>
+      <span class="tile__cta">Dodaj pomysł</span>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span>Portal aplikacji - wersja bazowa</span>
+    <div class="footer__actions">
+      <label class="theme-switch" for="theme-select">
+        <span class="theme-switch__label">Motyw</span>
+        <select id="theme-select" class="theme-switch__control">
+          <option value="auto">Auto</option>
+          <option value="day">Dzień</option>
+          <option value="night">Noc</option>
+        </select>
+      </label>
+      <a class="logout-link" href="/logout">Wyloguj</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="/bp-chatlog/themes.js"></script>
+  <script src="/bp-chatlog/app.js"></script>
+</body>
+
 </html>

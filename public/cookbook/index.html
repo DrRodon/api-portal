@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kucharz AI - Twój Portal</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body data-theme="auto">
+    <header class="app-header">
+        <div class="wrap">
+            <div class="header-content">
+                <a href="/" class="back-link">← Powrót do portalu</a>
+                <h1>👨‍🍳 Kucharz AI</h1>
+                <div class="user-info" id="user-email">...</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="wrap main-grid">
+        <!-- Section 1: Pantry -->
+        <section class="card pantry-card">
+            <div class="card-header">
+                <h2>📦 Spiżarnia</h2>
+                <button id="add-item-btn" class="btn btn-primary btn-sm">+ Dodaj produkt</button>
+            </div>
+            <div class="card-body">
+                <div id="pantry-list" class="pantry-list">
+                    <p class="empty-msg">Ładowanie zapasów...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Appliances & Generator -->
+        <div class="utility-col">
+            <section class="card appliances-card">
+                <div class="card-header">
+                    <h2>🔌 Urządzenia</h2>
+                </div>
+                <div class="card-body">
+                    <div id="appliances-grid" class="appliances-grid">
+                        <!-- Checkboxes will be rendered here -->
+                    </div>
+                </div>
+            </section>
+
+            <section class="card generate-card">
+                <div class="card-header">
+                    <h2>🍳 Co jemy?</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="meal-type">Typ posiłku</label>
+                        <select id="meal-type">
+                            <option value="Śniadanie">Śniadanie</option>
+                            <option value="Obiad">Obiad</option>
+                            <option value="Kolacja">Kolacja</option>
+                            <option value="Przekąska">Przekąska</option>
+                            <option value="Deser">Deser</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="people-count">Liczba osób</label>
+                        <input type="number" id="people-count" value="2" min="1" max="10">
+                    </div>
+                    <button id="generate-btn" class="btn btn-accent btn-large">🌟 Wygeneruj Przepis (Gemini)</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section 3: Recipe Display -->
+        <section class="card recipe-card hidden" id="recipe-section">
+            <div class="card-header">
+                <h2>📖 Przepis</h2>
+                <button id="close-recipe" class="btn btn-ghost">Zamknij</button>
+            </div>
+            <div class="card-body" id="recipe-content">
+                <!-- AI Recipe will appear here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for adding pantry items -->
+    <div id="pantry-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="card-header">
+                <h2 id="modal-title">Dodaj Produkt</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Nazwa</label>
+                    <input type="text" id="item-name" placeholder="np. Jajka">
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <label>Ilość</label>
+                        <input type="text" id="item-qty" placeholder="np. 10">
+                    </div>
+                    <div class="col">
+                        <label>Jednostka</label>
+                        <input type="text" id="item-unit" placeholder="np. szt.">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data ważności (opcjonalnie)</label>
+                    <input type="date" id="item-exp">
+                </div>
+                <div class="modal-actions">
+                    <button id="modal-cancel" class="btn btn-secondary">Anuluj</button>
+                    <button id="modal-save" class="btn btn-primary">Zapisz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="../bp-chatlog/themes.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
