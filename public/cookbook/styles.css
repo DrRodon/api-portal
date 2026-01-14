@@ -405,6 +405,19 @@ body.theme-dark .cookbook-item {
     transition: all 0.2s;
 }
 
+body.theme-dark .cookbook-panel__link,
+body.theme-dark .cookbook-panel__icon {
+    background: rgba(24, 20, 44, 0.9);
+    border-color: var(--tile-border);
+    color: var(--ink);
+}
+
+body.theme-dark .cookbook-panel__link:hover,
+body.theme-dark .cookbook-panel__icon:hover {
+    background: rgba(36, 30, 64, 0.95);
+    border-color: var(--accent-cookbook);
+}
+
 .cookbook-panel__link svg,
 .cookbook-panel__icon svg {
     width: 20px;
