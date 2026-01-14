@@ -727,21 +727,6 @@ app.post("/api/cookbook/appliances", async (req, res) => {
   }
 });
 
-app.get("/api/cookbook/debug-models", async (req, res) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "MISSING_API_KEY" });
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
-    );
-    const data = await response.json();
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 app.post("/api/cookbook/generate", async (req, res) => {
   const email = req.portalUser?.email;
   if (!email) return res.status(401).json({ ok: false });
@@ -774,7 +759,7 @@ Zasady:
 4. Pisz po polsku.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
