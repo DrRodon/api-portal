@@ -580,12 +580,11 @@
           <h3 id="cookbook-title">Twój Kucharz</h3>
         </div>
         <div class="cookbook-panel__actions">
-          <button class="cookbook-panel__link" id="view-chef-btn" type="button">Kucharz</button>
-          <button class="cookbook-panel__link" id="view-pantry-btn" type="button">Spiżarnia</button>
-          <button class="cookbook-panel__link" id="view-settings-btn" type="button">Ustawienia</button>
+          <button class="cookbook-panel__link" id="view-pantry-btn" type="button" title="Spiżarnia">📦</button>
+          <button class="cookbook-panel__link" id="view-settings-btn" type="button" title="Ustawienia">⚙️</button>
           <button class="cookbook-panel__icon cookbook-panel__close" type="button" id="cookbook-panel-close"
-            aria-label="Zamknij">
-            Zamknij
+            aria-label="Zamknij" title="Zamknij">
+            ✕
           </button>
         </div>
       </div>
@@ -608,7 +607,7 @@
                 <label>Liczba osób</label>
                 <input type="number" id="people-count-input" value="2" min="1">
               </div>
-              <div class="cookbook-form-group checkbox-group">
+              <div class="cookbook-form-group checkbox-group cookbook-form-group--inline">
                 <input type="checkbox" id="suggest-shopping-checkbox">
                 <label for="suggest-shopping-checkbox">Proponuj zakupy</label>
               </div>

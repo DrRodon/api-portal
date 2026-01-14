@@ -12,7 +12,6 @@
     // DOM Elements
     const getElements = () => ({
         viewsContainer: document.getElementById('cookbook-views-container'),
-        viewChefBtn: document.getElementById('view-chef-btn'),
         viewPantryBtn: document.getElementById('view-pantry-btn'),
         viewSettingsBtn: document.getElementById('view-settings-btn'),
 
@@ -276,7 +275,6 @@
         const el = getElements();
 
         // View Switching
-        el.viewChefBtn?.addEventListener('click', () => switchView('chef'));
         el.viewPantryBtn?.addEventListener('click', () => switchView('pantry'));
         el.viewSettingsBtn?.addEventListener('click', () => switchView('settings'));
         el.pantryBackBtn?.addEventListener('click', () => switchView('chef'));

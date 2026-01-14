@@ -60,22 +60,22 @@
 
 /* View Switching */
 .cookbook-view {
-  display: none;
+  display: none !important;
   flex-direction: column;
   gap: 16px;
   height: 100%;
 }
 
 [data-view="chef"] .cookbook-view--chef {
-  display: flex;
+  display: flex !important;
 }
 
 [data-view="pantry"] .cookbook-view--pantry {
-  display: flex;
+  display: flex !important;
 }
 
 [data-view="settings"] .cookbook-view--settings {
-  display: flex;
+  display: flex !important;
 }
 
 .cookbook-panel__header {
@@ -90,21 +90,30 @@
 .cookbook-horizontal-form .cookbook-form {
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
-  gap: 15px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
 }
 
 .cookbook-horizontal-form .cookbook-form-group {
-  flex: 1;
-  min-width: 150px;
+  flex: 1 1 auto;
   margin-bottom: 0;
+}
+
+.cookbook-horizontal-form .cookbook-form-group--inline {
+  flex: 0 0 auto;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding-top: 18px;
+  /* Align with label-top groups */
 }
 
 .cookbook-horizontal-form .cookbook-btn--accent {
   flex: 0 0 auto;
-  padding: 10px 24px;
-  height: 42px;
+  padding: 0 20px;
+  height: 38px;
+  align-self: flex-end;
 }
 
 /* Result Grid */
