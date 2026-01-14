@@ -581,11 +581,34 @@
           <h3 id="cookbook-title">Twój Kucharz</h3>
         </div>
         <div class="cookbook-panel__actions">
-          <button class="cookbook-panel__link" id="view-pantry-btn" type="button" title="Spiżarnia">📦</button>
-          <button class="cookbook-panel__link" id="view-settings-btn" type="button" title="Ustawienia">⚙️</button>
+          <button class="cookbook-panel__link cookbook-panel__back hidden" id="cookbook-back-btn" type="button"
+            title="Powrot" aria-label="Powrot">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+          <button class="cookbook-panel__link" id="view-pantry-btn" type="button" title="Spizarnia"
+            aria-label="Spizarnia">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16v12H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+              <path d="M7 7V4h10v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+          </button>
+          <button class="cookbook-panel__link" id="view-settings-btn" type="button" title="Ustawienia"
+            aria-label="Ustawienia">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 8.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 0 0 0-7Zm8 3.5l-1.7.6c-.1.4-.2.8-.4 1.2l1 1.5l-1.9 1.9l-1.5-1c-.4.2-.8.3-1.2.4L12 20l-1.3-1.7c-.4-.1-.8-.2-1.2-.4l-1.5 1L6 17.9l1-1.5c-.2-.4-.3-.8-.4-1.2L5 12l1.7-.6c.1-.4.2-.8.4-1.2l-1-1.5L7.9 6l1.5 1c.4-.2.8-.3 1.2-.4L12 4l1.3 1.7c.4.1.8.2 1.2.4l1.5-1L18 6.1l-1 1.5c.2.4.3.8.4 1.2L20 12Z"
+                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+            </svg>
+          </button>
           <button class="cookbook-panel__icon cookbook-panel__close" type="button" id="cookbook-panel-close"
             aria-label="Zamknij" title="Zamknij">
-            ✕
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6l-12 12" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round"></path>
+            </svg>
           </button>
         </div>
       </div>
@@ -596,24 +619,27 @@
           <section class="cookbook-card cookbook-horizontal-form">
             <div class="cookbook-form">
               <div class="cookbook-form-group">
-                <label>Typ posiłku</label>
-                <select id="meal-type-select">
-                  <option value="Śniadanie">Śniadanie</option>
+                <label for="meal-type-select">Typ posilku</label>
+                <select id="meal-type-select" class="cookbook-select">
+                  <option value="Sniadanie">Sniadanie</option>
                   <option value="Obiad">Obiad</option>
                   <option value="Kolacja">Kolacja</option>
-                  <option value="Przekąska">Przekąska</option>
+                  <option value="Przekaska">Przekaska</option>
                 </select>
               </div>
               <div class="cookbook-form-group">
-                <label>Liczba osób</label>
-                <input type="number" id="people-count-input" value="2" min="1">
+                <label for="people-count-input">Liczba osob</label>
+                <input type="number" id="people-count-input" class="cookbook-input" value="2" min="1">
               </div>
-              <div class="cookbook-form-group checkbox-group cookbook-form-group--inline">
-                <input type="checkbox" id="suggest-shopping-checkbox">
-                <label for="suggest-shopping-checkbox">Proponuj zakupy</label>
+              <div class="cookbook-form-group cookbook-form-group--inline cookbook-toggle">
+                <label class="cookbook-toggle-label" for="suggest-shopping-checkbox">Proponuj zakupy</label>
+                <label class="cookbook-switch" aria-label="Proponuj zakupy">
+                  <input type="checkbox" id="suggest-shopping-checkbox">
+                  <span class="cookbook-switch__slider"></span>
+                </label>
               </div>
-              <button id="cookbook-generate-btn" class="cookbook-btn cookbook-btn--accent">
-                🌟 Wygeneruj
+              <button id="cookbook-generate-btn" class="cookbook-btn cookbook-btn--primary">
+                Wygeneruj
               </button>
             </div>
           </section>
@@ -621,14 +647,14 @@
           <div class="cookbook-result-grid no-shopping" id="cookbook-result-area">
             <section class="cookbook-card cookbook-recipe hidden" id="recipe-display-section">
               <div class="cookbook-card__header">
-                <h3>📖 Przepis</h3>
+                <h3>Przepis</h3>
               </div>
               <div id="recipe-display-content" class="cookbook-recipe-content"></div>
             </section>
 
             <section class="cookbook-card cookbook-shopping hidden" id="shopping-list-section">
               <div class="cookbook-card__header">
-                <h3>🛒 Lista zakupów</h3>
+                <h3>Lista zakupow</h3>
               </div>
               <div id="shopping-list-content" class="cookbook-recipe-content"></div>
             </section>
@@ -639,9 +665,8 @@
         <div class="cookbook-view cookbook-view--pantry">
           <section class="cookbook-card">
             <div class="cookbook-card__header">
-              <h3>📦 Spiżarnia</h3>
+              <h3>Spizarnia</h3>
               <div>
-                <button id="pantry-back-btn" class="cookbook-btn cookbook-btn--sm cookbook-btn--ghost">Powrót</button>
                 <button id="pantry-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm">+ Dodaj</button>
               </div>
             </div>
@@ -655,14 +680,22 @@
         <div class="cookbook-view cookbook-view--settings">
           <section class="cookbook-card">
             <div class="cookbook-card__header">
-              <h3>🔌 Aktywne Urządzenia</h3>
-              <button id="settings-back-btn" class="cookbook-btn cookbook-btn--sm cookbook-btn--ghost">Powrót</button>
+              <h3>Ustawienia</h3>
             </div>
-            <p class="cookbook-panel__lede">Zaznacz urządzenia, które posiadasz w kuchni.</p>
-            <div id="appliances-container" class="cookbook-settings-grid">
-              <!-- Checkboxes from JS -->
+            <p class="cookbook-panel__lede">Wpisz sprzet kuchenny, ktory masz pod reka.</p>
+            <div class="cookbook-settings-form">
+              <div class="cookbook-form-row cookbook-form-row--settings">
+                <div class="cookbook-form-group">
+                  <label for="appliance-input">Dodaj sprzet</label>
+                  <input type="text" id="appliance-input" class="cookbook-input" placeholder="np. mikser">
+                </div>
+                <button id="appliance-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm"
+                  type="button">Dodaj</button>
+              </div>
             </div>
-            <button id="save-settings-btn" class="cookbook-btn cookbook-btn--primary">Zapisz ustawienia</button>
+            <div id="appliances-container" class="cookbook-settings-list">
+              <!-- Items from JS -->
+            </div>
           </section>
         </div>
       </div>

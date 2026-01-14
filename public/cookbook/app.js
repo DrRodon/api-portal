@@ -4,24 +4,19 @@
     let appliances = [];
     let editingId = null;
 
-    const AVAILABLE_APPLIANCES = [
-        "Piekarnik", "Mikrofalówka", "Patelnia", "Frytkownica beztłuszczowa",
-        "Blender", "Wolnowar", "Toster", "Gofrownica", "Mikser", "Parowar"
-    ];
-
     // DOM Elements
     const getElements = () => ({
         viewsContainer: document.getElementById('cookbook-views-container'),
+        backBtn: document.getElementById('cookbook-back-btn'),
         viewPantryBtn: document.getElementById('view-pantry-btn'),
         viewSettingsBtn: document.getElementById('view-settings-btn'),
 
         pantryList: document.getElementById('pantry-list-container'),
         pantryAddBtn: document.getElementById('pantry-add-btn'),
-        pantryBackBtn: document.getElementById('pantry-back-btn'),
 
         appliancesContainer: document.getElementById('appliances-container'),
-        settingsBackBtn: document.getElementById('settings-back-btn'),
-        saveSettingsBtn: document.getElementById('save-settings-btn'),
+        applianceInput: document.getElementById('appliance-input'),
+        applianceAddBtn: document.getElementById('appliance-add-btn'),
 
         mealTypeSelect: document.getElementById('meal-type-select'),
         peopleCountInput: document.getElementById('people-count-input'),
@@ -85,31 +80,13 @@
 
     async function saveAppliances() {
         try {
-            const { saveSettingsBtn } = getElements();
-            if (saveSettingsBtn) {
-                saveSettingsBtn.disabled = true;
-                saveSettingsBtn.textContent = 'Zapisywanie...';
-            }
-
-            const res = await fetch('/api/cookbook/appliances', {
+            await fetch('/api/cookbook/appliances', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ appliances })
             });
-
-            if (res.ok) {
-                alert('Ustawienia zapisane!');
-            } else {
-                alert('Błąd zapisu ustawień.');
-            }
         } catch (err) {
-            console.error('Błąd zapisu urządzeń:', err);
-        } finally {
-            const { saveSettingsBtn } = getElements();
-            if (saveSettingsBtn) {
-                saveSettingsBtn.disabled = false;
-                saveSettingsBtn.textContent = 'Zapisz ustawienia';
-            }
+            console.error('Blad zapisu urzadzen:', err);
         }
     }
 
@@ -118,7 +95,7 @@
         if (!pantryList) return;
 
         if (pantry.length === 0) {
-            pantryList.innerHTML = '<p class="cookbook-empty">Twoja spiżarnia jest pusta.</p>';
+            pantryList.innerHTML = '<p class="cookbook-empty">Twoja spizarnia jest pusta.</p>';
             return;
         }
 
@@ -127,11 +104,11 @@
         <div class="cookbook-item__info">
           <span class="cookbook-item__name">${item.name}</span>
           <span class="cookbook-item__qty">${item.qty} ${item.unit || ''}</span>
-          ${item.expDate ? `<span class="cookbook-item__exp">Ważne do: ${item.expDate}</span>` : ''}
+          ${item.expDate ? `<span class="cookbook-item__exp">Wazne do: ${item.expDate}</span>` : ''}
         </div>
         <div class="cookbook-item__actions">
-          <button onclick="window.editPantryItem(${index})" class="cookbook-btn cookbook-btn--icon" title="Edytuj">✏️</button>
-          <button onclick="window.deletePantryItem(${index})" class="cookbook-btn cookbook-btn--icon" title="Usuń">🗑️</button>
+          <button onclick="window.editPantryItem(${index})" class="cookbook-btn cookbook-btn--ghost cookbook-btn--sm" title="Edytuj">Edytuj</button>
+          <button onclick="window.deletePantryItem(${index})" class="cookbook-btn cookbook-btn--ghost cookbook-btn--sm" title="Usun">Usun</button>
         </div>
       </div>
     `).join('');
@@ -141,34 +118,59 @@
         const { appliancesContainer } = getElements();
         if (!appliancesContainer) return;
 
-        appliancesContainer.innerHTML = AVAILABLE_APPLIANCES.map(app => `
-            <label class="appliance-item">
-                <input type="checkbox" value="${app}" ${appliances.includes(app) ? 'checked' : ''} onchange="window.toggleAppliance('${app}')">
-                <span>${app}</span>
-            </label>
-        `).join('');
+        if (appliances.length == 0) {
+            appliancesContainer.innerHTML = '<p class="cookbook-empty">Brak sprzetow. Dodaj pierwszy powyzej.</p>';
+            return;
+        }
+
+        appliancesContainer.innerHTML = appliances.map((item, index) => `
+      <div class="cookbook-settings-item">
+        <span class="cookbook-settings-item__name">${item}</span>
+        <div class="cookbook-settings-item__actions">
+          <button onclick="window.deleteAppliance(${index})" class="cookbook-btn cookbook-btn--ghost cookbook-btn--sm" title="Usun">Usun</button>
+        </div>
+      </div>
+    `).join('');
     }
 
-    window.toggleAppliance = (name) => {
-        if (appliances.includes(name)) {
-            appliances = appliances.filter(a => a !== name);
-        } else {
-            appliances.push(name);
+    function addAppliance() {
+        const { applianceInput } = getElements();
+        if (!applianceInput) return;
+        const raw = applianceInput.value.trim();
+        if (!raw) return;
+        const exists = appliances.some(item => item.toLowerCase() == raw.toLowerCase());
+        if (exists) {
+            applianceInput.value = '';
+            return;
         }
+        appliances.push(raw);
+        applianceInput.value = '';
+        renderAppliances();
+        saveAppliances();
+    }
+
+    window.deleteAppliance = async (index) => {
+        appliances.splice(index, 1);
+        renderAppliances();
+        await saveAppliances();
     };
 
     function switchView(viewName) {
-        const { viewsContainer, title } = getElements();
+        const { viewsContainer, title, backBtn } = getElements();
         if (viewsContainer) {
             viewsContainer.dataset.view = viewName;
 
-            // Update Title
             const titles = {
-                'chef': 'Twój Kucharz',
-                'pantry': 'Spiżarnia',
-                'settings': 'Urządzenia'
+                chef: 'Twoj Kucharz',
+                pantry: 'Spizarnia',
+                settings: 'Ustawienia'
             };
             if (title) title.textContent = titles[viewName] || 'Kucharz AI';
+        }
+
+        if (backBtn) {
+            if (viewName === 'chef') backBtn.classList.add('hidden');
+            else backBtn.classList.remove('hidden');
         }
     }
 
@@ -196,7 +198,7 @@
         const { generateBtn, recipeSection, recipeContent, shoppingSection, shoppingContent, resultArea, mealTypeSelect, peopleCountInput, suggestShoppingCheckbox } = getElements();
         const originalBtnText = generateBtn.innerHTML;
         generateBtn.disabled = true;
-        generateBtn.innerHTML = '✨ Tworzenie...';
+        generateBtn.innerHTML = 'Tworzenie...';
 
         try {
             const response = await fetch('/api/cookbook/generate', {
@@ -285,8 +287,7 @@
         // View Switching
         el.viewPantryBtn?.addEventListener('click', () => switchView('pantry'));
         el.viewSettingsBtn?.addEventListener('click', () => switchView('settings'));
-        el.pantryBackBtn?.addEventListener('click', () => switchView('chef'));
-        el.settingsBackBtn?.addEventListener('click', () => switchView('chef'));
+        el.backBtn?.addEventListener('click', () => switchView('chef'));
 
         // Pantry Actions
         el.pantryAddBtn?.addEventListener('click', () => {
@@ -314,7 +315,13 @@
         });
 
         // Settings Actions
-        el.saveSettingsBtn?.addEventListener('click', saveAppliances);
+        el.applianceAddBtn?.addEventListener('click', addAppliance);
+        el.applianceInput?.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addAppliance();
+            }
+        });
 
         // Chef Actions
         el.generateBtn?.addEventListener('click', generateRecipe);
