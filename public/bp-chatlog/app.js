@@ -5,7 +5,7 @@
   const DEFAULT_WATER_TARGET = 2000;
 
   const el = (id) => document.getElementById(id);
-  const state = { items: [], editingId: null };
+  const state = { items: [], meds: [], editingId: null };
   const isEmbedded = Boolean(document.getElementById("notatnik-panel"));
 
   function uuid() {
@@ -116,14 +116,7 @@
   }
 
   function loadMedsAll() {
-    if (state.readOnly && state.meds) return state.meds;
-    try {
-      const raw = localStorage.getItem(MEDS_KEY);
-      const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
-    } catch {
-      return [];
-    }
+    return Array.isArray(state.meds) ? state.meds : [];
   }
 
   function parseMedStatus(v) {
@@ -363,11 +356,10 @@
 
   async function load() {
     state.readOnly = false;
-    state.meds = null;
+    state.meds = [];
 
     const params = new URLSearchParams(window.location.search);
     const viewUser = params.get("viewUser");
-
     if (viewUser) {
       state.readOnly = true;
       const form = el("formCard");
@@ -394,15 +386,14 @@
       return;
     }
 
-    // Cloud-only: Fetch directly, no local fallback
+    // Cloud-only: Fetch directly
     try {
       const res = await fetch("/api/bp/sync");
       const json = await res.json();
       if (json.ok) {
         state.items = typeof json.items === "string" ? JSON.parse(json.items) : (json.items || []);
-        if (!state.readOnly) {
-          // One-time cleanup if needed or just ignore local storage
-        }
+        const medArr = typeof json.meds === "string" ? JSON.parse(json.meds) : (json.meds || []);
+        state.meds = Array.isArray(medArr) ? medArr : [];
         render(); // Update UI after load
       } else {
         toast("Brak połączenia z bazą.");
@@ -424,44 +415,10 @@
     if (saveBtn) saveBtn.textContent = "Zapisywanie...";
 
     try {
-      // We need to send meds too, otherwise they might get cleared if we don't send them
-      // We'll fetch them from an internal function or just send what we have if the API supports partial updates (it replaces all, so we need meds)
-      // Actually, server.js replaces both. So we need to make sure we don't wipe meds.
-      // But this save() is called after upsert/remove of ITEMS.
-      // Ideally we should keep meds in state too. For now let's load them from API if not in state?
-      // Since we are cloud-only, we should probably store meds in global state to avoid fetching them every save.
-
-      // OPTIMIZATION: In Cloud-Only, we'll assume state.items is current.
-      // We also need meds. The simplest way for now without refactoring everything to one state:
-      // Fetch current meds to include in payload? data-loss risk if race condition.
-
-      // Let's rely on the fact that we might have loaded meds in settings. But settings might not be open.
-      // For safety in this "Cloud Only" refactor, we will retrieve meds first or use a separate endpoint for updating only items?
-      // server.js expects { items, meds }. If we send only items, meds might be set to undefined?
-      // Looking at server.js: 
-      // const { items, meds } = req.body; 
-      // await Promise.all([ kv.set(..., items || []), kv.set(..., meds || []) ]);
-      // So if meds is undefined, it sets [] (empty)! ERROR RISK.
-
-      // FIX: We need to load meds before saving items if we don't have them.
-      // OR better: Change backend to PATCH? Too much work.
-      // Let's just fetch existing meds first if we don't have them in a reliable place.
-      // Actually, we can just fetch /api/bp/sync (lite?) or just re-read.
-
-      // Current hack: We will read meds from the endpoint before saving to ensure we don't wipe them.
-      // Not efficient but safe.
-
-      let currentMeds = [];
-      try {
-        const r = await fetch("/api/bp/sync");
-        const j = await r.json();
-        if (j.ok && j.meds) currentMeds = j.meds;
-      } catch (e) {/* ignore */ }
-
       await fetch("/api/bp/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: state.items, meds: currentMeds })
+        body: JSON.stringify({ items: state.items, meds: state.meds || [] })
       });
       // toast("Zapisano w chmurze.");
     } catch (e) {
@@ -473,14 +430,7 @@
   }
 
   function loadMedsCatalog() {
-    try {
-      const raw = localStorage.getItem(MEDS_KEY);
-      const arr = raw ? JSON.parse(raw) : [];
-      const meds = Array.isArray(arr) ? arr : [];
-      return meds.filter(m => m && m.active);
-    } catch {
-      return [];
-    }
+    return (state.meds || []).filter(m => m && m.active);
   }
 
   function renderMedChecklist(selected) {
