@@ -65,7 +65,7 @@
             renderPantry();
             renderAppliances();
         } catch (err) {
-            console.error('Blad ladowania danych:', err);
+            console.error('Błąd ładowania danych:', err);
         }
     }
 
@@ -77,7 +77,7 @@
                 body: JSON.stringify({ pantry })
             });
         } catch (err) {
-            console.error('Blad zapisu spizarni:', err);
+            console.error('Błąd zapisu spiżarni:', err);
         }
     }
 
@@ -129,19 +129,19 @@
         try {
             parsed = JSON.parse(raw);
         } catch (err) {
-            alert('Niepoprawny JSON. Sprawdz skladnie.');
+            alert('Niepoprawny JSON. Sprawdź składnię.');
             return false;
         }
 
         const list = Array.isArray(parsed) ? parsed : parsed.pantry;
         if (!Array.isArray(list)) {
-            alert('JSON musi byc lista produktow lub obiektem z polem pantry.');
+            alert('JSON musi być listą produktów lub obiektem z polem pantry.');
             return false;
         }
 
         const normalized = list.map(normalizePantryItem).filter(Boolean);
         if (normalized.length === 0) {
-            alert('Brak poprawnych produktow do importu.');
+            alert('Brak poprawnych produktów do importu.');
             return false;
         }
 
@@ -159,7 +159,7 @@
                 body: JSON.stringify({ appliances })
             });
         } catch (err) {
-            console.error('Blad zapisu urzadzen:', err);
+            console.error('Błąd zapisu urządzeń:', err);
         }
     }
 
@@ -168,7 +168,7 @@
         if (!pantryList) return;
 
         if (pantry.length === 0) {
-            pantryList.innerHTML = '<p class="cookbook-empty">Twoja spizarnia jest pusta.</p>';
+            pantryList.innerHTML = '<p class="cookbook-empty">Twoja spiżarnia jest pusta.</p>';
             return;
         }
 
@@ -177,7 +177,7 @@
         <div class="cookbook-item__info">
           <span class="cookbook-item__name">${item.name}</span>
           <span class="cookbook-item__qty">${item.qty} ${item.unit || ''}</span>
-          ${item.expDate ? `<span class="cookbook-item__exp">Wazne do: ${item.expDate}</span>` : ''}
+          ${item.expDate ? `<span class="cookbook-item__exp">Ważne do: ${item.expDate}</span>` : ''}
         </div>
         <div class="cookbook-item__actions">
           <button onclick="window.editPantryItem(${index})" class="cookbook-btn cookbook-btn--ghost cookbook-btn--sm" title="Edytuj">Edytuj</button>
@@ -192,7 +192,7 @@
         if (!appliancesContainer) return;
 
         if (appliances.length == 0) {
-            appliancesContainer.innerHTML = '<p class="cookbook-empty">Brak sprzetow. Dodaj pierwszy powyzej.</p>';
+            appliancesContainer.innerHTML = '<p class="cookbook-empty">Brak sprzętów. Dodaj pierwszy powyżej.</p>';
             return;
         }
 
@@ -234,11 +234,9 @@
             viewsContainer.dataset.view = viewName;
 
             const titles = {
-                chef: 'Twoj Kucharz',
-                pantry: 'Spizarnia',
-                settings: 'Ustawienia'
+                chef: 'Twój Kucharz'
             };
-            if (title) title.textContent = titles[viewName] || 'Kucharz AI';
+            if (title) title.textContent = titles.chef;
         }
 
         if (backBtn) {
@@ -261,7 +259,7 @@
     };
 
     window.deletePantryItem = async (index) => {
-        if (confirm('Czy na pewno chcesz usunac ten produkt?')) {
+        if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
             pantry.splice(index, 1);
             renderPantry();
             await savePantry();

@@ -641,6 +641,9 @@ if (notatnikTile) {
     if (gmailPreviewOpen) {
       setPreviewOpen(false);
     }
+    if (cookbookPanelOpen) {
+      setCookbookOpen(false);
+    }
     setNotatnikOpen(!notatnikPanelOpen);
   });
 }
@@ -668,6 +671,9 @@ if (gmailTile) {
     event.preventDefault();
     if (notatnikPanelOpen) {
       setNotatnikOpen(false);
+    }
+    if (cookbookPanelOpen) {
+      setCookbookOpen(false);
     }
     setPreviewOpen(!gmailPreviewOpen);
   });

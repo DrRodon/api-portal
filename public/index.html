@@ -582,14 +582,14 @@
         </div>
         <div class="cookbook-panel__actions">
           <button class="cookbook-panel__link cookbook-panel__back hidden" id="cookbook-back-btn" type="button"
-            title="Powrot" aria-label="Powrot">
+            title="Powrót" aria-label="Powrót">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
           </button>
-          <button class="cookbook-panel__link" id="view-pantry-btn" type="button" title="Spizarnia"
-            aria-label="Spizarnia">
+          <button class="cookbook-panel__link" id="view-pantry-btn" type="button" title="Spiżarnia"
+            aria-label="Spiżarnia">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 7h16v12H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
               <path d="M7 7V4h10v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
@@ -618,16 +618,16 @@
           <section class="cookbook-card cookbook-horizontal-form">
             <div class="cookbook-form">
               <div class="cookbook-form-group">
-                <label for="meal-type-select">Typ posilku</label>
+                <label for="meal-type-select">Typ posiłku</label>
                 <select id="meal-type-select" class="cookbook-select">
-                  <option value="Sniadanie">Sniadanie</option>
+                  <option value="Śniadanie">Śniadanie</option>
                   <option value="Obiad">Obiad</option>
                   <option value="Kolacja">Kolacja</option>
-                  <option value="Przekaska">Przekaska</option>
+                  <option value="Przekąska">Przekąska</option>
                 </select>
               </div>
               <div class="cookbook-form-group">
-                <label for="people-count-input">Liczba osob</label>
+                <label for="people-count-input">Liczba osób</label>
                 <input type="number" id="people-count-input" class="cookbook-input" value="2" min="1">
               </div>
               <div class="cookbook-form-group cookbook-form-group--inline cookbook-toggle">
@@ -653,7 +653,7 @@
 
             <section class="cookbook-card cookbook-shopping hidden" id="shopping-list-section">
               <div class="cookbook-card__header">
-                <h3>Lista zakupow</h3>
+                <h3>Lista zakupów</h3>
               </div>
               <div id="shopping-list-content" class="cookbook-recipe-content"></div>
             </section>
@@ -663,13 +663,13 @@
         <div class="cookbook-view cookbook-view--pantry">
           <section class="cookbook-card">
             <div class="cookbook-card__header">
-              <h3>Spizarnia</h3>
+              <h3>Spiżarnia</h3>
               <div>
                 <button id="pantry-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm">+ Dodaj</button>
               </div>
             </div>
             <div id="pantry-list-container" class="cookbook-pantry-list">
-              <p class="cookbook-empty">Ladowanie zapasow...</p>
+              <p class="cookbook-empty">Ładowanie zapasów...</p>
             </div>
           </section>
         </div>
@@ -679,15 +679,14 @@
             <div class="cookbook-card__header">
               <h3>Ustawienia</h3>
             </div>
-            <p class="cookbook-panel__lede">Wpisz sprzet kuchenny, ktory masz pod reka.</p>
+            <p class="cookbook-panel__lede">Wpisz sprzęt kuchenny, który masz pod ręką.</p>
             <div class="cookbook-settings-form">
               <div class="cookbook-form-row cookbook-form-row--settings">
                 <div class="cookbook-form-group">
-                  <label for="appliance-input">Dodaj sprzet</label>
-                  <input type="text" id="appliance-input" class="cookbook-input" placeholder="np. mikser">
+                  <input type="text" id="appliance-input" class="cookbook-input" placeholder="Dodaj sprzęt (np. mikser)">
                 </div>
                 <button id="appliance-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm"
-                  type="button">Dodaj</button>
+                  type="button">+ Dodaj</button>
               </div>
             </div>
             <div id="appliances-container" class="cookbook-settings-list">
@@ -707,7 +706,7 @@
           </div>
           <div class="cookbook-form-row">
             <div class="cookbook-form-group">
-              <label for="item-qty">Ilosc</label>
+              <label for="item-qty">Ilość</label>
               <input type="text" id="item-qty" class="cookbook-input" required placeholder="np. 6">
             </div>
             <div class="cookbook-form-group">
@@ -716,12 +715,12 @@
             </div>
           </div>
           <div class="cookbook-form-group">
-            <label for="item-exp">Data waznosci (opcjonalnie)</label>
+            <label for="item-exp">Data ważności (opcjonalnie)</label>
             <input type="date" id="item-exp" class="cookbook-input">
           </div>
           <div class="cookbook-modal-divider"></div>
           <div class="cookbook-form-group">
-            <label for="pantry-json-input">JSON (lista produktow)</label>
+            <label for="pantry-json-input">JSON (lista produktów)</label>
             <textarea id="pantry-json-input" class="cookbook-textarea" rows="5"
               placeholder='[{"name":"Jajka","qty":"6","unit":"szt.","expDate":"2026-01-14"}]'></textarea>
           </div>

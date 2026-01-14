@@ -114,6 +114,10 @@
     margin-bottom: 12px;
 }
 
+.cookbook-form-row .cookbook-form-group {
+    margin-bottom: 0;
+}
+
 .cookbook-horizontal-form .cookbook-form-group--inline {
     flex-direction: row !important;
     align-items: center !important;
@@ -129,6 +133,7 @@
 
 .cookbook-form-row--settings {
     grid-template-columns: 1fr auto;
+    align-items: center;
 }
 
 .cookbook-input,
@@ -255,8 +260,15 @@
 }
 
 .cookbook-btn--ghost {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.7);
     border: 1px solid var(--tile-border);
+    color: var(--ink);
+}
+
+body.theme-dark .cookbook-btn--ghost {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--ink);
 }
 
 /* Result Grid - FORCED SIDE BY SIDE */
@@ -327,6 +339,25 @@
 .cookbook-recipe-content h3 {
     font-size: 1.1rem;
     margin-top: 12px;
+}
+
+.cookbook-recipe-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.cookbook-recipe-content th,
+.cookbook-recipe-content td {
+    border: 1px solid var(--tile-border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.cookbook-recipe-content th {
+    background: var(--accent-cookbook-soft);
+    font-weight: 700;
 }
 
 /* Pantry View */
