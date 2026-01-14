@@ -689,7 +689,8 @@ app.get("/api/cookbook/pantry", async (req, res) => {
 app.post("/api/cookbook/pantry", async (req, res) => {
   const email = req.portalUser?.email;
   if (!email) return res.status(401).json({ ok: false });
-  const { pantry } = req.body;
+  // Handle both { pantry: [...] } and direct [...] array
+  const pantry = Array.isArray(req.body) ? req.body : req.body.pantry;
   const kv = getKvClient();
   if (!kv) return res.status(503).json({ ok: false });
   try {
@@ -716,7 +717,8 @@ app.get("/api/cookbook/appliances", async (req, res) => {
 app.post("/api/cookbook/appliances", async (req, res) => {
   const email = req.portalUser?.email;
   if (!email) return res.status(401).json({ ok: false });
-  const { appliances } = req.body;
+  // Handle both { appliances: [...] } and direct [...] array
+  const appliances = Array.isArray(req.body) ? req.body : req.body.appliances;
   const kv = getKvClient();
   if (!kv) return res.status(503).json({ ok: false });
   try {

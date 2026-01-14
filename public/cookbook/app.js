@@ -43,6 +43,9 @@
                 appliances = data.appliances || [];
             }
 
+            const { modal } = getElements();
+            if (modal && !modal.classList.contains('hidden')) return;
+
             renderPantry();
         } catch (err) {
             console.error('Błąd ładowania danych:', err);
@@ -54,7 +57,7 @@
             await fetch('/api/cookbook/pantry', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(pantry)
+                body: JSON.stringify({ pantry })
             });
         } catch (err) {
             console.error('Błąd zapisu spiżarni:', err);
@@ -66,7 +69,7 @@
             await fetch('/api/cookbook/appliances', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(appliances)
+                body: JSON.stringify({ appliances })
             });
         } catch (err) {
             console.error('Błąd zapisu urządzeń:', err);
