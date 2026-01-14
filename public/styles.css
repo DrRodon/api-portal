@@ -79,10 +79,22 @@
   line-height: 1.5;
 }
 
-.cookbook-panel__actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.cookbook-panel__link {
+  text-decoration: none;
+  border: 1px solid rgba(154, 144, 134, 0.5);
+  border-radius: 12px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--ink);
+  font-weight: 650;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cookbook-panel__link:hover {
+  background: white;
+  border-color: var(--accent-cookbook);
 }
 
 .cookbook-panel__icon {
@@ -147,6 +159,15 @@ body.theme-dark .cookbook-item {
 
 .cookbook-item:hover {
   border-color: var(--accent-cookbook);
+}
+
+.cookbook-pantry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
 }
 
 .cookbook-item__info {
@@ -222,6 +243,20 @@ body.theme-dark .cookbook-item {
 
 .cookbook-recipe-content {
   line-height: 1.6;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-cookbook) transparent;
+}
+
+.cookbook-recipe-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cookbook-recipe-content::-webkit-scrollbar-thumb {
+  background: var(--accent-cookbook);
+  border-radius: 10px;
 }
 
 .cookbook-recipe-content h4 {
@@ -264,6 +299,25 @@ body.theme-dark .cookbook-item {
   border-radius: 10px;
   border: 1px solid var(--tile-border);
   background: white;
+}
+
+.cookbook-form-group.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.cookbook-form-group.checkbox-group label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.cookbook-form-group.checkbox-group input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent-cookbook);
 }
 
 body.theme-dark .cookbook-form-group input,

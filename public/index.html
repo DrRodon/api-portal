@@ -580,6 +580,9 @@
           <p class="cookbook-panel__lede">Zarządzaj spiżarnią i generuj przepisy.</p>
         </div>
         <div class="cookbook-panel__actions">
+          <a class="cookbook-panel__link" href="/cookbook/settings.html" target="_blank" rel="noreferrer">
+            Ustawienia
+          </a>
           <button class="cookbook-panel__icon cookbook-panel__close" type="button" id="cookbook-panel-close"
             aria-label="Zamknij">
             Zamknij
@@ -601,14 +604,6 @@
 
           <!-- Tools & Action Section -->
           <div class="cookbook-tools-col">
-            <section class="cookbook-card">
-              <div class="cookbook-card__header">
-                <h3>🔌 Urządzenia</h3>
-              </div>
-              <div id="appliances-container" class="cookbook-appliances-grid">
-                <!-- JS will render this -->
-              </div>
-            </section>
 
             <section class="cookbook-card">
               <div class="cookbook-card__header">
@@ -627,6 +622,10 @@
                 <div class="cookbook-form-group">
                   <label>Liczba osób</label>
                   <input type="number" id="people-count-input" value="2" min="1">
+                </div>
+                <div class="cookbook-form-group checkbox-group">
+                  <input type="checkbox" id="suggest-shopping-checkbox">
+                  <label for="suggest-shopping-checkbox">Proponuj zakupy (jeśli brakuje składników)</label>
                 </div>
                 <button id="cookbook-generate-btn" class="cookbook-btn cookbook-btn--accent cookbook-btn--large">
                   🌟 Wygeneruj Przepis

@@ -731,7 +731,7 @@ app.post("/api/cookbook/generate", async (req, res) => {
   const email = req.portalUser?.email;
   if (!email) return res.status(401).json({ ok: false });
 
-  const { mealType, peopleCount } = req.body;
+  const { mealType, peopleCount, suggestShopping } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ ok: false, error: "MISSING_API_KEY" });
@@ -749,14 +749,19 @@ app.post("/api/cookbook/generate", async (req, res) => {
       .join(", ");
     const applianceList = (appliances || []).join(", ");
 
-    const prompt = `Jesteś kreatywnym kucharzem. Przygotuj przepis na ${mealType} dla ${peopleCount} osób.
-Dostępne składniki w spiżarni: ${pantryList || "brak danych (improwizuj z podstawowych składników)"}.
+    let prompt = `Jesteś kreatywnym kucharzem. Przygotuj przepis na ${mealType} dla ${peopleCount} osób.
+Dostępne składniki w spiżarni: ${pantryList || "brak danych"}.
 Dostępne urządzenia: ${applianceList || "podstawowe wyposażenie kuchni"}.
-Zasady:
-1. Skup się na wykorzystaniu produktów ze spiżarni.
+
+ZASADY:
+1. ${suggestShopping ? "Możesz użyć brakujących składników, ale tylko jeśli są niezbędne." : "Używaj WYŁĄCZNIE składników wymienionych w spiżarni. Nie dodawaj niczego spoza listy (nawet soli/pieprzu, jeśli ich nie ma)."}
 2. Przepis musi być możliwy do wykonania za pomocą dostępnych urządzeń.
 3. Odpowiedź sformatuj w czytelnym Markdownie (Tytuł, Składniki, Instrukcja).
 4. Pisz po polsku.`;
+
+    if (suggestShopping) {
+      prompt += `\n5. Na końcu przepisu dodaj sekcję "Lista zakupów" z produktami, których brakuje w spiżarni a są potrzebne do tego przepisu.`;
+    }
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,

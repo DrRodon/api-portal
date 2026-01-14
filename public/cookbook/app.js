@@ -12,6 +12,7 @@
         mealTypeSelect: document.getElementById('meal-type-select'),
         peopleCountInput: document.getElementById('people-count-input'),
         generateBtn: document.getElementById('cookbook-generate-btn'),
+        suggestShoppingCheckbox: document.getElementById('suggest-shopping-checkbox'),
         recipeSection: document.getElementById('recipe-display-section'),
         recipeContent: document.getElementById('recipe-display-content'),
         recipeCloseBtn: document.getElementById('recipe-close-btn'),
@@ -25,14 +26,6 @@
         itemExpInput: document.getElementById('item-exp'),
     });
 
-    const availableAppliances = [
-        { id: 'piekarnik', label: 'Piekarnik' },
-        { id: 'frytkownica', label: 'Frytkownica beztłuszczowa' },
-        { id: 'mikrofalowka', label: 'Mikrofalówka' },
-        { id: 'blender', label: 'Blender' },
-        { id: 'patelnia', label: 'Patelnia' },
-        { id: 'wolnowar', label: 'Wolnowar' }
-    ];
 
     async function loadData() {
         try {
@@ -51,7 +44,6 @@
             }
 
             renderPantry();
-            renderAppliances();
         } catch (err) {
             console.error('Błąd ładowania danych:', err);
         }
@@ -105,17 +97,6 @@
     `).join('');
     }
 
-    function renderAppliances() {
-        const { appliancesContainer } = getElements();
-        if (!appliancesContainer) return;
-
-        appliancesContainer.innerHTML = availableAppliances.map(app => `
-      <label class="cookbook-checkbox">
-        <input type="checkbox" value="${app.id}" ${appliances.includes(app.id) ? 'checked' : ''} onchange="window.toggleAppliance('${app.id}')">
-        <span>${app.label}</span>
-      </label>
-    `).join('');
-    }
 
     window.editPantryItem = (index) => {
         const { modal, modalTitle, itemNameInput, itemQtyInput, itemUnitInput, itemExpInput } = getElements();
@@ -138,12 +119,7 @@
     };
 
     window.toggleAppliance = async (id) => {
-        if (appliances.includes(id)) {
-            appliances = appliances.filter(a => a !== id);
-        } else {
-            appliances.push(id);
-        }
-        await saveAppliances();
+        // Now handled in settings.html, but keeping for compatibility if needed
     };
 
     async function generateRecipe() {
@@ -158,7 +134,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     mealType: mealTypeSelect.value,
-                    peopleCount: peopleCountInput.value
+                    peopleCount: peopleCountInput.value,
+                    suggestShopping: suggestShoppingCheckbox?.checked || false
                 })
             });
 
