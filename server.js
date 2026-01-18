@@ -75,7 +75,7 @@ app.use(
     allowedHeaders: ["Content-Type", "X-Portal-Token"],
   })
 );
-app.use(express.json({ limit: "100kb" }));
+app.use(express.json({ limit: "10mb" }));
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
