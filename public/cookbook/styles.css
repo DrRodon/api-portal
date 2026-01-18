@@ -218,12 +218,12 @@
     transition: transform 0.2s ease;
 }
 
-.cookbook-switch input:checked + .cookbook-switch__slider {
+.cookbook-switch input:checked+.cookbook-switch__slider {
     background: var(--accent-cookbook-soft);
     border-color: rgba(245, 158, 11, 0.4);
 }
 
-.cookbook-switch input:checked + .cookbook-switch__slider::before {
+.cookbook-switch input:checked+.cookbook-switch__slider::before {
     transform: translateX(20px) translateY(-50%);
     background: #fef3c7;
     border-color: rgba(245, 158, 11, 0.35);
@@ -533,4 +533,96 @@ body.theme-dark .cookbook-settings-item {
 .cookbook-modal-actions--split {
     justify-content: space-between;
     margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    .cookbook-modal-actions--split {
+        flex-direction: column;
+    }
+}
+
+/* Review List Styles */
+.cookbook-review-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    background: var(--bg-card, #fff);
+    margin-bottom: 24px;
+}
+
+.cookbook-review-item {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color, #eee);
+    align-items: center;
+}
+
+.cookbook-review-item:last-child {
+    border-bottom: none;
+}
+
+.cookbook-review-item__inputs {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.cookbook-review-item__inputs input {
+    background: var(--bg-app);
+    border: 1px solid var(--tile-border);
+    color: var(--text-base);
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.cookbook-review-item__name {
+    flex: 2;
+    min-width: 100px;
+}
+
+.cookbook-review-item__qty {
+    flex: 1;
+    min-width: 60px;
+}
+
+.cookbook-review-item__unit {
+    flex: 1;
+    min-width: 60px;
+}
+
+.cookbook-review-item__remove {
+    background: none;
+    border: none;
+    color: var(--text-muted, #888);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cookbook-review-item__remove:hover {
+    color: #ff4d4d;
+}
+
+.cookbook-spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    margin-right: 8px;
+    vertical-align: text-bottom;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

@@ -41,6 +41,17 @@
         pantryJsonInput: document.getElementById('pantry-json-input'),
         pantryJsonImportBtn: document.getElementById('pantry-json-import-btn'),
         pantryJsonSchemaBtn: document.getElementById('pantry-json-schema-btn'),
+
+        // AI Pantry Elements
+        pantryCameraBtn: document.getElementById('pantry-camera-btn'),
+        pantryUploadBtn: document.getElementById('pantry-upload-btn'),
+        pantryCameraInput: document.getElementById('pantry-camera-input'),
+        pantryUploadInput: document.getElementById('pantry-upload-input'),
+
+        reviewModal: document.getElementById('pantry-review-modal'),
+        reviewList: document.getElementById('pantry-review-list'),
+        reviewConfirmBtn: document.getElementById('review-confirm-btn'),
+        reviewCancelBtn: document.getElementById('review-cancel-btn'),
     });
 
     async function loadData() {
@@ -246,7 +257,7 @@
     }
 
     window.editPantryItem = (index) => {
-        const {modal, modalTitle, itemNameInput, itemQtyInput, itemUnitInput, itemExpInput, pantryJsonInput} = getElements();
+        const { modal, modalTitle, itemNameInput, itemQtyInput, itemUnitInput, itemExpInput, pantryJsonInput } = getElements();
         const item = pantry[index];
         editingId = index;
         modalTitle.textContent = 'Edytuj produkt';
@@ -413,8 +424,145 @@
         // Chef Actions
         el.generateBtn?.addEventListener('click', generateRecipe);
 
+        el.generateBtn?.addEventListener('click', generateRecipe);
+
+        // AI Pantry Actions
+        el.pantryCameraBtn?.addEventListener('click', () => el.pantryCameraInput?.click());
+        el.pantryUploadBtn?.addEventListener('click', () => el.pantryUploadInput?.click());
+
+        const handleImageInput = async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            e.target.value = ''; // Reset input
+            await processPantryImage(file);
+        };
+
+        el.pantryCameraInput?.addEventListener('change', handleImageInput);
+        el.pantryUploadInput?.addEventListener('change', handleImageInput);
+
+        el.reviewCancelBtn?.addEventListener('click', () => {
+            el.reviewModal.classList.add('hidden');
+            reviewItems = [];
+        });
+
+        el.reviewConfirmBtn?.addEventListener('click', async () => {
+            if (reviewItems.length === 0) return;
+
+            // Gather values from Review Modal inputs
+            const updatedItems = [];
+            const rows = el.reviewList.querySelectorAll('.cookbook-review-item');
+
+            rows.forEach((row, index) => {
+                const nameInput = row.querySelector('.review-name');
+                const qtyInput = row.querySelector('.review-qty');
+                const unitInput = row.querySelector('.review-unit');
+
+                if (nameInput && qtyInput) {
+                    updatedItems.push({
+                        name: nameInput.value.trim(),
+                        qty: qtyInput.value.trim(),
+                        unit: unitInput.value.trim()
+                    });
+                }
+            });
+
+            // Add valid items to pantry
+            const valid = updatedItems.filter(i => i.name && i.qty);
+            if (valid.length > 0) {
+                pantry = pantry.concat(valid);
+                renderPantry();
+                await savePantry();
+                alert(`Dodano ${valid.length} produktów do spiżarni.`);
+            }
+
+            el.reviewModal.classList.add('hidden');
+            reviewItems = [];
+        });
+
         loadData();
         isInitialized = true;
+    };
+
+    // AI Logic
+    let reviewItems = [];
+
+    async function processPantryImage(file) {
+        // Show loading state (reuse generate btn or specific spinner if wanted, using alert/toast for simplicity for now or custom UI)
+        const startToast = (msg) => {
+            const toast = document.getElementById('toast');
+            if (toast) { toast.textContent = msg; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); }
+        };
+        startToast('Przetwarzanie zdjęcia...');
+
+        try {
+            const base64 = await toBase64(file);
+            // Resize if too large (?) - skipping for now, Gemini supports up to 4MB/20MB usually
+
+            const response = await fetch('/api/cookbook/recognize-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: base64 })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Błąd API');
+
+            reviewItems = data.items || [];
+            if (reviewItems.length === 0) {
+                alert('Nie rozpoznano żadnych produktów.');
+                return;
+            }
+
+            openReviewModal();
+        } catch (err) {
+            console.error(err);
+            alert('Wystąpił błąd podczas analizy zdjęcia: ' + err.message);
+        }
+    }
+
+    function toBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    function openReviewModal() {
+        const { reviewModal, reviewList } = getElements();
+        if (!reviewModal || !reviewList) return;
+
+        renderReviewItems();
+        reviewModal.classList.remove('hidden');
+    }
+
+    function renderReviewItems() {
+        const { reviewList } = getElements();
+        if (!reviewList) return;
+
+        if (reviewItems.length === 0) {
+            reviewList.innerHTML = '<p class="cookbook-empty">Brak produktów.</p>';
+            return;
+        }
+
+        reviewList.innerHTML = reviewItems.map((item, index) => `
+            <div class="cookbook-review-item">
+                <div class="cookbook-review-item__inputs">
+                    <input class="review-name cookbook-review-item__name" value="${item.name}" placeholder="Nazwa">
+                    <input class="review-qty cookbook-review-item__qty" value="${item.qty}" placeholder="Ilość">
+                    <input class="review-unit cookbook-review-item__unit" value="${item.unit || ''}" placeholder="Jedn.">
+                </div>
+                <button type="button" class="cookbook-review-item__remove" onclick="window.removeReviewItem(${index})" title="Usuń">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    window.removeReviewItem = (index) => {
+        reviewItems.splice(index, 1);
+        renderReviewItems();
     };
 
     window.loadCookbookData = loadData;

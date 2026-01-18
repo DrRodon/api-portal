@@ -584,8 +584,8 @@
           <button class="cookbook-panel__link cookbook-panel__back hidden" id="cookbook-back-btn" type="button"
             title="Powrót" aria-label="Powrót">
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round"></path>
             </svg>
           </button>
           <button class="cookbook-panel__link" id="view-pantry-btn" type="button" title="Spiżarnia"
@@ -665,6 +665,25 @@
             <div class="cookbook-card__header">
               <h3>Spiżarnia</h3>
               <div>
+                <input type="file" id="pantry-camera-input" accept="image/*" capture="environment" hidden>
+                <input type="file" id="pantry-upload-input" accept="image/*" hidden>
+                <button id="pantry-camera-btn" class="cookbook-btn cookbook-btn--ghost cookbook-btn--sm"
+                  title="Zrób zdjęcie">
+                  <svg viewBox="0 0 24 24" style="width:16px;height:16px;margin:0;" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                </button>
+                <button id="pantry-upload-btn" class="cookbook-btn cookbook-btn--ghost cookbook-btn--sm"
+                  title="Wgraj zdjęcie">
+                  <svg viewBox="0 0 24 24" style="width:16px;height:16px;margin:0;" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </button>
                 <button id="pantry-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm">+ Dodaj</button>
               </div>
             </div>
@@ -683,7 +702,8 @@
             <div class="cookbook-settings-form">
               <div class="cookbook-form-row cookbook-form-row--settings">
                 <div class="cookbook-form-group">
-                  <input type="text" id="appliance-input" class="cookbook-input" placeholder="Dodaj sprzęt (np. mikser)">
+                  <input type="text" id="appliance-input" class="cookbook-input"
+                    placeholder="Dodaj sprzęt (np. mikser)">
                 </div>
                 <button id="appliance-add-btn" class="cookbook-btn cookbook-btn--primary cookbook-btn--sm"
                   type="button">+ Dodaj</button>
@@ -696,6 +716,23 @@
         </div>
       </div>
     </div>
+    </div>
+    </div>
+    <div id="pantry-review-modal" class="cookbook-modal hidden">
+      <div class="cookbook-modal-content">
+        <h2>Rozpoznane produkty</h2>
+        <p class="cookbook-panel__lede">Sprawdź i zatwierdź listę produktów rozpoznanych przez AI.</p>
+        <div id="pantry-review-list" class="cookbook-review-list">
+          <!-- Items injected by JS -->
+        </div>
+        <div class="cookbook-modal-actions">
+          <button type="button" id="review-cancel-btn" class="cookbook-btn cookbook-btn--ghost">Anuluj</button>
+          <button type="button" id="review-confirm-btn" class="cookbook-btn cookbook-btn--primary">Dodaj do
+            spiżarni</button>
+        </div>
+      </div>
+    </div>
+
     <div id="pantry-modal" class="cookbook-modal hidden">
       <div class="cookbook-modal-content">
         <h2 id="modal-title">Dodaj produkt</h2>
@@ -725,8 +762,10 @@
               placeholder='[{"name":"Jajka","qty":"6","unit":"szt.","expDate":"2026-01-14"}]'></textarea>
           </div>
           <div class="cookbook-modal-actions cookbook-modal-actions--split">
-            <button type="button" id="pantry-json-import-btn" class="cookbook-btn cookbook-btn--ghost">Importuj JSON</button>
-            <button type="button" id="pantry-json-schema-btn" class="cookbook-btn cookbook-btn--ghost">Pobierz schemat JSON</button>
+            <button type="button" id="pantry-json-import-btn" class="cookbook-btn cookbook-btn--ghost">Importuj
+              JSON</button>
+            <button type="button" id="pantry-json-schema-btn" class="cookbook-btn cookbook-btn--ghost">Pobierz schemat
+              JSON</button>
           </div>
           <div class="cookbook-modal-actions">
             <button type="button" id="modal-cancel-btn" class="cookbook-btn cookbook-btn--ghost">Anuluj</button>

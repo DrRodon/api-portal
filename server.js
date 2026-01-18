@@ -796,6 +796,91 @@ ZASADY:
   }
 });
 
+app.post("/api/cookbook/recognize-image", async (req, res) => {
+  const email = req.portalUser?.email;
+  if (!email) return res.status(401).json({ ok: false });
+
+  const { imageBase64 } = req.body; // Expecting base64 string without data prefix if possible, or strip it
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ ok: false, error: "MISSING_API_KEY" });
+  }
+  if (!imageBase64) {
+    return res.status(400).json({ ok: false, error: "MISSING_IMAGE" });
+  }
+
+  try {
+    // Strip data URL prefix if present (e.g., "data:image/jpeg;base64,")
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+
+    const prompt = `
+      Jestes asystentem kuchennym. Twoim zadaniem jest rozpoznanie produktow spozywczych na zdjeciu.
+      Wypisz znalezione produkty w formacie JSON zgodnym z ponizszym schematem.
+      Jesli nie jestes pewien ilosci, oszacuj ja (np. 1 szt., 0.5 kg, 1 opakowanie).
+      Ignoruj rzeczy niebędące jedzeniem.
+
+      Wymagany format odpowiedzi (tylko czysty JSON, bez Markdowna):
+      [
+        { "name": "Nazwa produktu", "qty": "Ilość", "unit": "Jednostka (np. szt., kg, l, opak.)" }
+      ]
+
+      Przyklad:
+      [ { "name": "Banan", "qty": "3", "unit": "szt." }, { "name": "Mleko", "qty": "1", "unit": "l" } ]
+    `;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: prompt },
+                {
+                  inline_data: {
+                    mime_type: "image/jpeg", // Assuming JPEG for simplicity, Gemini is flexible
+                    data: base64Data,
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Gemini Vision API Error:", JSON.stringify(data.error, null, 2));
+      return res.status(500).json({ ok: false, error: data.error.message });
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      return res.status(500).json({ ok: false, error: "Empty response from Gemini Vision" });
+    }
+
+    // Attempt to parse JSON from the response (cleanup code blocks if present)
+    let cleanedText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    let items = [];
+    try {
+      items = JSON.parse(cleanedText);
+    } catch (parseErr) {
+      console.error("JSON Parse Error:", parseErr, "Raw Text:", text);
+      return res.status(500).json({ ok: false, error: "Failed to parse AI response" });
+    }
+
+    res.json({ ok: true, items });
+  } catch (e) {
+    console.error("Recognize Image Exception:", e);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.get("/api/bp/sync", async (req, res) => {
   const email = req.portalUser?.email;
   if (!email) return res.status(401).json({ ok: false });
