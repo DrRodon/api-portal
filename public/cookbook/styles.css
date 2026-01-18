@@ -626,3 +626,32 @@ body.theme-dark .cookbook-settings-item {
         transform: rotate(360deg);
     }
 }
+
+/* Dark Mode Overrides for Review Modal */
+body.theme-dark .cookbook-review-list {
+    background: var(--paper);
+    /* or a specific dark color */
+    border-color: var(--tile-border);
+}
+
+body.theme-dark .cookbook-review-item {
+    border-bottom-color: var(--tile-border);
+}
+
+body.theme-dark .cookbook-review-item__inputs input {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: var(--tile-border);
+    color: var(--ink);
+}
+
+body.theme-dark .cookbook-review-item__inputs input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+body.theme-dark .cookbook-review-item__remove {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+body.theme-dark .cookbook-review-item__remove:hover {
+    color: #ff6b6b;
+}
