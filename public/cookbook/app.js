@@ -430,7 +430,7 @@
         el.generateBtn?.addEventListener('click', generateRecipe);
 
         // AI Pantry Actions
-        el.pantryCameraBtn?.addEventListener('click', () => el.pantryCameraInput?.click());
+        el.pantryCameraBtn?.addEventListener('click', () => openCameraModal());
         el.pantryUploadBtn?.addEventListener('click', () => el.pantryUploadInput?.click());
 
         const handleImageInput = async (e) => {
@@ -440,8 +440,57 @@
             await processPantryImage(file);
         };
 
-        el.pantryCameraInput?.addEventListener('change', handleImageInput);
+        // el.pantryCameraInput?.addEventListener('change', handleImageInput); // Not used if using custom modal, but kept for fallback if needed
         el.pantryUploadInput?.addEventListener('change', handleImageInput);
+
+        // Webcam Logic
+        let mediaStream = null;
+
+        async function openCameraModal() {
+            const modal = document.getElementById('camera-modal');
+            const video = document.getElementById('camera-video');
+            const cancelBtn = document.getElementById('camera-cancel-btn');
+            const captureBtn = document.getElementById('camera-capture-btn');
+
+            if (!modal || !video) return;
+
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                video.srcObject = mediaStream;
+                modal.classList.remove('hidden');
+
+                cancelBtn.onclick = () => closeCameraModal();
+                captureBtn.onclick = () => {
+                    const canvas = document.getElementById('camera-canvas');
+                    if (canvas) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        canvas.getContext('2d').drawImage(video, 0, 0);
+                        canvas.toBlob(blob => {
+                            if (blob) processPantryImage(blob);
+                            closeCameraModal();
+                        }, 'image/jpeg', 0.85);
+                    }
+                };
+            } catch (err) {
+                console.error("Camera error:", err);
+                alert("Nie udało się uruchomić kamery. Sprawdź uprawnienia.");
+            }
+        }
+
+        function closeCameraModal() {
+            const modal = document.getElementById('camera-modal');
+            const video = document.getElementById('camera-video');
+
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            if (video) video.srcObject = null;
+            if (modal) modal.classList.add('hidden');
+        }
 
         el.reviewCancelBtn?.addEventListener('click', () => {
             el.reviewModal.classList.add('hidden');

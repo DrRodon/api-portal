@@ -385,6 +385,14 @@ body.theme-dark .cookbook-btn--ghost {
 }
 
 /* Pantry View */
+.cookbook-view--pantry .cookbook-card {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+}
+
 .cookbook-pantry-list {
     display: flex;
     flex-direction: column;
