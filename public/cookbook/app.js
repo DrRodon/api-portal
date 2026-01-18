@@ -52,6 +52,9 @@
         reviewList: document.getElementById('pantry-review-list'),
         reviewConfirmBtn: document.getElementById('review-confirm-btn'),
         reviewCancelBtn: document.getElementById('review-cancel-btn'),
+
+        processingOverlay: document.getElementById('processing-overlay'),
+        processingCancelBtn: document.getElementById('processing-cancel-btn'),
     });
 
     async function loadData() {
@@ -485,27 +488,42 @@
 
     // AI Logic
     let reviewItems = [];
+    let currentAbortController = null;
 
     async function processPantryImage(file) {
-        // Show loading state (reuse generate btn or specific spinner if wanted, using alert/toast for simplicity for now or custom UI)
-        const startToast = (msg) => {
-            const toast = document.getElementById('toast');
-            if (toast) { toast.textContent = msg; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); }
+        const { processingOverlay, processingCancelBtn } = getElements();
+
+        // Show Overlay
+        if (processingOverlay) processingOverlay.classList.remove('hidden');
+
+        // Setup Cancellation
+        if (currentAbortController) currentAbortController.abort();
+        currentAbortController = new AbortController();
+
+        const handleCancel = () => {
+            if (currentAbortController) {
+                currentAbortController.abort();
+                currentAbortController = null;
+            }
+            if (processingOverlay) processingOverlay.classList.add('hidden');
         };
-        startToast('Przetwarzanie zdjęcia...');
+
+        if (processingCancelBtn) processingCancelBtn.onclick = handleCancel;
 
         try {
             const base64 = await toBase64(file);
-            // Resize if too large (?) - skipping for now, Gemini supports up to 4MB/20MB usually
 
             const response = await fetch('/api/cookbook/recognize-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageBase64: base64 })
+                body: JSON.stringify({ imageBase64: base64 }),
+                signal: currentAbortController.signal
             });
 
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Błąd API');
+
+            if (processingOverlay) processingOverlay.classList.add('hidden'); // Hide on success
 
             reviewItems = data.items || [];
             if (reviewItems.length === 0) {
@@ -515,8 +533,16 @@
 
             openReviewModal();
         } catch (err) {
-            console.error(err);
-            alert('Wystąpił błąd podczas analizy zdjęcia: ' + err.message);
+            if (err.name === 'AbortError') {
+                console.log('Image processing aborted by user.');
+            } else {
+                console.error(err);
+                alert('Wystąpił błąd podczas analizy zdjęcia: ' + err.message);
+            }
+            if (processingOverlay) processingOverlay.classList.add('hidden'); // Hide on error
+        } finally {
+            currentAbortController = null;
+            if (processingCancelBtn) processingCancelBtn.onclick = null;
         }
     }
 
